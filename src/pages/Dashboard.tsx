@@ -16,7 +16,9 @@ import {
   Bell as BellIcon,
   LogOut as LogOutIcon,
   Weight as WeightIcon,
-  Droplets as DropletsIcon
+  Droplets as DropletsIcon,
+  BarChart2,
+  LineChart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +31,10 @@ import AppointmentPage from '@/components/appointments/AppointmentPage';
 import MedicationPage from '@/components/medications/MedicationPage';
 import HealthRecordsPage from '@/components/records/HealthRecordsPage';
 import MessagesPage from '@/components/messages/MessagesPage';
+import HealthChart from '@/components/dashboard/HealthChart';
+import MedicalReminders from '@/components/dashboard/MedicalReminders';
+import HealthArticles from '@/components/dashboard/HealthArticles';
+import HealthSummary from '@/components/dashboard/HealthSummary';
 
 // Mock user data (in a real app, this would come from authentication context)
 const user = {
@@ -99,6 +105,7 @@ const healthMetrics = [
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeMetric, setActiveMetric] = useState('bloodPressure');
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -207,9 +214,12 @@ const Dashboard = () => {
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-fade-up">
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user.name}</h1>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user.name}</h1>
+                  <p className="text-muted-foreground">Here's your health overview for today</p>
+                </div>
                 <Button asChild>
-                  <Link to="/auth?type=register">Book Appointment</Link>
+                  <Link to="/appointments">Book Appointment</Link>
                 </Button>
               </div>
               
@@ -218,9 +228,9 @@ const Dashboard = () => {
                 {healthMetrics.map((metric, index) => (
                   <GlassCard key={metric.id} className="text-center">
                     <div className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${
-                      metric.status === 'normal' ? 'bg-green-100 text-green-600' : 
-                      metric.status === 'warning' ? 'bg-amber-100 text-amber-600' : 
-                      'bg-red-100 text-red-600'
+                      metric.status === 'normal' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 
+                      metric.status === 'warning' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 
+                      'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                     } mb-3`}>
                       {index === 0 ? <Activity className="h-5 w-5" /> :
                        index === 1 ? <Heart className="h-5 w-5" /> :
@@ -235,65 +245,115 @@ const Dashboard = () => {
                 ))}
               </div>
               
-              {/* Upcoming Appointments */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div>
-                    <CardTitle>Upcoming Appointments</CardTitle>
-                    <CardDescription>Your scheduled appointments</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/appointments">View All</Link>
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {upcomingAppointments.length > 0 ? (
-                    <div className="space-y-4">
-                      {upcomingAppointments.map((appointment) => (
-                        <div 
-                          key={appointment.id} 
-                          className="flex items-center justify-between p-4 border rounded-lg"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="bg-primary/10 p-3 rounded-full">
-                              <Stethoscope className="h-6 w-6 text-primary" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium">{appointment.doctor}</h4>
-                              <p className="text-sm text-muted-foreground">{appointment.specialty}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(appointment.date).toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric', 
-                                    year: 'numeric' 
-                                  })}
-                                </span>
-                                <Clock className="h-3.5 w-3.5 ml-2 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">{appointment.time}</span>
+              {/* Health Chart and Summary */}
+              <div className="grid md:grid-cols-4 gap-6">
+                <HealthChart activeMetric={activeMetric} />
+                <HealthSummary />
+              </div>
+              
+              {/* Chart Controls */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Button 
+                  variant={activeMetric === 'bloodPressure' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setActiveMetric('bloodPressure')}
+                >
+                  <Activity className="h-4 w-4 mr-1" />
+                  Blood Pressure
+                </Button>
+                <Button 
+                  variant={activeMetric === 'heartRate' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setActiveMetric('heartRate')}
+                >
+                  <Heart className="h-4 w-4 mr-1" />
+                  Heart Rate
+                </Button>
+                <Button 
+                  variant={activeMetric === 'bloodGlucose' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setActiveMetric('bloodGlucose')}
+                >
+                  <DropletsIcon className="h-4 w-4 mr-1" />
+                  Blood Glucose
+                </Button>
+                <Button 
+                  variant={activeMetric === 'weight' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setActiveMetric('weight')}
+                >
+                  <WeightIcon className="h-4 w-4 mr-1" />
+                  Weight
+                </Button>
+              </div>
+              
+              {/* Medical Reminders */}
+              <MedicalReminders />
+              
+              {/* Appointments & Articles Section */}
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Upcoming Appointments */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <div>
+                      <CardTitle>Upcoming Appointments</CardTitle>
+                      <CardDescription>Your scheduled appointments</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to="/appointments">View All</Link>
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    {upcomingAppointments.length > 0 ? (
+                      <div className="space-y-4">
+                        {upcomingAppointments.map((appointment) => (
+                          <div 
+                            key={appointment.id} 
+                            className="flex items-center justify-between p-4 border rounded-lg"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="bg-primary/10 p-3 rounded-full">
+                                <Stethoscope className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium">{appointment.doctor}</h4>
+                                <p className="text-sm text-muted-foreground">{appointment.specialty}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(appointment.date).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric', 
+                                      year: 'numeric' 
+                                    })}
+                                  </span>
+                                  <Clock className="h-3.5 w-3.5 ml-2 text-muted-foreground" />
+                                  <span className="text-xs text-muted-foreground">{appointment.time}</span>
+                                </div>
                               </div>
                             </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={appointment.type === 'video' ? 'outline' : 'secondary'}>
+                                {appointment.type === 'video' ? 'Video Call' : 'In-Person'}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={appointment.type === 'video' ? 'outline' : 'secondary'}>
-                              {appointment.type === 'video' ? 'Video Call' : 'In-Person'}
-                            </Badge>
-                            <Button size="sm" variant="outline">Details</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                      <h3 className="text-lg font-medium mb-1">No Upcoming Appointments</h3>
-                      <p className="text-muted-foreground mb-4">Book a consultation with a doctor</p>
-                      <Button>Book Appointment</Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                        <h3 className="text-lg font-medium mb-1">No Upcoming Appointments</h3>
+                        <p className="text-muted-foreground mb-4">Book a consultation with a doctor</p>
+                        <Button>Book Appointment</Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Health Articles */}
+                <HealthArticles />
+              </div>
               
               {/* Medications & Health Records */}
               <div className="grid md:grid-cols-2 gap-6">
