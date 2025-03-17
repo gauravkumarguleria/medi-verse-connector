@@ -15,26 +15,22 @@ const healthTrendsData = [
   { date: 'Jun 11', bloodPressure: 115, heartRate: 69, bloodGlucose: 88, weight: 68.2 },
 ];
 
-// Chart configuration for different metrics
+// Chart configuration for different metrics - fixed to match ChartConfig type
 const chartConfig = {
   bloodPressure: { 
-    label: 'Blood Pressure', 
-    color: '#8B5CF6',
+    label: 'Blood Pressure',
     theme: { light: '#8B5CF6', dark: '#A78BFA' }
   },
   heartRate: { 
-    label: 'Heart Rate', 
-    color: '#EF4444',
+    label: 'Heart Rate',
     theme: { light: '#EF4444', dark: '#F87171' }
   },
   bloodGlucose: { 
-    label: 'Blood Glucose', 
-    color: '#10B981',
+    label: 'Blood Glucose',
     theme: { light: '#10B981', dark: '#34D399' }
   },
   weight: { 
-    label: 'Weight', 
-    color: '#0EA5E9',
+    label: 'Weight',
     theme: { light: '#0EA5E9', dark: '#38BDF8' }
   }
 };
@@ -59,7 +55,8 @@ const HealthChart: React.FC<HealthChartProps> = ({ activeMetric }) => {
     }
   };
 
-  const formatYAxis = (value: number) => {
+  // Fixed to always return a string as required by YAxis tickFormatter
+  const formatYAxis = (value: number): string => {
     switch (activeMetric) {
       case 'bloodPressure':
         return `${value} mmHg`;
@@ -70,11 +67,22 @@ const HealthChart: React.FC<HealthChartProps> = ({ activeMetric }) => {
       case 'weight':
         return `${value} kg`;
       default:
-        return value;
+        return value.toString();
     }
   };
 
   const [min, max] = getYAxisDomain(activeMetric);
+  
+  // Helper function to get color based on metric
+  const getMetricColor = (metric: string): string => {
+    const colors = {
+      bloodPressure: '#8B5CF6',
+      heartRate: '#EF4444',
+      bloodGlucose: '#10B981',
+      weight: '#0EA5E9'
+    };
+    return colors[metric as keyof typeof colors] || '#8B5CF6';
+  };
 
   return (
     <Card className="col-span-3">
@@ -98,7 +106,7 @@ const HealthChart: React.FC<HealthChartProps> = ({ activeMetric }) => {
             <Line
               type="monotone"
               dataKey={activeMetric}
-              stroke={`var(--color-${activeMetric}, ${chartConfig[activeMetric as keyof typeof chartConfig]?.color})`}
+              stroke={getMetricColor(activeMetric)}
               strokeWidth={2}
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
