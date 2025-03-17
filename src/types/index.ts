@@ -54,3 +54,22 @@ export interface Medicine {
   requiresPrescription: boolean;
   image?: string;
 }
+
+// IoT-related types
+export interface IoTDevice {
+  id: string;
+  name: string;
+  type: string;
+  connectionStatus: 'connected' | 'disconnected';
+  lastSync: string;
+  batteryLevel: number;
+}
+
+export interface CloudReport {
+  id: string;
+  deviceId: string;
+  type: string;
+  timestamp: string;
+  data: Record<string, any>;
+  size: string;
+}

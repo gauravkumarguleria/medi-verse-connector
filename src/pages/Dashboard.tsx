@@ -18,7 +18,9 @@ import {
   Weight as WeightIcon,
   Droplets as DropletsIcon,
   BarChart2,
-  LineChart
+  LineChart,
+  Server,
+  Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -186,6 +188,14 @@ const Dashboard = () => {
               >
                 <MessageSquare className="h-5 w-5 mr-2" />
                 <span className="hidden md:inline">Messages</span>
+              </Button>
+              <Button
+                variant={activeTab === 'iot' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setActiveTab('iot')}
+              >
+                <Server className="h-5 w-5 mr-2" />
+                <span className="hidden md:inline">IoT Reports</span>
               </Button>
               <Button
                 variant={activeTab === 'profile' ? 'default' : 'ghost'}
@@ -486,11 +496,30 @@ const Dashboard = () => {
           
           {activeTab === 'messages' && <MessagesPage />}
           
+          {activeTab === 'iot' && (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
+              <div className="mb-6 text-muted-foreground">
+                <Server className="h-16 w-16" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">IoT Reports Dashboard</h2>
+              <p className="text-muted-foreground mb-6 text-center max-w-md">
+                View and download your IoT device reports and adjust your system settings based on device data.
+              </p>
+              <Button asChild>
+                <Link to="/iot-reports">
+                  <Download className="h-4 w-4 mr-2" />
+                  Go to IoT Reports
+                </Link>
+              </Button>
+            </div>
+          )}
+          
           {(activeTab !== 'overview' && 
             activeTab !== 'appointments' && 
             activeTab !== 'medications' && 
             activeTab !== 'records' && 
-            activeTab !== 'messages') && (
+            activeTab !== 'messages' &&
+            activeTab !== 'iot') && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
               <div className="mb-6 text-muted-foreground">
                 {activeTab === 'medications' && <PillBottle className="h-16 w-16" />}
