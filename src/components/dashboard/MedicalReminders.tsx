@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 // Mock reminders data
 const remindersList = [
@@ -41,7 +42,11 @@ const remindersList = [
   }
 ];
 
-const MedicalReminders = () => {
+interface MedicalRemindersProps {
+  className?: string;
+}
+
+const MedicalReminders: React.FC<MedicalRemindersProps> = ({ className }) => {
   const handleMarkComplete = (id: string, title: string) => {
     toast({
       title: "Reminder Completed",
@@ -50,7 +55,7 @@ const MedicalReminders = () => {
   };
 
   return (
-    <Card>
+    <Card className={cn(className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle>Medical Reminders</CardTitle>
