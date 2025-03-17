@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   FileText, 
@@ -110,6 +110,11 @@ const healthMetrics = [
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [activeMetric, setActiveMetric] = useState('bloodPressure');
+  const navigate = useNavigate();
+
+  const handleIoTButtonClick = () => {
+    navigate('/iot-reports');
+  };
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -507,11 +512,9 @@ const Dashboard = () => {
               <p className="text-muted-foreground mb-6 text-center max-w-md">
                 View and download your IoT device reports and adjust your system settings based on device data.
               </p>
-              <Button asChild>
-                <Link to="/iot-reports">
-                  <Download className="h-4 w-4 mr-2" />
-                  Go to IoT Reports
-                </Link>
+              <Button onClick={handleIoTButtonClick}>
+                <Download className="h-4 w-4 mr-2" />
+                Go to IoT Reports
               </Button>
             </div>
           )}
