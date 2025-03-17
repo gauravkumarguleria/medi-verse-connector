@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Preloader from "./components/ui/Preloader";
 import { ThemeProvider } from "./components/ui/ThemeProvider";
 import IoTReportsPage from "./components/iot/IoTReportsPage";
+import AppointmentPage from "./components/appointments/AppointmentPage";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/iot-reports" element={<IoTReportsPage />} />
+            <Route path="/appointments" element={<AppointmentPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
