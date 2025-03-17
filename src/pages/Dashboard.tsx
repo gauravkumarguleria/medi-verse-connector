@@ -12,7 +12,11 @@ import {
   BookOpen,
   Activity,
   Clock,
-  Search
+  Search,
+  Bell,
+  LogOut,
+  Weight,
+  Droplets
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import GlassCard from '@/components/ui/GlassCard';
 import AnimatedButton from '@/components/ui/AnimatedButton';
+import AppointmentPage from '@/components/appointments/AppointmentPage';
 
 // Mock user data (in a real app, this would come from authentication context)
 const user = {
@@ -410,11 +415,12 @@ const Dashboard = () => {
             </div>
           )}
           
+          {activeTab === 'appointments' && <AppointmentPage />}
+          
           {/* Other tabs would be implemented similarly */}
-          {activeTab !== 'overview' && (
+          {(activeTab !== 'overview' && activeTab !== 'appointments') && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
               <div className="mb-6 text-muted-foreground">
-                {activeTab === 'appointments' && <Calendar className="h-16 w-16" />}
                 {activeTab === 'medications' && <PillBottle className="h-16 w-16" />}
                 {activeTab === 'records' && <FileText className="h-16 w-16" />}
                 {activeTab === 'messages' && <MessageSquare className="h-16 w-16" />}
