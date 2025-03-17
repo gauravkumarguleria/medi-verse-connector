@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -259,232 +258,232 @@ const IoTReportsPage: React.FC = () => {
             <TabsTrigger value="devices">IoT Devices</TabsTrigger>
             <TabsTrigger value="adjustments">System Adjustments</TabsTrigger>
           </TabsList>
+        
+
+          <TabsContent value="reports" className="mt-0">
+            <Card>
+              <Table>
+                <TableCaption>A list of your IoT device reports.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Report Type</TableHead>
+                    <TableHead>Device</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10">Loading reports data...</TableCell>
+                    </TableRow>
+                  ) : filteredReports.length > 0 ? (
+                    filteredReports.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          {getReportIcon(report.reportType)}
+                          <span className="capitalize">{report.reportType} Report</span>
+                        </TableCell>
+                        <TableCell>{report.deviceName}</TableCell>
+                        <TableCell>
+                          {new Date(report.timestamp).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={report.status === 'processed' ? 'default' : report.status === 'pending' ? 'outline' : 'destructive'}>
+                            {report.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownloadReport(report.id)}
+                            title="Download Report"
+                          >
+                            <ArrowDownToLine className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Server className="h-10 w-10 text-muted-foreground mb-2" />
+                          <h3 className="text-lg font-medium">No reports found</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            {searchTerm ? "Try a different search term" : "No reports available from the cloud"}
+                          </p>
+                          <Button onClick={() => setSearchTerm('')}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Refresh
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="devices" className="mt-0">
+            <Card>
+              <Table>
+                <TableCaption>A list of your connected IoT devices.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Device</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Synced</TableHead>
+                    <TableHead>Battery</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10">Loading devices data...</TableCell>
+                    </TableRow>
+                  ) : filteredDevices.length > 0 ? (
+                    filteredDevices.map((device) => (
+                      <TableRow key={device.id}>
+                        <TableCell className="font-medium">{device.name}</TableCell>
+                        <TableCell>{device.type}</TableCell>
+                        <TableCell>
+                          <Badge variant={device.status === 'online' ? 'default' : device.status === 'offline' ? 'outline' : 'destructive'}>
+                            {device.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(device.lastSynced).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                          {' '}
+                          ({new Date(device.lastSynced).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })})
+                        </TableCell>
+                        <TableCell className="flex items-center gap-2">
+                          <Battery className={`h-4 w-4 ${
+                            device.batteryLevel > 70 ? 'text-green-500' : 
+                            device.batteryLevel > 30 ? 'text-yellow-500' : 
+                            'text-red-500'
+                          }`} />
+                          <span>{device.batteryLevel}%</span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Smartphone className="h-10 w-10 text-muted-foreground mb-2" />
+                          <h3 className="text-lg font-medium">No devices found</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            {searchTerm ? "Try a different search term" : "No IoT devices connected"}
+                          </p>
+                          <Button onClick={() => setSearchTerm('')}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Refresh
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="adjustments" className="mt-0">
+            <Card>
+              <Table>
+                <TableCaption>System adjustments based on IoT data.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Recommendation</TableHead>
+                    <TableHead>Severity</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10">Loading adjustments data...</TableCell>
+                    </TableRow>
+                  ) : filteredAdjustments.length > 0 ? (
+                    filteredAdjustments.map((adjustment) => (
+                      <TableRow key={adjustment.id}>
+                        <TableCell className="font-medium capitalize">{adjustment.recommendationType}</TableCell>
+                        <TableCell>{adjustment.recommendation}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getAdjustmentBadgeColor(adjustment.severity)}`}>
+                            {adjustment.severity}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {adjustment.applied ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-300">Applied</Badge>
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                {adjustment.appliedAt ? new Date(adjustment.appliedAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric'
+                                }) : ''}
+                              </span>
+                            </div>
+                          ) : (
+                            <Badge variant="outline">Pending</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {!adjustment.applied && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleApplyAdjustment(adjustment.id)}
+                            >
+                              Apply
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Settings className="h-10 w-10 text-muted-foreground mb-2" />
+                          <h3 className="text-lg font-medium">No adjustments found</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            {searchTerm ? "Try a different search term" : "No system adjustments needed"}
+                          </p>
+                          <Button onClick={() => setSearchTerm('')}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Refresh
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
-
-      {/* Tabs Content */}
-      <TabsContent value="reports" className="mt-0">
-        <Card>
-          <Table>
-            <TableCaption>A list of your IoT device reports.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Report Type</TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">Loading reports data...</TableCell>
-                </TableRow>
-              ) : filteredReports.length > 0 ? (
-                filteredReports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell className="font-medium flex items-center gap-2">
-                      {getReportIcon(report.reportType)}
-                      <span className="capitalize">{report.reportType} Report</span>
-                    </TableCell>
-                    <TableCell>{report.deviceName}</TableCell>
-                    <TableCell>
-                      {new Date(report.timestamp).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={report.status === 'processed' ? 'default' : report.status === 'pending' ? 'outline' : 'destructive'}>
-                        {report.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDownloadReport(report.id)}
-                        title="Download Report"
-                      >
-                        <ArrowDownToLine className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Server className="h-10 w-10 text-muted-foreground mb-2" />
-                      <h3 className="text-lg font-medium">No reports found</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {searchTerm ? "Try a different search term" : "No reports available from the cloud"}
-                      </p>
-                      <Button onClick={() => setSearchTerm('')}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="devices" className="mt-0">
-        <Card>
-          <Table>
-            <TableCaption>A list of your connected IoT devices.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Device</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Synced</TableHead>
-                <TableHead>Battery</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">Loading devices data...</TableCell>
-                </TableRow>
-              ) : filteredDevices.length > 0 ? (
-                filteredDevices.map((device) => (
-                  <TableRow key={device.id}>
-                    <TableCell className="font-medium">{device.name}</TableCell>
-                    <TableCell>{device.type}</TableCell>
-                    <TableCell>
-                      <Badge variant={device.status === 'online' ? 'default' : device.status === 'offline' ? 'outline' : 'destructive'}>
-                        {device.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(device.lastSynced).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                      {' '}
-                      ({new Date(device.lastSynced).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                      })})
-                    </TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      <Battery className={`h-4 w-4 ${
-                        device.batteryLevel > 70 ? 'text-green-500' : 
-                        device.batteryLevel > 30 ? 'text-yellow-500' : 
-                        'text-red-500'
-                      }`} />
-                      <span>{device.batteryLevel}%</span>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Smartphone className="h-10 w-10 text-muted-foreground mb-2" />
-                      <h3 className="text-lg font-medium">No devices found</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {searchTerm ? "Try a different search term" : "No IoT devices connected"}
-                      </p>
-                      <Button onClick={() => setSearchTerm('')}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="adjustments" className="mt-0">
-        <Card>
-          <Table>
-            <TableCaption>System adjustments based on IoT data.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Recommendation</TableHead>
-                <TableHead>Severity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">Loading adjustments data...</TableCell>
-                </TableRow>
-              ) : filteredAdjustments.length > 0 ? (
-                filteredAdjustments.map((adjustment) => (
-                  <TableRow key={adjustment.id}>
-                    <TableCell className="font-medium capitalize">{adjustment.recommendationType}</TableCell>
-                    <TableCell>{adjustment.recommendation}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getAdjustmentBadgeColor(adjustment.severity)}`}>
-                        {adjustment.severity}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {adjustment.applied ? (
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-300">Applied</Badge>
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">
-                            {adjustment.appliedAt ? new Date(adjustment.appliedAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            }) : ''}
-                          </span>
-                        </div>
-                      ) : (
-                        <Badge variant="outline">Pending</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {!adjustment.applied && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleApplyAdjustment(adjustment.id)}
-                        >
-                          Apply
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Settings className="h-10 w-10 text-muted-foreground mb-2" />
-                      <h3 className="text-lg font-medium">No adjustments found</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {searchTerm ? "Try a different search term" : "No system adjustments needed"}
-                      </p>
-                      <Button onClick={() => setSearchTerm('')}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
-      </TabsContent>
 
       {/* System Settings Adjustment Section */}
       <Card className="mt-8">
