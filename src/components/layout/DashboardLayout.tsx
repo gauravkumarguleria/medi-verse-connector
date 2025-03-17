@@ -18,20 +18,14 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
-  Stethoscope, 
-  Calendar, 
-  MessageSquare, 
-  FileText, 
   Settings, 
   LogOut,
-  CircuitBoard, 
   User,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ThemeModeToggle } from '../ui/ThemeModeToggle';
-import { Checkbox } from '../ui/checkbox';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -43,7 +37,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarHidden, setSidebarHidden] = useState(false);
 
   const isActiveRoute = (route: string) => {
-    return location.pathname === route;
+    return location.pathname.includes(route);
   };
 
   const handleLogout = () => {
@@ -81,52 +75,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                         >
                           <Home className="h-5 w-5" />
                           <span>Dashboard</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/iot-reports')}
-                          isActive={isActiveRoute('/iot-reports')}
-                          tooltip="IoT Reports"
-                        >
-                          <CircuitBoard className="h-5 w-5" />
-                          <span>IoT Reports</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-                
-                <SidebarGroup>
-                  <SidebarGroupLabel>Medical</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/appointments')}
-                          isActive={isActiveRoute('/appointments')}
-                          tooltip="Appointments"
-                        >
-                          <Calendar className="h-5 w-5" />
-                          <span>Appointments</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Medical Records">
-                          <FileText className="h-5 w-5" />
-                          <span>Medical Records</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Medications">
-                          <Stethoscope className="h-5 w-5" />
-                          <span>Medications</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Messages">
-                          <MessageSquare className="h-5 w-5" />
-                          <span>Messages</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     </SidebarMenu>
