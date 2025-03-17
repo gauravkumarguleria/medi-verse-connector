@@ -38,6 +38,7 @@ import MedicalReminders from '@/components/dashboard/MedicalReminders';
 import HealthArticles from '@/components/dashboard/HealthArticles';
 import HealthSummary from '@/components/dashboard/HealthSummary';
 import { ThemeModeToggle } from '@/components/ui/ThemeModeToggle';
+import ProfileSection from '@/components/profile/ProfileSection';
 
 // Mock user data (in a real app, this would come from authentication context)
 const user = {
@@ -147,7 +148,6 @@ const Dashboard = () => {
       </header>
       
       <div className="flex">
-        {/* Sidebar */}
         <aside className="w-16 md:w-64 fixed left-0 top-16 bottom-0 bg-background border-r z-20">
           <div className="py-6 flex flex-col h-full">
             <nav className="space-y-1 px-2">
@@ -516,12 +516,15 @@ const Dashboard = () => {
             </div>
           )}
           
+          {activeTab === 'profile' && <ProfileSection user={user} />}
+          
           {(activeTab !== 'overview' && 
             activeTab !== 'appointments' && 
             activeTab !== 'medications' && 
             activeTab !== 'records' && 
             activeTab !== 'messages' &&
-            activeTab !== 'iot') && (
+            activeTab !== 'iot' &&
+            activeTab !== 'profile') && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
               <div className="mb-6 text-muted-foreground">
                 {activeTab === 'medications' && <PillBottle className="h-16 w-16" />}
