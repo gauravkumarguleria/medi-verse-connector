@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -17,6 +16,7 @@ import AnimatedButton from '@/components/ui/AnimatedButton';
 import GlassCard from '@/components/ui/GlassCard';
 import CircleBackground from '@/components/ui/CircleBackground';
 import FeatureCard from '@/components/ui/FeatureCard';
+import FeatureSection from '@/components/sections/FeatureSection';
 import { Feature } from '@/types';
 
 const Index = () => {
@@ -114,7 +114,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Overview Section */}
       <section id="learn-more" className="py-20 bg-gradient-to-b from-background to-secondary/20">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-12">
@@ -131,6 +131,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Detailed Feature Section */}
+      <FeatureSection />
 
       {/* User Roles Section */}
       <section className="py-20 bg-background relative">
