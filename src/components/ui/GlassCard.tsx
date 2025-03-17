@@ -6,15 +6,18 @@ interface GlassCardProps {
   className?: string;
   children: React.ReactNode;
   hoverEffect?: boolean;
+  style?: React.CSSProperties;
 }
 
 const GlassCard: React.FC<GlassCardProps> = ({ 
   className, 
   children, 
-  hoverEffect = true 
+  hoverEffect = true,
+  style
 }) => {
   return (
     <div
+      style={style}
       className={cn(
         'relative overflow-hidden rounded-xl bg-white/30 p-6 backdrop-blur-lg border border-white/20 shadow-sm',
         hoverEffect && 'transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] hover:bg-white/40',

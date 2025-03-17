@@ -13,6 +13,7 @@ interface AnimatedButtonProps {
   type?: 'button' | 'submit' | 'reset';
   shine?: boolean;
   href?: string;
+  asChild?: boolean;
 }
 
 const AnimatedButton = ({
@@ -25,6 +26,7 @@ const AnimatedButton = ({
   type = 'button',
   shine = true,
   href,
+  asChild = false,
 }: AnimatedButtonProps) => {
   const content = (
     <Button
@@ -38,7 +40,7 @@ const AnimatedButton = ({
       onClick={onClick}
       disabled={disabled}
       type={type}
-      asChild={!!href}
+      asChild={asChild || !!href}
     >
       <>
         {children}
@@ -49,7 +51,7 @@ const AnimatedButton = ({
     </Button>
   );
 
-  if (href) {
+  if (href && !asChild) {
     return <a href={href}>{content}</a>;
   }
 
