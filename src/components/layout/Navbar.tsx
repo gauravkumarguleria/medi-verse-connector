@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AnimatedButton from '../ui/AnimatedButton';
 import { Menu, X } from 'lucide-react';
+import { ThemeModeToggle } from '../ui/ThemeModeToggle';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -40,7 +41,7 @@ const Navbar: React.FC = () => {
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
         isScrolled
-          ? 'py-3 bg-white/80 backdrop-blur-lg shadow-sm'
+          ? 'py-3 bg-white/80 dark:bg-background/80 backdrop-blur-lg shadow-sm'
           : 'py-5 bg-transparent'
       )}
     >
@@ -86,6 +87,7 @@ const Navbar: React.FC = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
+          <ThemeModeToggle />
           <Button asChild variant="ghost" size="sm">
             <Link to="/auth?type=login">Login</Link>
           </Button>
@@ -112,7 +114,7 @@ const Navbar: React.FC = () => {
       {/* Mobile Navigation */}
       <div
         className={cn(
-          'md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg shadow-sm overflow-hidden transition-all duration-300 ease-in-out',
+          'md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-background/95 backdrop-blur-lg shadow-sm overflow-hidden transition-all duration-300 ease-in-out',
           mobileMenuOpen ? 'max-h-[400px] py-4' : 'max-h-0 py-0'
         )}
       >
@@ -149,13 +151,16 @@ const Navbar: React.FC = () => {
             )}>
             Contact
           </Link>
-          <div className="flex gap-4 py-2">
-            <Button asChild variant="outline" className="flex-1">
-              <Link to="/auth?type=login">Login</Link>
-            </Button>
-            <AnimatedButton asChild className="flex-1">
-              <Link to="/auth?type=register">Get Started</Link>
-            </AnimatedButton>
+          <div className="flex items-center justify-between py-2">
+            <ThemeModeToggle />
+            <div className="flex gap-4 ml-4">
+              <Button asChild variant="outline" className="flex-1">
+                <Link to="/auth?type=login">Login</Link>
+              </Button>
+              <AnimatedButton asChild className="flex-1">
+                <Link to="/auth?type=register">Get Started</Link>
+              </AnimatedButton>
+            </div>
           </div>
         </div>
       </div>
