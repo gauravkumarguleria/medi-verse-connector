@@ -13,10 +13,10 @@ import {
   Activity,
   Clock,
   Search,
-  Bell,
-  LogOut,
-  Weight,
-  Droplets
+  Bell as BellIcon,
+  LogOut as LogOutIcon,
+  Weight as WeightIcon,
+  Droplets as DropletsIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,7 +118,7 @@ const Dashboard = () => {
           
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
+              <BellIcon className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
               <img 
@@ -192,7 +192,7 @@ const Dashboard = () => {
                 variant="outline"
                 className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
               >
-                <LogOut className="h-5 w-5 mr-2" />
+                <LogOutIcon className="h-5 w-5 mr-2" />
                 <span className="hidden md:inline">Log Out</span>
               </Button>
             </div>
@@ -221,8 +221,8 @@ const Dashboard = () => {
                     } mb-3`}>
                       {index === 0 ? <Activity className="h-5 w-5" /> :
                        index === 1 ? <Heart className="h-5 w-5" /> :
-                       index === 2 ? <Weight className="h-5 w-5" /> :
-                       <Droplets className="h-5 w-5" />}
+                       index === 2 ? <WeightIcon className="h-5 w-5" /> :
+                       <DropletsIcon className="h-5 w-5" />}
                     </div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">{metric.name}</h3>
                     <p className="text-2xl font-semibold">
@@ -417,7 +417,6 @@ const Dashboard = () => {
           
           {activeTab === 'appointments' && <AppointmentPage />}
           
-          {/* Other tabs would be implemented similarly */}
           {(activeTab !== 'overview' && activeTab !== 'appointments') && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
               <div className="mb-6 text-muted-foreground">
@@ -442,71 +441,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-// Custom icons for the Dashboard
-const Bell = (props: React.ComponentProps<'svg'>) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    {...props}
-  >
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-  </svg>
-);
-
-const LogOut = (props: React.ComponentProps<'svg'>) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    {...props}
-  >
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" y1="12" x2="9" y2="12" />
-  </svg>
-);
-
-const Weight = (props: React.ComponentProps<'svg'>) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    {...props}
-  >
-    <circle cx="12" cy="5" r="3" />
-    <path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.925-2.54L19.4 9.5A2 2 0 0 0 17.48 8Z" />
-  </svg>
-);
-
-const Droplets = (props: React.ComponentProps<'svg'>) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    {...props}
-  >
-    <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" />
-    <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97" />
-  </svg>
-);
 
 export default Dashboard;
