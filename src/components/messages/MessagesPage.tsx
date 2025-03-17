@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Search, Plus, MessageCircle, Send, MoreVertical, Paperclip, ChevronLeft } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Search, Plus, MessageCircle, Send, MoreVertical, Paperclip, ChevronLeft, Download, File, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { toast } from '@/hooks/use-toast';
 import GlassCard from '@/components/ui/GlassCard';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 
 // Mock data for conversations
 const conversations = [
@@ -112,6 +114,19 @@ const messageHistory = [
     time: '10:42 AM',
     sender: 'recipient',
     status: 'delivered'
+  },
+  {
+    id: 'm5',
+    text: '',
+    time: '10:45 AM',
+    sender: 'recipient',
+    status: 'delivered',
+    attachment: {
+      name: 'test_results.pdf',
+      size: '2.3 MB',
+      type: 'application/pdf',
+      url: '#'
+    }
   }
 ];
 
@@ -120,6 +135,8 @@ const MessagesPage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversation(id);
@@ -127,11 +144,66 @@ const MessagesPage = () => {
   };
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // In a real app, send message to the API
+    if (newMessage.trim() || attachments.length > 0) {
+      // In a real app, send message and attachments to the API
       console.log('Sending message:', newMessage);
+      console.log('Attachments:', attachments);
+      toast({
+        title: attachments.length > 0 ? "Message with files sent" : "Message sent",
+        description: "Your message has been delivered successfully."
+      });
       setNewMessage('');
+      setAttachments([]);
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      
+      // Check if any file is too large (>10MB)
+      const tooLargeFiles = newFiles.filter(file => file.size > 10 * 1024 * 1024);
+      
+      if (tooLargeFiles.length > 0) {
+        toast({
+          title: "File too large",
+          description: "Files must be less than 10MB in size.",
+          variant: "destructive"
+        });
+        
+        // Filter out too large files
+        const validFiles = newFiles.filter(file => file.size <= 10 * 1024 * 1024);
+        setAttachments(prev => [...prev, ...validFiles]);
+      } else {
+        setAttachments(prev => [...prev, ...newFiles]);
+      }
+    }
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleDownloadFile = (fileName: string) => {
+    // In a real app, this would download the actual file from your backend
+    toast({
+      title: "Download started",
+      description: `Downloading ${fileName}...`
+    });
+    
+    // Simulate a download (in a real app, you would use a proper file URL)
+    setTimeout(() => {
+      toast({
+        title: "Download complete",
+        description: `${fileName} has been downloaded.`
+      });
+    }, 1500);
   };
 
   const filteredConversations = conversations.filter(conversation => {
@@ -145,6 +217,12 @@ const MessagesPage = () => {
   });
 
   const currentConversation = conversations.find(conv => conv.id === selectedConversation);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col">
@@ -270,7 +348,26 @@ const MessagesPage = () => {
                             : 'bg-muted'
                         }`}
                       >
-                        <p>{message.text}</p>
+                        {message.text && <p>{message.text}</p>}
+                        {message.attachment && (
+                          <div className="mt-2 border rounded-md p-2 bg-background/50 dark:bg-background/10">
+                            <div className="flex items-center">
+                              <File className="h-5 w-5 mr-2" />
+                              <div className="flex-1 overflow-hidden">
+                                <p className="text-sm font-medium truncate">{message.attachment.name}</p>
+                                <p className="text-xs text-muted-foreground">{message.attachment.size}</p>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => handleDownloadFile(message.attachment.name)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                         <div className={`text-xs mt-1 ${
                           message.sender === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'
                         }`}>
@@ -281,6 +378,28 @@ const MessagesPage = () => {
                   ))}
                 </div>
               </ScrollArea>
+
+              {attachments.length > 0 && (
+                <div className="px-4 py-2 border-t">
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((file, index) => (
+                      <div key={index} className="flex items-center bg-muted rounded-md p-2 pr-1">
+                        <File className="h-4 w-4 mr-2" />
+                        <span className="text-sm truncate max-w-[150px]">{file.name}</span>
+                        <span className="text-xs text-muted-foreground ml-2">({formatFileSize(file.size)})</span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 ml-1"
+                          onClick={() => handleRemoveAttachment(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="p-4 border-t">
                 <div className="flex items-end gap-2">
@@ -297,10 +416,28 @@ const MessagesPage = () => {
                     }}
                   />
                   <div className="flex flex-col gap-2">
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      multiple
+                    />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="rounded-full"
+                      onClick={triggerFileInput}
+                      title="Attach file"
+                    >
                       <Paperclip className="h-5 w-5" />
                     </Button>
-                    <Button size="icon" className="rounded-full" onClick={handleSendMessage}>
+                    <Button 
+                      size="icon" 
+                      className="rounded-full" 
+                      onClick={handleSendMessage}
+                      title="Send message"
+                    >
                       <Send className="h-5 w-5" />
                     </Button>
                   </div>
@@ -314,10 +451,10 @@ const MessagesPage = () => {
               <p className="text-muted-foreground mb-6 max-w-md">
                 Select a conversation to view messages or start a new conversation with a healthcare provider.
               </p>
-              <Button>
+              <AnimatedButton>
                 <Plus className="h-4 w-4 mr-2" />
                 Start New Conversation
-              </Button>
+              </AnimatedButton>
             </div>
           )}
         </div>
