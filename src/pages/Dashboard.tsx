@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import GlassCard from '@/components/ui/GlassCard';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
+import MedicationPage from '@/components/medications/MedicationPage';
 
 // Mock user data (in a real app, this would come from authentication context)
 const user = {
@@ -417,7 +418,9 @@ const Dashboard = () => {
           
           {activeTab === 'appointments' && <AppointmentPage />}
           
-          {(activeTab !== 'overview' && activeTab !== 'appointments') && (
+          {activeTab === 'medications' && <MedicationPage />}
+          
+          {(activeTab !== 'overview' && activeTab !== 'appointments' && activeTab !== 'medications') && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
               <div className="mb-6 text-muted-foreground">
                 {activeTab === 'medications' && <PillBottle className="h-16 w-16" />}
