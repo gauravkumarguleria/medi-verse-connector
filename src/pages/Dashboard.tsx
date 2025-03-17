@@ -37,6 +37,7 @@ import HealthChart from '@/components/dashboard/HealthChart';
 import MedicalReminders from '@/components/dashboard/MedicalReminders';
 import HealthArticles from '@/components/dashboard/HealthArticles';
 import HealthSummary from '@/components/dashboard/HealthSummary';
+import { ThemeModeToggle } from '@/components/ui/ThemeModeToggle';
 
 // Mock user data (in a real app, this would come from authentication context)
 const user = {
@@ -129,6 +130,7 @@ const Dashboard = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <ThemeModeToggle />
             <Button variant="ghost" size="icon">
               <BellIcon className="h-5 w-5" />
             </Button>
