@@ -28,6 +28,7 @@ import AnimatedButton from '@/components/ui/AnimatedButton';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
 import MedicationPage from '@/components/medications/MedicationPage';
 import HealthRecordsPage from '@/components/records/HealthRecordsPage';
+import MessagesPage from '@/components/messages/MessagesPage';
 
 // Mock user data (in a real app, this would come from authentication context)
 const user = {
@@ -423,7 +424,13 @@ const Dashboard = () => {
           
           {activeTab === 'records' && <HealthRecordsPage />}
           
-          {(activeTab !== 'overview' && activeTab !== 'appointments' && activeTab !== 'medications' && activeTab !== 'records') && (
+          {activeTab === 'messages' && <MessagesPage />}
+          
+          {(activeTab !== 'overview' && 
+            activeTab !== 'appointments' && 
+            activeTab !== 'medications' && 
+            activeTab !== 'records' && 
+            activeTab !== 'messages') && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
               <div className="mb-6 text-muted-foreground">
                 {activeTab === 'medications' && <PillBottle className="h-16 w-16" />}
