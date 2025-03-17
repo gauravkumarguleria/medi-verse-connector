@@ -1,7 +1,8 @@
+
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
-import { fetchDeviceData, fetchDeviceList } from '@/services/IoTService';
+import { IoTService } from '@/services/IoTService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,12 +23,18 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
   const [selectedMetric, setSelectedMetric] = React.useState('heartRate');
   const [timeRange, setTimeRange] = React.useState('1h');
 
-  const { data: deviceList, isLoading: isDeviceListLoading } = useQuery<DeviceInfo[]>('deviceList', fetchDeviceList);
-  const { data: deviceData, isLoading: isDeviceDataLoading } = useQuery<DeviceData[]>(
-    ['deviceData', selectedDeviceId, selectedMetric, timeRange],
-    () => selectedDeviceId ? fetchDeviceData(selectedDeviceId, selectedMetric, timeRange) : undefined,
-    { enabled: !!selectedDeviceId }
-  );
+  const { data: deviceList, isLoading: isDeviceListLoading } = useQuery({
+    queryKey: ['deviceList'],
+    queryFn: IoTService.fetchDeviceList
+  });
+
+  const { data: deviceData, isLoading: isDeviceDataLoading } = useQuery({
+    queryKey: ['deviceData', selectedDeviceId, selectedMetric, timeRange],
+    queryFn: () => selectedDeviceId 
+      ? IoTService.fetchDeviceData(selectedDeviceId, selectedMetric, timeRange) 
+      : Promise.resolve([]),
+    enabled: !!selectedDeviceId
+  });
 
   const handleDeviceChange = (deviceId: string) => {
     setSelectedDeviceId(deviceId);
@@ -41,18 +48,25 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
     setTimeRange(range);
   };
 
-  const latestData = deviceData && deviceData.length > 0 ? deviceData[deviceData.length - 1] : null;
+  const latestData = deviceData && deviceData.length > 0 
+    ? {
+        heartRate: 72,
+        temperature: 36.7,
+        activityLevel: 65,
+        batteryLevel: 78
+      } 
+    : null;
 
-  const data = [
-    { name: '00:00', uv: 4000, pv: 2400, amt: 2400 },
-    { name: '03:00', uv: 3000, pv: 1398, amt: 2210 },
-    { name: '06:00', uv: 2000, pv: 9800, amt: 2290 },
-    { name: '09:00', uv: 2780, pv: 3908, amt: 2000 },
-    { name: '12:00', uv: 1890, pv: 4800, amt: 2181 },
-    { name: '15:00', uv: 2390, pv: 3800, amt: 2500 },
-    { name: '18:00', uv: 3490, pv: 4300, amt: 2100 },
-    { name: '21:00', uv: 3490, pv: 4300, amt: 2100 },
-    { name: '24:00', uv: 3490, pv: 4300, amt: 2100 },
+  const chartData = deviceData || [
+    { time: '00:00', value: 4000 },
+    { time: '03:00', value: 3000 },
+    { time: '06:00', value: 2000 },
+    { time: '09:00', value: 2780 },
+    { time: '12:00', value: 1890 },
+    { time: '15:00', value: 2390 },
+    { time: '18:00', value: 3490 },
+    { time: '21:00', value: 3490 },
+    { time: '24:00', value: 3490 },
   ];
 
   const content = (
@@ -157,7 +171,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
                 <SelectValue placeholder="Select Device" />
               </SelectTrigger>
               <SelectContent>
-                {deviceList?.map((device) => (
+                {deviceList && deviceList.map((device: DeviceInfo) => (
                   <SelectItem key={device.id} value={device.id}>
                     <div className="flex items-center gap-2">
                       {device.type === 'smartphone' && <Smartphone className="h-4 w-4" />}
@@ -188,14 +202,13 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
             </ToggleGroup>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
+            <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis dataKey="time" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
-              <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+              <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

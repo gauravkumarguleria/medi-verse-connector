@@ -39,3 +39,21 @@ export interface SystemAdjustment {
   applied: boolean;
   appliedAt?: string;
 }
+
+// Add the missing interfaces
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  lastConnected?: string;
+  batteryLevel: number;
+}
+
+export interface DeviceData {
+  timestamp: string;
+  heartRate: number;
+  temperature: number;
+  activityLevel: number;
+  batteryLevel: number;
+}

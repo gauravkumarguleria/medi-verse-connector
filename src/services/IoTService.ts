@@ -1,4 +1,3 @@
-
 import { IoTReport, IoTDevice, SystemAdjustment } from '../types/iotReports';
 
 // Mock data for IoT reports
@@ -92,6 +91,42 @@ const mockSystemAdjustments: SystemAdjustment[] = [
   { id: '5', reportId: '5', recommendationType: 'diet', recommendation: 'Increase daily water intake to 2L', severity: 'medium', applied: false }
 ];
 
+// Mock device data for charts
+const mockDeviceData = {
+  heartRate: [
+    { time: '00:00', value: 72 },
+    { time: '04:00', value: 68 },
+    { time: '08:00', value: 75 },
+    { time: '12:00', value: 82 },
+    { time: '16:00', value: 78 },
+    { time: '20:00', value: 71 }
+  ],
+  temperature: [
+    { time: '00:00', value: 36.5 },
+    { time: '04:00', value: 36.3 },
+    { time: '08:00', value: 36.7 },
+    { time: '12:00', value: 37.0 },
+    { time: '16:00', value: 36.8 },
+    { time: '20:00', value: 36.6 }
+  ],
+  activityLevel: [
+    { time: '00:00', value: 10 },
+    { time: '04:00', value: 5 },
+    { time: '08:00', value: 45 },
+    { time: '12:00', value: 65 },
+    { time: '16:00', value: 80 },
+    { time: '20:00', value: 30 }
+  ],
+  batteryLevel: [
+    { time: '00:00', value: 90 },
+    { time: '04:00', value: 85 },
+    { time: '08:00', value: 78 },
+    { time: '12:00', value: 72 },
+    { time: '16:00', value: 65 },
+    { time: '20:00', value: 60 }
+  ],
+};
+
 export const IoTService = {
   // Get all reports
   getReports: async (): Promise<IoTReport[]> => {
@@ -155,5 +190,30 @@ export const IoTService = {
         resolve(blob);
       }, 800);
     });
+  },
+
+  // Fetch device data for charts
+  fetchDeviceData: async (deviceId: string, metricType: string, timeRange: string): Promise<any[]> => {
+    console.log(`Fetching ${metricType} data for device ${deviceId} over ${timeRange}`);
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Return mock data based on metric type
+        resolve(mockDeviceData[metricType as keyof typeof mockDeviceData] || []);
+      }, 800);
+    });
+  },
+
+  // Fetch list of devices
+  fetchDeviceList: async (): Promise<any[]> => {
+    console.log('Fetching device list');
+    // Return the mock devices
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mockIoTDevices);
+      }, 800);
+    });
   }
 };
+
+export default IoTService;
