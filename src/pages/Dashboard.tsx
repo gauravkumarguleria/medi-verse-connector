@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import HealthSummary from '@/components/dashboard/HealthSummary';
 import HealthChart from '@/components/dashboard/HealthChart';
@@ -7,6 +7,8 @@ import MedicalReminders from '@/components/dashboard/MedicalReminders';
 import HealthArticles from '@/components/dashboard/HealthArticles';
 
 const Dashboard: React.FC = () => {
+  const [activeMetric, setActiveMetric] = useState<string>('bloodPressure');
+  
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-up">
@@ -21,7 +23,7 @@ const Dashboard: React.FC = () => {
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="md:col-span-2">
-            <HealthChart />
+            <HealthChart activeMetric={activeMetric} />
           </div>
           <div>
             <MedicalReminders />
