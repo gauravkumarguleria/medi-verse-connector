@@ -8,7 +8,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/u
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface CallActionsProps {
   recipient: {
@@ -137,7 +137,9 @@ export function CallActions({ recipient }: CallActionsProps) {
       
       {/* Video Call Dialog/Drawer */}
       <CallContainer open={isVideoCallActive} onOpenChange={setIsVideoCallActive}>
-        <CallContent className={isMobile ? "px-4 pt-12 pb-8" : "sm:max-w-md"}>
+        <CallContent className={cn(
+          isMobile ? "h-[80vh] px-4 pt-8 pb-8" : "sm:max-w-md"
+        )}>
           <CallHeader>
             <CallTitle>Video Call with {recipient.name}</CallTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -153,14 +155,16 @@ export function CallActions({ recipient }: CallActionsProps) {
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
                 <Avatar className="h-20 w-20">
-                  <img src={recipient.avatar} alt={recipient.name} />
+                  <AvatarImage src={recipient.avatar} alt={recipient.name} />
+                  <AvatarFallback>{recipient.name.charAt(0)}</AvatarFallback>
                 </Avatar>
               </div>
             )}
             
             <div className="absolute bottom-4 right-4 bg-gray-800 rounded-lg p-2">
               <Avatar className="h-16 w-16">
-                <img src="https://i.pravatar.cc/150?img=12" alt="You" />
+                <AvatarImage src="https://i.pravatar.cc/150?img=12" alt="You" />
+                <AvatarFallback>You</AvatarFallback>
               </Avatar>
             </div>
           </div>
@@ -199,7 +203,9 @@ export function CallActions({ recipient }: CallActionsProps) {
       
       {/* Voice Call Dialog/Drawer */}
       <CallContainer open={isVoiceCallActive} onOpenChange={setIsVoiceCallActive}>
-        <CallContent className={isMobile ? "px-4 pt-12 pb-8" : "sm:max-w-[425px]"}>
+        <CallContent className={cn(
+          isMobile ? "h-[70vh] px-4 pt-8 pb-8" : "sm:max-w-[425px]"
+        )}>
           <CallHeader>
             <CallTitle>Voice Call with {recipient.name}</CallTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -209,7 +215,8 @@ export function CallActions({ recipient }: CallActionsProps) {
           
           <div className="flex flex-col items-center gap-4 py-6">
             <Avatar className="h-24 w-24">
-              <img src={recipient.avatar} alt={recipient.name} />
+              <AvatarImage src={recipient.avatar} alt={recipient.name} />
+              <AvatarFallback>{recipient.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <p className="text-lg font-medium">{recipient.name}</p>
             <p className="text-sm text-muted-foreground">{recipient.role}</p>
