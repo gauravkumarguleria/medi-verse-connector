@@ -10,6 +10,7 @@ import IoTReportsPage from '@/components/iot/IoTReportsPage';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
 import MedicationPage from '@/components/medications/MedicationPage';
 import HealthRecordsPage from '@/components/records/HealthRecordsPage';
+import MessagesPage from '@/components/messages/MessagesPage';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -56,6 +57,7 @@ const Dashboard = () => {
         <Route path="/appointments" element={<AppointmentPage hideLayout />} />
         <Route path="/medications" element={<MedicationPage />} />
         <Route path="/records" element={<HealthRecordsPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
       </Routes>
     </DashboardLayout>
   );
