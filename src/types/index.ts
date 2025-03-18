@@ -1,4 +1,3 @@
-
 export type UserRole = 'patient' | 'doctor' | 'pharmacist' | 'admin';
 
 export interface User {
@@ -7,6 +6,7 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  createdAt?: string; // Added createdAt property as optional
 }
 
 export interface Feature {
