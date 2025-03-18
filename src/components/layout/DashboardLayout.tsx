@@ -34,7 +34,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [sidebarHidden, setSidebarHidden] = useState(true); // Set default to true (sidebar hidden)
 
   const isActiveRoute = (route: string) => {
     return location.pathname.includes(route);
