@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -159,6 +158,17 @@ const Index = () => {
     }
   ];
 
+  // Sample videos for the hero background
+  const sampleVideos = [
+    "https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-white-sand-beach-and-palm-trees-1564-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-the-sea-and-sand-with-mountains-45056-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-clouds-and-blue-sky-2408-large.mp4"
+  ];
+
+  // Randomly select a background video
+  const randomVideo = sampleVideos[Math.floor(Math.random() * sampleVideos.length)];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -166,7 +176,7 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
         <VideoBackground 
-          videoSrc="/videos/medical-background.mp4" 
+          videoSrc={randomVideo} 
           overlayOpacity={70}
         />
         <CircleBackground className="z-10" />
