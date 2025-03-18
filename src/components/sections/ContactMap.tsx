@@ -10,7 +10,7 @@ const ContactMap = () => {
   const [mapToken, setMapToken] = useState('');
 
   // Himachal Pradesh coordinates (approximate center)
-  const himachalCenter = [77.1734, 31.1048]; // Long, Lat
+  const himachalCenter: [number, number] = [77.1734, 31.1048]; // Long, Lat
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -36,7 +36,7 @@ const ContactMap = () => {
     );
 
     // Add marker for Shimla
-    const shimlaCoordinates = [77.1734, 31.1048]; // Shimla coordinates
+    const shimlaCoordinates: [number, number] = [77.1734, 31.1048]; // Shimla coordinates
     new mapboxgl.Marker({ color: '#3b82f6' })
       .setLngLat(shimlaCoordinates)
       .setPopup(new mapboxgl.Popup().setHTML("<h3>MediVerse HQ</h3><p>Shimla, Himachal Pradesh</p>"))
