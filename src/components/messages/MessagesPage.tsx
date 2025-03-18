@@ -10,6 +10,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import FileAttachment from './FileAttachment';
+import { CallActions } from './CallActions';
 
 // Mock data for conversations
 const conversations = [
@@ -453,27 +454,34 @@ const MessagesPage = () => {
         >
           {selectedConversation && currentConversation ? (
             <>
-              <div className="p-4 border-b flex items-center justify-between">
-                <div className="flex items-center">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="md:hidden mr-2"
-                    onClick={() => setSelectedConversation(null)}
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  <Avatar className="h-10 w-10">
-                    <img src={currentConversation.recipient.avatar} alt={currentConversation.recipient.name} />
-                  </Avatar>
-                  <div className="ml-3">
-                    <h3 className="font-medium">{currentConversation.recipient.name}</h3>
-                    <p className="text-xs text-muted-foreground">{currentConversation.recipient.role}</p>
+              <div className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="md:hidden mr-2"
+                      onClick={() => setSelectedConversation(null)}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <Avatar className="h-10 w-10">
+                      <img src={currentConversation.recipient.avatar} alt={currentConversation.recipient.name} />
+                    </Avatar>
+                    <div className="ml-3">
+                      <h3 className="font-medium">{currentConversation.recipient.name}</h3>
+                      <p className="text-xs text-muted-foreground">{currentConversation.recipient.role}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Add Call Actions */}
+                  <div className="flex items-center gap-2">
+                    <CallActions recipient={currentConversation.recipient} />
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
               </div>
 
               <ScrollArea className="flex-1 p-4 relative">
