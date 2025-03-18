@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface VideoBackgroundProps {
   videoSrc: string;
@@ -17,6 +18,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
 }) => {
   const [videoError, setVideoError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const isMobile = useIsMobile();
 
   // List of sample videos that could be used if no specific video is provided
   const sampleVideos = [
@@ -47,6 +49,18 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
     setIsLoaded(true);
   };
 
+  // Use an optimized video size based on device type
+  const getOptimizedVideoSrc = (src: string) => {
+    if (!src) return '';
+    
+    // For mobile devices, try to load a smaller version if available
+    if (isMobile && src.includes('-large.mp4')) {
+      return src.replace('-large.mp4', '-medium.mp4');
+    }
+    
+    return src;
+  };
+
   // Common video props to ensure consistent behavior
   const videoProps = {
     className: "absolute w-full h-full object-cover",
@@ -65,7 +79,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
           {...videoProps}
           onError={handleVideoError}
         >
-          <source src={videoSrc || fallbackVideoSrc} type="video/mp4" />
+          <source src={getOptimizedVideoSrc(videoSrc || fallbackVideoSrc)} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       ) : fallbackImage ? (
@@ -76,7 +90,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
         />
       ) : (
         <video {...videoProps}>
-          <source src={fallbackVideoSrc} type="video/mp4" />
+          <source src={getOptimizedVideoSrc(fallbackVideoSrc)} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       )}
