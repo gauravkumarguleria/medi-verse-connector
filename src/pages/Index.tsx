@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -26,6 +27,7 @@ import GlassCard from '@/components/ui/GlassCard';
 import CircleBackground from '@/components/ui/CircleBackground';
 import FeatureCard from '@/components/ui/FeatureCard';
 import FeatureSection from '@/components/sections/FeatureSection';
+import VideoBackground from '@/components/ui/VideoBackground';
 import { Feature } from '@/types';
 
 const Index = () => {
@@ -163,11 +165,15 @@ const Index = () => {
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
-        <CircleBackground />
-        <div className="container px-4 md:px-6">
+        <VideoBackground 
+          videoSrc="/videos/medical-background.mp4" 
+          overlayOpacity={70}
+        />
+        <CircleBackground className="z-10" />
+        <div className="container px-4 md:px-6 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="flex-1 text-center md:text-left">
-              <div className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-sm font-medium text-muted-foreground mb-6 animate-fade-down">
+              <div className="inline-flex items-center rounded-full border border-border bg-background/80 backdrop-blur-sm px-3 py-1 text-sm font-medium text-muted-foreground mb-6 animate-fade-down">
                 <span className="flex h-2 w-2 rounded-full bg-medical-green mr-2"></span>
                 Healthcare Simplified
               </div>
@@ -191,12 +197,12 @@ const Index = () => {
                 <img 
                   src="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1050&q=80" 
                   alt="Healthcare professionals" 
-                  className="w-full h-full object-cover rounded-2xl shadow-xl preserve-3d transform rotate-3"
+                  className="w-full h-full object-cover rounded-2xl shadow-xl preserve-3d transform rotate-3 bg-white/10 backdrop-blur-sm"
                 />
                 <img 
                   src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1050&q=80" 
                   alt="Telehealth consultation" 
-                  className="w-full h-full object-cover rounded-2xl shadow-xl preserve-3d transform -rotate-2"
+                  className="w-full h-full object-cover rounded-2xl shadow-xl preserve-3d transform -rotate-2 bg-white/10 backdrop-blur-sm"
                 />
                 <div className="absolute -bottom-4 -right-4 w-48 h-48 bg-primary/10 rounded-full blur-3xl"></div>
                 <div className="absolute -top-4 -left-4 w-48 h-48 bg-medical-green/10 rounded-full blur-3xl"></div>
