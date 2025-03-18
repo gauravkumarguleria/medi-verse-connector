@@ -1,6 +1,5 @@
-
-import React, { useState, useRef } from 'react';
-import { Search, Plus, MessageCircle, Send, MoreVertical, Paperclip, ChevronLeft, Download, File, X } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { Search, Plus, MessageCircle, Send, MoreVertical, Paperclip, ChevronLeft, Share2, File, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,10 +7,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import GlassCard from '@/components/ui/GlassCard';
 import AnimatedButton from '@/components/ui/AnimatedButton';
+import FileAttachment from './FileAttachment';
 
 // Mock data for conversations
 const conversations = [
@@ -85,7 +83,7 @@ const conversations = [
   }
 ];
 
-// Mock message history for a conversation
+// Updated message history with more file examples
 const messageHistory = [
   {
     id: 'm1',
@@ -127,6 +125,19 @@ const messageHistory = [
       type: 'application/pdf',
       url: '#'
     }
+  },
+  {
+    id: 'm6',
+    text: 'I\'ve also attached my recent blood work results for your review.',
+    time: '10:50 AM',
+    sender: 'user',
+    status: 'delivered',
+    attachment: {
+      name: 'blood_work_results.pdf',
+      size: '1.8 MB',
+      type: 'application/pdf',
+      url: '#'
+    }
   }
 ];
 
@@ -136,11 +147,22 @@ const MessagesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversation(id);
     // In a real app, mark messages as read here
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleSendMessage = () => {
@@ -148,40 +170,93 @@ const MessagesPage = () => {
       // In a real app, send message and attachments to the API
       console.log('Sending message:', newMessage);
       console.log('Attachments:', attachments);
-      toast({
-        title: attachments.length > 0 ? "Message with files sent" : "Message sent",
-        description: "Your message has been delivered successfully."
-      });
+      
+      // Simulate message sending
+      if (attachments.length > 0) {
+        toast({
+          title: "Message with files sent",
+          description: "Your message has been delivered successfully."
+        });
+      } else {
+        toast({
+          title: "Message sent",
+          description: "Your message has been delivered successfully."
+        });
+      }
+      
       setNewMessage('');
       setAttachments([]);
+      scrollToBottom();
     }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      
-      // Check if any file is too large (>10MB)
-      const tooLargeFiles = newFiles.filter(file => file.size > 10 * 1024 * 1024);
-      
-      if (tooLargeFiles.length > 0) {
-        toast({
-          title: "File too large",
-          description: "Files must be less than 10MB in size.",
-          variant: "destructive"
-        });
-        
-        // Filter out too large files
-        const validFiles = newFiles.filter(file => file.size <= 10 * 1024 * 1024);
-        setAttachments(prev => [...prev, ...validFiles]);
-      } else {
-        setAttachments(prev => [...prev, ...newFiles]);
-      }
+      processFiles(newFiles);
     }
   };
 
+  const processFiles = (files: File[]) => {
+    // Check if any file is too large (>10MB)
+    const tooLargeFiles = files.filter(file => file.size > 10 * 1024 * 1024);
+    
+    if (tooLargeFiles.length > 0) {
+      toast({
+        title: "File too large",
+        description: "Files must be less than 10MB in size.",
+        variant: "destructive"
+      });
+    }
+    
+    // Filter out too large files
+    const validFiles = files.filter(file => file.size <= 10 * 1024 * 1024);
+    
+    // Set initial progress for each file
+    const newProgress = { ...uploadProgress };
+    validFiles.forEach(file => {
+      newProgress[file.name] = 0;
+    });
+    setUploadProgress(newProgress);
+    
+    // Simulate upload progress
+    validFiles.forEach(file => {
+      simulateFileUpload(file);
+    });
+    
+    setAttachments(prev => [...prev, ...validFiles]);
+  };
+
+  const simulateFileUpload = (file: File) => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress > 100) {
+        progress = 100;
+        clearInterval(interval);
+      }
+      
+      setUploadProgress(prev => ({
+        ...prev,
+        [file.name]: progress
+      }));
+    }, 200);
+  };
+
   const handleRemoveAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
+    setAttachments(prev => {
+      const newAttachments = [...prev];
+      const removedFile = newAttachments.splice(index, 1)[0];
+      
+      // Remove from progress tracking
+      setUploadProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[removedFile.name];
+        return newProgress;
+      });
+      
+      return newAttachments;
+    });
   };
 
   const triggerFileInput = () => {
@@ -205,6 +280,66 @@ const MessagesPage = () => {
       });
     }, 1500);
   };
+
+  const handleShareFile = (fileName: string) => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Shared medical document',
+        text: `Medical document: ${fileName}`,
+        url: window.location.href,
+      })
+      .then(() => {
+        toast({
+          title: "File shared successfully",
+        });
+      })
+      .catch((error) => {
+        console.error("Error sharing:", error);
+        // Fallback for error in sharing
+        navigator.clipboard.writeText(`${window.location.origin}/shared-file/${fileName}`);
+        toast({
+          title: "Link copied to clipboard",
+          description: "You can now paste and share it"
+        });
+      });
+    } else {
+      // Fallback for browsers that don't support navigator.share
+      navigator.clipboard.writeText(`${window.location.origin}/shared-file/${fileName}`);
+      toast({
+        title: "Link copied to clipboard",
+        description: "You can now paste and share it"
+      });
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      processFiles(droppedFiles);
+    }
+  }, []);
 
   const filteredConversations = conversations.filter(conversation => {
     const matchesSearch = conversation.recipient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -308,7 +443,14 @@ const MessagesPage = () => {
         </div>
 
         {/* Message Content */}
-        <div className={`w-full md:w-2/3 flex flex-col bg-background ${selectedConversation ? 'block' : 'hidden md:block'}`}>
+        <div 
+          className={`w-full md:w-2/3 flex flex-col bg-background ${selectedConversation ? 'block' : 'hidden md:block'}`}
+          ref={dropZoneRef}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           {selectedConversation && currentConversation ? (
             <>
               <div className="p-4 border-b flex items-center justify-between">
@@ -334,7 +476,7 @@ const MessagesPage = () => {
                 </Button>
               </div>
 
-              <ScrollArea className="flex-1 p-4">
+              <ScrollArea className="flex-1 p-4 relative">
                 <div className="space-y-4">
                   {messageHistory.map((message) => (
                     <div
@@ -350,22 +492,13 @@ const MessagesPage = () => {
                       >
                         {message.text && <p>{message.text}</p>}
                         {message.attachment && (
-                          <div className="mt-2 border rounded-md p-2 bg-background/50 dark:bg-background/10">
-                            <div className="flex items-center">
-                              <File className="h-5 w-5 mr-2" />
-                              <div className="flex-1 overflow-hidden">
-                                <p className="text-sm font-medium truncate">{message.attachment.name}</p>
-                                <p className="text-xs text-muted-foreground">{message.attachment.size}</p>
-                              </div>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8"
-                                onClick={() => handleDownloadFile(message.attachment.name)}
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
+                          <div className="mt-2">
+                            <FileAttachment 
+                              file={message.attachment}
+                              onDownload={() => handleDownloadFile(message.attachment.name)}
+                              onShare={() => handleShareFile(message.attachment.name)}
+                              className={`${message.sender === 'user' ? 'bg-primary/80' : 'bg-background/50 dark:bg-background/10'}`}
+                            />
                           </div>
                         )}
                         <div className={`text-xs mt-1 ${
@@ -376,26 +509,38 @@ const MessagesPage = () => {
                       </div>
                     </div>
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
+                
+                {/* File drop overlay */}
+                {isDragging && (
+                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-md border-2 border-dashed border-primary">
+                    <div className="text-center p-4">
+                      <File className="h-12 w-12 text-primary mx-auto mb-2" />
+                      <h3 className="text-lg font-medium">Drop files here</h3>
+                      <p className="text-muted-foreground">Upload documents to share with {currentConversation.recipient.name}</p>
+                    </div>
+                  </div>
+                )}
               </ScrollArea>
 
               {attachments.length > 0 && (
                 <div className="px-4 py-2 border-t">
                   <div className="flex flex-wrap gap-2">
                     {attachments.map((file, index) => (
-                      <div key={index} className="flex items-center bg-muted rounded-md p-2 pr-1">
-                        <File className="h-4 w-4 mr-2" />
-                        <span className="text-sm truncate max-w-[150px]">{file.name}</span>
-                        <span className="text-xs text-muted-foreground ml-2">({formatFileSize(file.size)})</span>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 ml-1"
-                          onClick={() => handleRemoveAttachment(index)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      <FileAttachment 
+                        key={index}
+                        file={{
+                          name: file.name,
+                          size: file.size,
+                          type: file.type,
+                          data: file
+                        }}
+                        onRemove={() => handleRemoveAttachment(index)}
+                        isPending={uploadProgress[file.name] < 100}
+                        progress={uploadProgress[file.name]}
+                        showActions={false}
+                      />
                     ))}
                   </div>
                 </div>
