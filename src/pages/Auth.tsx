@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import AnimatedButton from '@/components/ui/AnimatedButton';
 import { UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { ChevronLeft } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -24,6 +24,7 @@ const Auth = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(preselectedRole);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { updateUser } = useUser();
 
   // Form state
   const [email, setEmail] = useState('');
@@ -49,10 +50,30 @@ const Auth = () => {
           description: "You need to select a role to register",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
       
-      // Simulate successful authentication
+      // For registration, update the user context with the selected role
+      if (authType === 'register' && selectedRole) {
+        updateUser({
+          name,
+          email,
+          role: selectedRole,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+        });
+      } else {
+        // For login, we'd normally fetch user data from backend
+        // Since we're mocking, we'll just set a default role for now
+        updateUser({
+          name: "John Doe",
+          email,
+          role: "patient",
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=John`,
+        });
+      }
+      
+      // Display success toast
       toast({
         title: authType === 'login' ? "Login Successful" : "Registration Successful",
         description: authType === 'login' 

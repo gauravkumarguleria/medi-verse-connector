@@ -2,6 +2,7 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardMain from '@/components/dashboard/DashboardMain';
+import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
 import IoTReportsPage from '@/components/iot/IoTReportsPage';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
 import MedicationPage from '@/components/medications/MedicationPage';
@@ -9,12 +10,12 @@ import HealthRecordsPage from '@/components/records/HealthRecordsPage';
 import MessagesPage from '@/components/messages/MessagesPage';
 import ProfileSection from '@/components/profile/ProfileSection';
 import SettingsSection from '@/components/settings/SettingsSection';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
+import { useUser } from '@/contexts/UserContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useUser();
   const currentPath = location.pathname.split('/').pop() || 'overview';
   
   const handleTabChange = (value: string) => {
@@ -24,8 +25,8 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <Routes>
-        <Route path="/" element={<DashboardMain />} />
-        <Route path="/overview" element={<DashboardMain />} />
+        <Route path="/" element={user.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
+        <Route path="/overview" element={user.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
         <Route path="/iot-reports" element={<IoTReportsPage hideLayout />} />
         <Route path="/appointments" element={<AppointmentPage hideLayout />} />
         <Route path="/medications" element={<MedicationPage />} />
@@ -41,4 +42,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ThemeModeToggle } from '../ui/ThemeModeToggle';
+import { useUser } from '@/contexts/UserContext';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -41,6 +42,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarHidden, setSidebarHidden] = useState(true); // Set default to true (sidebar hidden)
+  const { user } = useUser();
 
   const isActiveRoute = (route: string) => {
     return location.pathname.includes(route);
@@ -54,6 +56,141 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const toggleSidebar = () => {
     setSidebarHidden(!sidebarHidden);
   };
+
+  // Get relevant menu items based on user role
+  const getMenuItems = () => {
+    const commonItems = [
+      {
+        group: 'Main Navigation',
+        items: [
+          {
+            label: 'Dashboard',
+            icon: <Home className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard'),
+            isActive: isActiveRoute('/dashboard') && !location.pathname.includes('/dashboard/'),
+          },
+        ],
+      },
+      {
+        group: 'Settings',
+        items: [
+          {
+            label: 'Profile',
+            icon: <User className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/profile'),
+            isActive: isActiveRoute('/dashboard/profile'),
+          },
+          {
+            label: 'Settings',
+            icon: <Settings className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/settings'),
+            isActive: isActiveRoute('/dashboard/settings'),
+          },
+        ],
+      },
+    ];
+
+    // Doctor-specific menu items
+    if (user.role === 'doctor') {
+      return [
+        ...commonItems.slice(0, 1),
+        {
+          group: 'Doctor Tools',
+          items: [
+            {
+              label: 'Appointments',
+              icon: <CalendarClock className="h-5 w-5" />,
+              onClick: () => navigate('/dashboard/appointments'),
+              isActive: isActiveRoute('/dashboard/appointments'),
+            },
+            {
+              label: 'Patient Records',
+              icon: <ClipboardList className="h-5 w-5" />,
+              onClick: () => navigate('/dashboard/records'),
+              isActive: isActiveRoute('/dashboard/records'),
+            },
+            {
+              label: 'Prescriptions',
+              icon: <Pill className="h-5 w-5" />,
+              onClick: () => navigate('/dashboard/medications'),
+              isActive: isActiveRoute('/dashboard/medications'),
+            },
+          ],
+        },
+        {
+          group: 'Communication',
+          items: [
+            {
+              label: 'Messages',
+              icon: <MessageSquare className="h-5 w-5" />,
+              onClick: () => navigate('/dashboard/messages'),
+              isActive: isActiveRoute('/dashboard/messages'),
+            },
+          ],
+        },
+        ...commonItems.slice(1),
+      ];
+    }
+
+    // Patient-specific menu items
+    return [
+      ...commonItems.slice(0, 1),
+      {
+        group: 'Health Management',
+        items: [
+          {
+            label: 'Appointments',
+            icon: <CalendarClock className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/appointments'),
+            isActive: isActiveRoute('/dashboard/appointments'),
+          },
+          {
+            label: 'Medications',
+            icon: <Pill className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/medications'),
+            isActive: isActiveRoute('/dashboard/medications'),
+          },
+          {
+            label: 'Health Records',
+            icon: <ClipboardList className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/records'),
+            isActive: isActiveRoute('/dashboard/records'),
+          },
+        ],
+      },
+      {
+        group: 'Communication',
+        items: [
+          {
+            label: 'Messages',
+            icon: <MessageSquare className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/messages'),
+            isActive: isActiveRoute('/dashboard/messages'),
+          },
+        ],
+      },
+      {
+        group: 'Monitoring',
+        items: [
+          {
+            label: 'Vital Signs',
+            icon: <HeartPulse className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/vitals'),
+            isActive: isActiveRoute('/dashboard/vitals'),
+          },
+          {
+            label: 'IoT Devices',
+            icon: <CircuitBoard className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/iot-devices'),
+            isActive: isActiveRoute('/dashboard/iot-devices'),
+          },
+        ],
+      },
+      ...commonItems.slice(1),
+    ];
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <SidebarProvider>
@@ -69,133 +206,36 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </div>
               </SidebarHeader>
               <SidebarContent>
-                <SidebarGroup>
-                  <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard')}
-                          isActive={isActiveRoute('/dashboard') && !location.pathname.includes('/dashboard/')}
-                          tooltip="Dashboard"
-                        >
-                          <Home className="h-5 w-5" />
-                          <span>Dashboard</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/appointments')}
-                          isActive={isActiveRoute('/dashboard/appointments')}
-                          tooltip="Appointments"
-                        >
-                          <CalendarClock className="h-5 w-5" />
-                          <span>Appointments</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/medications')}
-                          isActive={isActiveRoute('/dashboard/medications')}
-                          tooltip="Medications"
-                        >
-                          <Pill className="h-5 w-5" />
-                          <span>Medications</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/records')}
-                          isActive={isActiveRoute('/dashboard/records')}
-                          tooltip="Health Records"
-                        >
-                          <ClipboardList className="h-5 w-5" />
-                          <span>Health Records</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-                
-                <SidebarGroup>
-                  <SidebarGroupLabel>Communication</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/messages')}
-                          isActive={isActiveRoute('/dashboard/messages')}
-                          tooltip="Messages"
-                        >
-                          <MessageSquare className="h-5 w-5" />
-                          <span>Messages</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-                
-                <SidebarGroup>
-                  <SidebarGroupLabel>Monitoring</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/vitals')}
-                          isActive={isActiveRoute('/dashboard/vitals')}
-                          tooltip="Vital Signs"
-                        >
-                          <HeartPulse className="h-5 w-5" />
-                          <span>Vital Signs</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/iot-devices')}
-                          isActive={isActiveRoute('/dashboard/iot-devices')}
-                          tooltip="IoT Devices"
-                        >
-                          <CircuitBoard className="h-5 w-5" />
-                          <span>IoT Devices</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-                
-                <SidebarGroup>
-                  <SidebarGroupLabel>Settings</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/profile')}
-                          isActive={isActiveRoute('/dashboard/profile')}
-                          tooltip="Profile"
-                        >
-                          <User className="h-5 w-5" />
-                          <span>Profile</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          onClick={() => navigate('/dashboard/settings')}
-                          isActive={isActiveRoute('/dashboard/settings')}
-                          tooltip="Settings"
-                        >
-                          <Settings className="h-5 w-5" />
-                          <span>Settings</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
+                {menuItems.map((group, index) => (
+                  <SidebarGroup key={index}>
+                    <SidebarGroupLabel>{group.group}</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {group.items.map((item, idx) => (
+                          <SidebarMenuItem key={idx}>
+                            <SidebarMenuButton 
+                              onClick={item.onClick}
+                              isActive={item.isActive}
+                              tooltip={item.label}
+                            >
+                              {item.icon}
+                              <span>{item.label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                ))}
               </SidebarContent>
               <SidebarFooter className="p-4">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-sm font-medium">John Doe</span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{user.name}</span>
+                      <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
+                    </div>
                   </div>
                   <ThemeModeToggle />
                   <Button 
