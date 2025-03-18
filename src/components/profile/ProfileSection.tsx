@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Mail, 
@@ -9,7 +8,9 @@ import {
   Shield, 
   KeyRound,
   Bell,
-  FileText
+  FileText,
+  Save,
+  X
 } from 'lucide-react';
 import { 
   Card, 
@@ -27,14 +28,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import GlassCard from '@/components/ui/GlassCard';
-import { User as UserType } from '@/types';
+import { useUser } from '@/contexts/UserContext';
+import { useToast } from '@/hooks/use-toast';
 
-interface ProfileSectionProps {
-  user: UserType;
-}
-
-const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
+const ProfileSection: React.FC = () => {
+  const { user, updateUser } = useUser();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('personal');
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    phone: '+1 (555) 123-4567',
+    dateOfBirth: '1990-05-15',
+    address: '123 Health Street',
+    city: 'San Francisco',
+    state: 'California',
+    zipCode: '94105',
+    bloodType: 'O+',
+    height: '175',
+    weight: '70',
+    allergies: 'None',
+    conditions: 'None'
+  });
+
   const [notificationsEnabled, setNotificationsEnabled] = useState({
     appointments: true,
     medications: true,
@@ -43,11 +60,57 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
     newsletters: false
   });
 
+  useEffect(() => {
+    // Update form data when user data changes
+    setFormData(prev => ({
+      ...prev,
+      name: user.name,
+      email: user.email
+    }));
+  }, [user]);
+
   const handleNotificationToggle = (key: keyof typeof notificationsEnabled) => {
     setNotificationsEnabled(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSaveChanges = () => {
+    // Save the user details
+    updateUser({
+      name: formData.name,
+      email: formData.email
+    });
+    
+    setIsEditing(false);
+    toast({
+      title: "Profile updated",
+      description: "Your profile has been updated successfully.",
+      variant: "default",
+    });
+  };
+
+  const handleCancel = () => {
+    // Reset form to current user data
+    setFormData(prev => ({
+      ...prev,
+      name: user.name,
+      email: user.email
+    }));
+    setIsEditing(false);
+  };
+
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
   };
 
   return (
@@ -58,8 +121,20 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
           <p className="text-muted-foreground">Manage your account and settings</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline">Cancel</Button>
-          <Button>Save Changes</Button>
+          {isEditing ? (
+            <>
+              <Button variant="outline" onClick={handleCancel}>
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button onClick={handleSaveChanges}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </>
+          ) : (
+            <Button onClick={toggleEdit}>Edit Profile</Button>
+          )}
         </div>
       </div>
 
@@ -77,7 +152,13 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
             
             <div className="w-full mt-4">
               <Button variant="outline" className="w-full mb-2">Change Avatar</Button>
-              <Button variant="secondary" className="w-full">Edit Profile</Button>
+              <Button 
+                variant="secondary" 
+                className="w-full"
+                onClick={toggleEdit}
+              >
+                {isEditing ? 'Cancel Editing' : 'Edit Profile'}
+              </Button>
             </div>
           </div>
           
@@ -119,46 +200,91 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
                 <CardContent className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
-                      <Input id="fullName" defaultValue={user.name} />
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input 
+                        id="name" 
+                        value={formData.name} 
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" defaultValue={user.email} />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" defaultValue="+1 (555) 123-4567" />
+                      <Input 
+                        id="phone" 
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                      <Input id="dateOfBirth" defaultValue="1990-05-15" />
+                      <Input 
+                        id="dateOfBirth" 
+                        value={formData.dateOfBirth}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="address">Address</Label>
-                    <Input id="address" defaultValue="123 Health Street" />
+                    <Input 
+                      id="address" 
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                    />
                   </div>
                   
                   <div className="grid md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city">City</Label>
-                      <Input id="city" defaultValue="San Francisco" />
+                      <Input 
+                        id="city" 
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">State</Label>
-                      <Input id="state" defaultValue="California" />
+                      <Input 
+                        id="state" 
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="zipCode">Zip Code</Label>
-                      <Input id="zipCode" defaultValue="94105" />
+                      <Input 
+                        id="zipCode" 
+                        value={formData.zipCode}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Save Changes</Button>
+                  {isEditing && (
+                    <>
+                      <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                      <Button onClick={handleSaveChanges}>Save Changes</Button>
+                    </>
+                  )}
                 </CardFooter>
               </Card>
               
@@ -171,30 +297,59 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="bloodType">Blood Type</Label>
-                      <Input id="bloodType" defaultValue="O+" />
+                      <Input 
+                        id="bloodType" 
+                        value={formData.bloodType}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="height">Height (cm)</Label>
-                      <Input id="height" defaultValue="175" />
+                      <Input 
+                        id="height" 
+                        value={formData.height}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="weight">Weight (kg)</Label>
-                      <Input id="weight" defaultValue="70" />
+                      <Input 
+                        id="weight" 
+                        value={formData.weight}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="allergies">Allergies</Label>
-                      <Input id="allergies" defaultValue="None" />
+                      <Input 
+                        id="allergies" 
+                        value={formData.allergies}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="conditions">Medical Conditions</Label>
-                    <Input id="conditions" defaultValue="None" />
+                    <Input 
+                      id="conditions" 
+                      value={formData.conditions}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                    />
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Save Changes</Button>
+                  {isEditing && (
+                    <>
+                      <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                      <Button onClick={handleSaveChanges}>Save Changes</Button>
+                    </>
+                  )}
                 </CardFooter>
               </Card>
             </TabsContent>

@@ -14,7 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUser } from '@/contexts/UserContext';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -22,12 +23,9 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Mock user data - in a real app, this would come from your auth context/provider
-  const user = {
-    name: 'John Doe',
-    role: 'Patient',
-    initials: 'JD'
-  };
+  // Use the user context instead of mock data
+  const { user } = useUser();
+  const userInitials = user.name.split(' ').map(n => n[0]).join('');
 
   // Check if user is on the dashboard to show different navigation
   const isOnDashboard = location.pathname.includes('/dashboard');
@@ -134,15 +132,16 @@ const Navbar: React.FC = () => {
           {isOnDashboard ? (
             <div className="flex items-center gap-3">
               <div className="text-sm font-medium mr-1">
-                <span className="text-muted-foreground">{user.role}</span>
+                <span className="text-muted-foreground">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
               </div>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 h-9 px-2">
                     <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatar} alt={user.name} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {user.initials}
+                        {userInitials}
                       </AvatarFallback>
                     </Avatar>
                     <span className="font-medium text-sm">{user.name}</span>
@@ -241,13 +240,14 @@ const Navbar: React.FC = () => {
           ) : (
             <div className="flex items-center py-2 border-b">
               <Avatar className="h-8 w-8 mr-3">
+                <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {user.initials}
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <span className="font-medium">{user.name}</span>
-                <span className="text-sm text-muted-foreground">{user.role}</span>
+                <span className="text-sm text-muted-foreground">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
               </div>
             </div>
           )}
