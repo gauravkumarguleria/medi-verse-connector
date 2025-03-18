@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AnimatedButton from '../ui/AnimatedButton';
@@ -20,6 +20,7 @@ const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Mock user data - in a real app, this would come from your auth context/provider
   const user = {
@@ -59,6 +60,14 @@ const Navbar: React.FC = () => {
     // In a real application, this would call your logout function
     // For now, we'll just redirect to home
     window.location.href = '/';
+  };
+
+  const handleProfileClick = () => {
+    navigate('/dashboard/profile');
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/dashboard/settings');
   };
 
   return (
@@ -143,11 +152,11 @@ const Navbar: React.FC = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer" onClick={handleProfileClick}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer" onClick={handleSettingsClick}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
@@ -245,20 +254,20 @@ const Navbar: React.FC = () => {
           
           {isOnDashboard && (
             <>
-              <Link 
-                to="/dashboard/profile" 
+              <button 
+                onClick={handleProfileClick}
                 className="py-2 text-base font-medium flex items-center gap-2 text-foreground/70 hover:text-primary"
               >
                 <User className="h-5 w-5" />
                 Profile
-              </Link>
-              <Link 
-                to="/dashboard/settings" 
+              </button>
+              <button 
+                onClick={handleSettingsClick}
                 className="py-2 text-base font-medium flex items-center gap-2 text-foreground/70 hover:text-primary"
               >
                 <Settings className="h-5 w-5" />
                 Settings
-              </Link>
+              </button>
               <button 
                 onClick={handleLogout}
                 className="py-2 text-base font-medium flex items-center gap-2 text-foreground/70 hover:text-primary"
