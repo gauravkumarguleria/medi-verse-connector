@@ -7,6 +7,7 @@ import IoTReportsPage from '@/components/iot/IoTReportsPage';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
 import DoctorAppointmentView from '@/components/dashboard/DoctorAppointmentView';
 import MedicationPage from '@/components/medications/MedicationPage';
+import DoctorMedicationPage from '@/components/medications/DoctorMedicationPage';
 import HealthRecordsPage from '@/components/records/HealthRecordsPage';
 import MessagesPage from '@/components/messages/MessagesPage';
 import ProfileSection from '@/components/profile/ProfileSection';
@@ -34,7 +35,11 @@ const Dashboard = () => {
             ? <DoctorAppointmentView /> 
             : <AppointmentPage hideLayout />
         } />
-        <Route path="/medications" element={<MedicationPage />} />
+        <Route path="/medications" element={
+          user.role === 'doctor'
+            ? <DoctorMedicationPage />
+            : <MedicationPage />
+        } />
         <Route path="/records" element={<HealthRecordsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
