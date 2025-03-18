@@ -8,6 +8,7 @@ import MedicalReminders from '@/components/dashboard/MedicalReminders';
 import HealthArticles from '@/components/dashboard/HealthArticles';
 import IoTReportsPage from '@/components/iot/IoTReportsPage';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
+import MedicationPage from '@/components/medications/MedicationPage';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -47,28 +48,13 @@ const Dashboard = () => {
   
   return (
     <DashboardLayout>
-      <Card className="border-0 shadow-none">
-        <CardContent className="p-0 pb-6">
-          <Tabs 
-            value={currentPath} 
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="iot-reports">IoT Reports</TabsTrigger>
-              <TabsTrigger value="appointments">Appointments</TabsTrigger>
-            </TabsList>
-            
-            <Routes>
-              <Route path="/" element={<DashboardMain />} />
-              <Route path="/overview" element={<DashboardMain />} />
-              <Route path="/iot-reports" element={<IoTReportsPage hideLayout />} />
-              <Route path="/appointments" element={<AppointmentPage hideLayout />} />
-            </Routes>
-          </Tabs>
-        </CardContent>
-      </Card>
+      <Routes>
+        <Route path="/" element={<DashboardMain />} />
+        <Route path="/overview" element={<DashboardMain />} />
+        <Route path="/iot-reports" element={<IoTReportsPage hideLayout />} />
+        <Route path="/appointments" element={<AppointmentPage hideLayout />} />
+        <Route path="/medications" element={<MedicationPage />} />
+      </Routes>
     </DashboardLayout>
   );
 };
