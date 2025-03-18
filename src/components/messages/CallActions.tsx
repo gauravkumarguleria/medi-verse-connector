@@ -1,8 +1,10 @@
 
 import React from 'react';
-import { Phone, Video, PhoneOff, VideoOff } from 'lucide-react';
+import { Phone, Video, PhoneOff, VideoOff, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -22,10 +24,34 @@ export function CallActions({ recipient }: CallActionsProps) {
   const [isVoiceCallActive, setIsVoiceCallActive] = React.useState(false);
   const [isMicMuted, setIsMicMuted] = React.useState(false);
   const [isVideoOff, setIsVideoOff] = React.useState(false);
+  const [callDuration, setCallDuration] = React.useState(0);
   const isMobile = useIsMobile();
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+  
+  React.useEffect(() => {
+    if ((isVideoCallActive || isVoiceCallActive) && !timerRef.current) {
+      timerRef.current = setInterval(() => {
+        setCallDuration(prev => prev + 1);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isVideoCallActive, isVoiceCallActive]);
+  
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
   
   const handleStartVideoCall = () => {
     setIsVideoCallActive(true);
+    setCallDuration(0);
     toast({
       title: "Video call started",
       description: `Connecting to ${recipient.name}...`
@@ -34,6 +60,7 @@ export function CallActions({ recipient }: CallActionsProps) {
   
   const handleStartVoiceCall = () => {
     setIsVoiceCallActive(true);
+    setCallDuration(0);
     toast({
       title: "Voice call started",
       description: `Calling ${recipient.name}...`
@@ -56,6 +83,12 @@ export function CallActions({ recipient }: CallActionsProps) {
         description: `Call with ${recipient.name} has ended`
       });
     }
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setCallDuration(0);
   };
   
   const toggleMic = () => {
@@ -71,6 +104,12 @@ export function CallActions({ recipient }: CallActionsProps) {
       description: isVideoOff ? "Camera turned on" : "Camera turned off"
     });
   };
+  
+  // Choose the appropriate UI component based on device
+  const CallContainer = isMobile ? Drawer : Dialog;
+  const CallContent = isMobile ? DrawerContent : DialogContent;
+  const CallHeader = isMobile ? DrawerHeader : DialogHeader;
+  const CallTitle = isMobile ? DrawerTitle : DialogTitle;
   
   return (
     <>
@@ -96,14 +135,17 @@ export function CallActions({ recipient }: CallActionsProps) {
         </Button>
       </div>
       
-      {/* Video Call Dialog */}
-      <Dialog open={isVideoCallActive} onOpenChange={setIsVideoCallActive}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Video Call with {recipient.name}</DialogTitle>
-          </DialogHeader>
+      {/* Video Call Dialog/Drawer */}
+      <CallContainer open={isVideoCallActive} onOpenChange={setIsVideoCallActive}>
+        <CallContent className={isMobile ? "px-4 pt-12 pb-8" : "sm:max-w-md"}>
+          <CallHeader>
+            <CallTitle>Video Call with {recipient.name}</CallTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Call duration: {formatDuration(callDuration)}
+            </DialogDescription>
+          </CallHeader>
           
-          <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4">
+          <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4 mt-2">
             {!isVideoOff ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-white">Camera preview would show here</p>
@@ -123,16 +165,16 @@ export function CallActions({ recipient }: CallActionsProps) {
             </div>
           </div>
           
-          <div className="flex justify-center gap-4 py-2">
+          <div className="flex justify-center gap-4 py-2 mt-2">
             <Button 
               variant="outline" 
               className={isMicMuted ? "bg-red-100 text-red-500" : ""}
               onClick={toggleMic}
             >
               {isMicMuted ? (
-                <PhoneOff className="h-4 w-4" />
+                <MicOff className="h-4 w-4" />
               ) : (
-                <Phone className="h-4 w-4" />
+                <Mic className="h-4 w-4" />
               )}
             </Button>
             
@@ -152,15 +194,18 @@ export function CallActions({ recipient }: CallActionsProps) {
               End Call
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </CallContent>
+      </CallContainer>
       
-      {/* Voice Call Dialog */}
-      <Dialog open={isVoiceCallActive} onOpenChange={setIsVoiceCallActive}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Voice Call with {recipient.name}</DialogTitle>
-          </DialogHeader>
+      {/* Voice Call Dialog/Drawer */}
+      <CallContainer open={isVoiceCallActive} onOpenChange={setIsVoiceCallActive}>
+        <CallContent className={isMobile ? "px-4 pt-12 pb-8" : "sm:max-w-[425px]"}>
+          <CallHeader>
+            <CallTitle>Voice Call with {recipient.name}</CallTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Call duration: {formatDuration(callDuration)}
+            </DialogDescription>
+          </CallHeader>
           
           <div className="flex flex-col items-center gap-4 py-6">
             <Avatar className="h-24 w-24">
@@ -168,7 +213,6 @@ export function CallActions({ recipient }: CallActionsProps) {
             </Avatar>
             <p className="text-lg font-medium">{recipient.name}</p>
             <p className="text-sm text-muted-foreground">{recipient.role}</p>
-            <p className="text-sm text-muted-foreground">Call duration: 00:00</p>
           </div>
           
           <div className="flex justify-center gap-4 py-2">
@@ -178,9 +222,9 @@ export function CallActions({ recipient }: CallActionsProps) {
               onClick={toggleMic}
             >
               {isMicMuted ? (
-                <PhoneOff className="h-4 w-4" />
+                <MicOff className="h-4 w-4" />
               ) : (
-                <Phone className="h-4 w-4" />
+                <Mic className="h-4 w-4" />
               )}
             </Button>
             
@@ -188,8 +232,8 @@ export function CallActions({ recipient }: CallActionsProps) {
               End Call
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </CallContent>
+      </CallContainer>
     </>
   );
 }
