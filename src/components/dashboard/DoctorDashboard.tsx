@@ -4,8 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CalendarClock, User, ClipboardCheck, MessageSquare, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const DoctorDashboard = () => {
+  const navigate = useNavigate();
+  
   // Mock data for appointments
   const upcomingAppointments = [
     { id: '1', patient: 'Sarah Johnson', time: '10:00 AM', date: 'Today', type: 'Video' },
@@ -75,7 +78,7 @@ const DoctorDashboard = () => {
         <CardHeader className="px-6 py-4">
           <div className="flex items-center justify-between">
             <CardTitle>Upcoming Appointments</CardTitle>
-            <Button variant="outline" size="sm">View All</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/appointments')}>View All</Button>
           </div>
         </CardHeader>
         <CardContent className="px-6 py-0">
