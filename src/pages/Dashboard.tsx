@@ -58,6 +58,7 @@ const Dashboard = () => {
         <Route path="/medications" element={<MedicationPage />} />
         <Route path="/records" element={<HealthRecordsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
       </Routes>
     </DashboardLayout>
   );
