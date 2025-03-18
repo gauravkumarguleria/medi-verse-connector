@@ -216,7 +216,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 variant="ghost" 
                 size="icon" 
                 onClick={toggleSidebar} 
-                className="mr-2"
+                className="ml-0"
                 aria-label={sidebarHidden ? "Show sidebar" : "Hide sidebar"}
               >
                 {sidebarHidden ? (

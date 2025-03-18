@@ -21,6 +21,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         download: "text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1 h-auto rounded",
         share: "text-green-600 hover:text-green-800 hover:bg-green-50 p-1 h-auto rounded",
+        sidebar: "text-muted-foreground hover:text-foreground hover:bg-accent/50 p-1 h-auto rounded-sm",
       },
       size: {
         default: "h-10 px-4 py-2",
