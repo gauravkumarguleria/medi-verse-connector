@@ -1,9 +1,12 @@
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'patient' | 'doctor';
+  role: 'patient' | 'doctor' | 'pharmacist' | 'admin';
   profilePicture?: string;
+  avatar?: string;
+  createdAt?: string;
 }
 
 export interface Doctor {
@@ -27,4 +30,13 @@ export interface Appointment {
   patientName?: string;
   patientEmail?: string;
   reason?: string;
+}
+
+export type UserRole = 'patient' | 'doctor' | 'pharmacist' | 'admin';
+
+export interface Feature {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  userRole?: UserRole;
 }
