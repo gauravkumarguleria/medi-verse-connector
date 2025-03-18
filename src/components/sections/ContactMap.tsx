@@ -1,94 +1,54 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const ContactMap = () => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapToken, setMapToken] = useState('');
+  const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Himachal Pradesh coordinates (approximate center)
-  const himachalCenter: [number, number] = [77.1734, 31.1048]; // Long, Lat
-
+  // Function to load the Google Maps script
   useEffect(() => {
-    if (!mapContainer.current) return;
+    // Check if Google Maps script is already loaded
+    if (window.google && window.google.maps) {
+      setMapLoaded(true);
+      return;
+    }
+
+    // Load Google Maps script
+    const googleMapScript = document.createElement('script');
+    googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=&libraries=places`;
+    googleMapScript.async = true;
+    googleMapScript.defer = true;
+    googleMapScript.id = 'googleMapsScript';
     
-    // Check if we have a token
-    if (!mapToken) return;
-
-    // Initialize map
-    mapboxgl.accessToken = mapToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: himachalCenter,
-      zoom: 7,
-      projection: 'mercator',
-    });
-
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl(),
-      'top-right'
-    );
-
-    // Add marker for Shimla
-    const shimlaCoordinates: [number, number] = [77.1734, 31.1048]; // Shimla coordinates
-    new mapboxgl.Marker({ color: '#3b82f6' })
-      .setLngLat(shimlaCoordinates)
-      .setPopup(new mapboxgl.Popup().setHTML("<h3>MediVerse HQ</h3><p>Shimla, Himachal Pradesh</p>"))
-      .addTo(map.current);
-
-    // Cleanup
-    return () => {
-      map.current?.remove();
+    googleMapScript.onload = () => {
+      setMapLoaded(true);
     };
-  }, [mapToken]);
+    
+    document.body.appendChild(googleMapScript);
 
-  const handleTokenSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const input = e.currentTarget.elements.namedItem('mapboxToken') as HTMLInputElement;
-    if (input && input.value) {
-      setMapToken(input.value);
-      localStorage.setItem('mapbox_token', input.value);
-    }
-  };
-
-  useEffect(() => {
-    // Check for token in localStorage
-    const savedToken = localStorage.getItem('mapbox_token');
-    if (savedToken) {
-      setMapToken(savedToken);
-    }
+    return () => {
+      // Clean up the script when component unmounts
+      const script = document.getElementById('googleMapsScript');
+      if (script) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   return (
-    <>
-      {!mapToken ? (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-secondary/20 p-8 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4">Enter your Mapbox Token</h3>
-          <p className="mb-6 text-center text-muted-foreground">
-            Please enter your Mapbox public token to display the map. You can get one by signing up at <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary">Mapbox.com</a>
-          </p>
-          <form onSubmit={handleTokenSubmit} className="w-full max-w-md">
-            <div className="flex gap-2">
-              <input 
-                name="mapboxToken"
-                type="text" 
-                placeholder="Enter your Mapbox public token" 
-                className="flex-1 h-10 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <Button type="submit">Submit</Button>
-            </div>
-          </form>
-        </div>
-      ) : (
-        <div ref={mapContainer} className="w-full h-full" />
-      )}
-    </>
+    <div className="w-full h-full rounded-xl overflow-hidden shadow-md">
+      <iframe 
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d217266.97185469233!2d76.96957773351159!3d31.09789681216703!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390578e3e35d6e67%3A0x1f7e7ff6ff9f54b7!2sShimla%2C%20Himachal%20Pradesh!5e0!3m2!1sen!2sin!4v1694889780668!5m2!1sen!2sin" 
+        width="100%" 
+        height="100%" 
+        style={{ border: 0 }} 
+        allowFullScreen 
+        loading="lazy" 
+        referrerPolicy="no-referrer-when-downgrade"
+        title="Google Map of Shimla, Himachal Pradesh"
+        className="w-full h-full min-h-[500px]"
+      />
+    </div>
   );
 };
 
