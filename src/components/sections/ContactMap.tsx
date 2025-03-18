@@ -2,6 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
+// Add type declaration for Google Maps API
+declare global {
+  interface Window {
+    google?: {
+      maps?: any;
+    };
+  }
+}
+
 const ContactMap = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
 
