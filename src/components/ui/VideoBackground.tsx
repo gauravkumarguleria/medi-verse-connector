@@ -40,15 +40,21 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
     setVideoError(true);
   };
 
+  // Common video props to ensure consistent behavior
+  const videoProps = {
+    className: "absolute w-full h-full object-cover",
+    autoPlay: true,
+    muted: true, // Ensure videos are always muted
+    loop: true,
+    playsInline: true,
+    preload: "auto" as const, // Preload video data for smoother playback
+  };
+
   return (
     <div className={cn('absolute inset-0 overflow-hidden -z-20', className)}>
       {!videoError ? (
         <video 
-          className="absolute w-full h-full object-cover"
-          autoPlay 
-          muted 
-          loop 
-          playsInline
+          {...videoProps}
           onError={handleVideoError}
         >
           <source src={videoSrc} type="video/mp4" />
@@ -61,13 +67,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
           className="absolute w-full h-full object-cover"
         />
       ) : (
-        <video 
-          className="absolute w-full h-full object-cover"
-          autoPlay 
-          muted 
-          loop 
-          playsInline
-        >
+        <video {...videoProps}>
           <source src={fallbackVideoSrc} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
