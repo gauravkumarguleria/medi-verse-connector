@@ -16,14 +16,16 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
   fallbackImage
 }) => {
   const [videoError, setVideoError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // List of sample videos that could be used if no specific video is provided
   const sampleVideos = [
     "https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4",
     "https://assets.mixkit.co/videos/preview/mixkit-white-sand-beach-and-palm-trees-1564-large.mp4",
     "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-the-sea-and-sand-with-mountains-45056-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-aerial-of-forest-and-road-on-a-mountain-14 Large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-clouds-and-blue-sky-2408-large.mp4"
+    "https://assets.mixkit.co/videos/preview/mixkit-clouds-and-blue-sky-2408-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4",
+    "https://assets.mixkit.co/videos/preview/mixkit-rain-falling-on-the-water-of-a-lake-18312-large.mp4"
   ];
 
   // Randomly select a video if none provided or if the provided one failed
@@ -40,6 +42,11 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
     setVideoError(true);
   };
 
+  const handleVideoLoaded = () => {
+    console.log("Video loaded successfully");
+    setIsLoaded(true);
+  };
+
   // Common video props to ensure consistent behavior
   const videoProps = {
     className: "absolute w-full h-full object-cover",
@@ -48,6 +55,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
     loop: true,
     playsInline: true,
     preload: "auto" as const, // Preload video data for smoother playback
+    onLoadedData: handleVideoLoaded
   };
 
   return (
@@ -57,7 +65,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
           {...videoProps}
           onError={handleVideoError}
         >
-          <source src={videoSrc} type="video/mp4" />
+          <source src={videoSrc || fallbackVideoSrc} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       ) : fallbackImage ? (
