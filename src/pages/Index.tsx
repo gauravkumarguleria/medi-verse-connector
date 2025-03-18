@@ -187,11 +187,16 @@ const Index = () => {
               </div>
             </div>
             <div className="flex-1 perspective">
-              <div className="relative w-full h-[400px] preserve-3d animate-float">
+              <div className="relative w-full h-[400px] preserve-3d animate-float grid grid-cols-2 gap-4">
                 <img 
                   src="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1050&q=80" 
                   alt="Healthcare professionals" 
-                  className="absolute inset-0 w-full h-full object-cover rounded-2xl shadow-xl preserve-3d transform rotate-3"
+                  className="w-full h-full object-cover rounded-2xl shadow-xl preserve-3d transform rotate-3"
+                />
+                <img 
+                  src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1050&q=80" 
+                  alt="Telehealth consultation" 
+                  className="w-full h-full object-cover rounded-2xl shadow-xl preserve-3d transform -rotate-2"
                 />
                 <div className="absolute -bottom-4 -right-4 w-48 h-48 bg-primary/10 rounded-full blur-3xl"></div>
                 <div className="absolute -top-4 -left-4 w-48 h-48 bg-medical-green/10 rounded-full blur-3xl"></div>
