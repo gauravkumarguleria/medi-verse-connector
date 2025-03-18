@@ -213,7 +213,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className={`flex flex-col flex-1 ${!sidebarHidden ? 'ml-[calc(var(--sidebar-width)_-_1px)]' : ''} transition-all duration-300`}>
             <div className="flex items-center p-2 border-b">
               <Button 
-                variant="ghost" 
+                variant="sidebar" 
                 size="icon" 
                 onClick={toggleSidebar} 
                 className="ml-0"

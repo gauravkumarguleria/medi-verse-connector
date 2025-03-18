@@ -11,8 +11,10 @@ import AppointmentPage from '@/components/appointments/AppointmentPage';
 import MedicationPage from '@/components/medications/MedicationPage';
 import HealthRecordsPage from '@/components/records/HealthRecordsPage';
 import MessagesPage from '@/components/messages/MessagesPage';
+import ProfileSection from '@/components/profile/ProfileSection';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { User as UserType } from '@/types';
 
 const DashboardMain = () => {
   const [activeMetric, setActiveMetric] = useState('bloodPressure');
@@ -39,6 +41,16 @@ const DashboardMain = () => {
   );
 };
 
+// Mock user data for the profile page
+const mockUser: UserType = {
+  id: "1",
+  name: "John Doe",
+  email: "john.doe@example.com",
+  role: "patient",
+  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+  createdAt: new Date().toISOString()
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,6 +71,9 @@ const Dashboard = () => {
         <Route path="/records" element={<HealthRecordsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
+        <Route path="/profile" element={<ProfileSection user={mockUser} />} />
+        <Route path="/vitals" element={<div>Vitals Page</div>} />
+        <Route path="/settings" element={<div>Settings Page</div>} />
       </Routes>
     </DashboardLayout>
   );
