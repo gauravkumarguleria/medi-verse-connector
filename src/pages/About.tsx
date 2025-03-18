@@ -1,10 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import CircleBackground from '@/components/ui/CircleBackground';
+import { Button } from '@/components/ui/button';
 import { Award, Building, Clock, Heart, Users, Book, Globe, BarChart } from 'lucide-react';
 
 const About = () => {
