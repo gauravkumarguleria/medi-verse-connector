@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,8 @@ import { UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { ChevronLeft } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle2 } from 'lucide-react';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -24,6 +27,7 @@ const Auth = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(preselectedRole);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { updateUser } = useUser();
 
   // Form state
@@ -54,34 +58,44 @@ const Auth = () => {
         return;
       }
       
-      // For registration, update the user context with the selected role
+      // For registration, update the user context with the selected role but don't authenticate yet
       if (authType === 'register' && selectedRole) {
+        // We store user info but don't set isAuthenticated = true
         updateUser({
           name,
           email,
           role: selectedRole,
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
         });
+        
+        // Display success toast
+        toast({
+          title: "Registration Successful",
+          description: `Your ${selectedRole} account has been created successfully.`,
+        });
+        
+        // Show registration success message
+        setRegistrationSuccess(true);
+        // Switch to login tab
+        setAuthType('login');
       } else {
-        // For login, we'd normally fetch user data from backend
-        // Since we're mocking, we'll just set a default role for now
+        // For login, fetch user data and authenticate
         updateUser({
           name: "John Doe",
           email,
           role: "patient",
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=John`,
         });
+        
+        // Display success toast
+        toast({
+          title: "Login Successful",
+          description: "Welcome back to MediVerse!",
+        });
+        
+        // Set authenticated to redirect to dashboard
+        setIsAuthenticated(true);
       }
-      
-      // Display success toast
-      toast({
-        title: authType === 'login' ? "Login Successful" : "Registration Successful",
-        description: authType === 'login' 
-          ? "Welcome back to MediVerse!" 
-          : `Your ${selectedRole} account has been created successfully.`,
-      });
-      
-      setIsAuthenticated(true);
     } catch (error) {
       toast({
         title: "Authentication Failed",
@@ -93,7 +107,7 @@ const Auth = () => {
     }
   };
 
-  // Redirect to dashboard if authenticated
+  // Redirect to dashboard only if authenticated
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -123,10 +137,28 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           
+          {registrationSuccess && authType === 'login' && (
+            <div className="px-6 pb-2">
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-800">Registration Successful!</AlertTitle>
+                <AlertDescription className="text-green-700">
+                  Your account has been created. Please login to continue.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          
           <Tabs 
-            defaultValue={authType} 
+            value={authType}
             className="w-full" 
-            onValueChange={(value) => setAuthType(value as 'login' | 'register')}
+            onValueChange={(value) => {
+              setAuthType(value as 'login' | 'register');
+              // Reset success state when switching to register tab
+              if (value === 'register') {
+                setRegistrationSuccess(false);
+              }
+            }}
           >
             <TabsList className="grid grid-cols-2 w-full mb-4 mx-4">
               <TabsTrigger value="login">Login</TabsTrigger>
@@ -183,6 +215,7 @@ const Auth = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         setAuthType('register');
+                        setRegistrationSuccess(false);
                       }}
                     >
                       Register
