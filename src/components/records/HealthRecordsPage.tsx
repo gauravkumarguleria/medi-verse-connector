@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import {
   FileText,
@@ -32,6 +33,9 @@ import {
   Trash2,
   Share2,
   BookOpen,
+  AlertCircle,
+  Check,
+  X,
 } from 'lucide-react';
 
 // Mock data for health records
@@ -105,6 +109,10 @@ const HealthRecordsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [selectedCategory, setSelectedCategory] = useState('All Documents');
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Filter records based on search term and category
@@ -115,37 +123,99 @@ const HealthRecordsPage = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleUpload = () => {
-    toast({
-      title: "Upload started",
-      description: "Your document is being processed...",
-    });
-    // In a real app, this would trigger a file upload dialog and process the file
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(Array.from(e.target.files));
+    }
+  };
+
+  const processFiles = (files: File[]) => {
+    setUploadedFiles(prev => [...prev, ...files]);
+    
+    // Simulate upload progress
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev === null) return 0;
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setUploadProgress(null);
+            toast({
+              title: "Upload complete",
+              description: `Successfully uploaded ${files.length} file(s)`,
+            });
+          }, 500);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 100);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(Array.from(e.dataTransfer.files));
+    }
   };
 
   const handleDownload = (recordId: string) => {
+    // In a real app, you would fetch the file from the server
+    // and trigger a download using the File API or a Blob
+    const record = healthRecords.find(r => r.id === recordId);
+    
     toast({
       title: "Download started",
-      description: "Your document will be downloaded shortly...",
+      description: `Downloading "${record?.name}"...`,
     });
-    // In a real app, this would download the file
+    
+    // Simulate a download delay
+    setTimeout(() => {
+      toast({
+        title: "Download complete",
+        description: `"${record?.name}" has been downloaded successfully.`,
+      });
+    }, 1500);
   };
 
   const handleShare = (recordId: string) => {
+    const record = healthRecords.find(r => r.id === recordId);
+    
+    // In a real app, this would open a sharing dialog or copy a link
     toast({
       title: "Sharing options",
-      description: "You can now select who to share this document with.",
+      description: `Share "${record?.name}" with healthcare providers or family members.`,
     });
-    // In a real app, this would open a sharing dialog
+
+    // You would implement a sharing modal or mechanism here
   };
 
   const handleDelete = (recordId: string) => {
+    const record = healthRecords.find(r => r.id === recordId);
+    
+    // In a real app, you would delete the record from your database
     toast({
       title: "Document deleted",
-      description: "The document has been removed from your records.",
+      description: `"${record?.name}" has been removed from your records.`,
       variant: "destructive",
     });
-    // In a real app, this would delete the record
   };
 
   const getCategoryIcon = (category: string) => {
@@ -169,11 +239,57 @@ const HealthRecordsPage = () => {
     <div className="space-y-6 animate-fade-up">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl md:text-3xl font-bold">Health Records</h1>
-        <Button onClick={handleUpload} className="gap-2">
+        <Button onClick={handleUploadClick} className="gap-2">
           <Upload className="h-4 w-4" />
           Upload Document
         </Button>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          multiple 
+          onChange={handleFileChange}
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.dicom"
+        />
       </div>
+
+      {/* Upload Progress Alert */}
+      {uploadProgress !== null && (
+        <Alert className="relative overflow-hidden">
+          <div 
+            className="absolute left-0 top-0 h-1 bg-primary" 
+            style={{ width: `${uploadProgress}%` }}
+          />
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="flex items-center justify-between">
+            <span>Uploading files...</span>
+            <span>{uploadProgress}%</span>
+          </AlertTitle>
+          <AlertDescription>
+            Please wait while your files are being uploaded.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Recently Uploaded Files */}
+      {uploadedFiles.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {uploadedFiles.map((file, index) => (
+            <Badge key={index} variant="outline" className="flex items-center gap-1">
+              <FileText className="h-3 w-3" />
+              {file.name}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== index))}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {/* Records Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -338,7 +454,7 @@ const HealthRecordsPage = () => {
                       <p className="text-sm text-muted-foreground mb-4">
                         {searchTerm ? "Try a different search term" : "Upload your first health record"}
                       </p>
-                      <Button onClick={handleUpload}>
+                      <Button onClick={handleUploadClick}>
                         <Plus className="h-4 w-4 mr-2" />
                         Upload Document
                       </Button>
@@ -416,7 +532,7 @@ const HealthRecordsPage = () => {
                 <p className="text-sm text-muted-foreground mb-6">
                   {searchTerm ? "Try a different search term" : "Upload your first health record"}
                 </p>
-                <Button onClick={handleUpload}>
+                <Button onClick={handleUploadClick}>
                   <Plus className="h-4 w-4 mr-2" />
                   Upload Document
                 </Button>
@@ -426,7 +542,7 @@ const HealthRecordsPage = () => {
         </div>
       )}
 
-      {/* Upload New Document Section */}
+      {/* Upload New Document Section with Drag and Drop */}
       <Card className="mt-8">
         <CardHeader>
           <CardTitle>Upload New Document</CardTitle>
@@ -435,13 +551,24 @@ const HealthRecordsPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed rounded-lg p-8 text-center">
-            <FilePlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">Drag and drop files here</h3>
+          <div 
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              isDragging ? 'bg-primary/5 border-primary' : 'bg-background'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <FilePlus className={`h-12 w-12 mx-auto mb-4 ${
+              isDragging ? 'text-primary animate-bounce' : 'text-muted-foreground'
+            }`} />
+            <h3 className="text-lg font-medium mb-2">
+              {isDragging ? 'Drop files here' : 'Drag and drop files here'}
+            </h3>
             <p className="text-muted-foreground mb-4">
               Supports PDF, JPEG, PNG, DICOM and other medical formats
             </p>
-            <Button onClick={handleUpload}>
+            <Button onClick={handleUploadClick}>
               Choose File
             </Button>
           </div>
