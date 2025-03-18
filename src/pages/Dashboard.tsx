@@ -12,6 +12,7 @@ import MedicationPage from '@/components/medications/MedicationPage';
 import HealthRecordsPage from '@/components/records/HealthRecordsPage';
 import MessagesPage from '@/components/messages/MessagesPage';
 import ProfileSection from '@/components/profile/ProfileSection';
+import SettingsSection from '@/components/settings/SettingsSection';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { User as UserType } from '@/types';
@@ -73,7 +74,7 @@ const Dashboard = () => {
         <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
         <Route path="/profile" element={<ProfileSection user={mockUser} />} />
         <Route path="/vitals" element={<div>Vitals Page</div>} />
-        <Route path="/settings" element={<div>Settings Page</div>} />
+        <Route path="/settings" element={<SettingsSection />} />
       </Routes>
     </DashboardLayout>
   );
