@@ -52,6 +52,15 @@ function App() {
     };
   }, []);
 
+  // Protected route wrapper
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!isAuthenticated && !loading) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    return <>{children}</>;
+  };
+
   return (
     <Router>
       <Preloader />
@@ -61,14 +70,19 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard/*" element={
-              <DashboardLayout>
-                <Dashboard />
-              </DashboardLayout>
-            } />
             <Route path="/about" element={<About />} />
             <Route path="/features" element={<Features />} />
             <Route path="/contact" element={<Contact />} />
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="/dashboard/*" element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />

@@ -11,7 +11,10 @@ interface NavbarActionsProps {
   user?: UserType;
 }
 
-const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated: initialIsAuthenticated, user: initialUser }) => {
+const NavbarActions: React.FC<NavbarActionsProps> = ({ 
+  isAuthenticated: initialIsAuthenticated, 
+  user: initialUser 
+}) => {
   const [authenticated, setAuthenticated] = useState<boolean>(initialIsAuthenticated);
   const [currentUser, setCurrentUser] = useState<UserType | undefined>(initialUser);
 
