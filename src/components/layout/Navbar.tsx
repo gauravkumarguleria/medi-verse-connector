@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import AnimatedButton from '../ui/AnimatedButton';
 import { Menu, X, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { ThemeModeToggle } from '../ui/ThemeModeToggle';
+import AnimatedLogo from '../ui/AnimatedLogo';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -79,6 +80,7 @@ const Navbar: React.FC = () => {
     >
       <div className="container px-4 md:px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
+          <AnimatedLogo size="md" className="mr-1" />
           <span className="text-xl font-bold text-primary">MediVerse</span>
         </Link>
 
