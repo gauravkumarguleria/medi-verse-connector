@@ -9,9 +9,13 @@ export const isActiveRoute = (location: { pathname: string }, route: string) => 
 // Navigate to a specific path
 export const useNavigation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const handleNavigation = (path: string) => {
-    navigate(path);
+    // Ensure the path is correctly formatted for dashboard routes
+    const fullPath = path.startsWith('/dashboard') ? path : `/dashboard${path.startsWith('/') ? path : `/${path}`}`;
+    console.log(`Navigating to: ${fullPath} from ${location.pathname}`);
+    navigate(fullPath);
   };
   
   return { handleNavigation };
