@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardMain from '@/components/dashboard/DashboardMain';
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
 import IoTReportsPage from '@/components/iot/IoTReportsPage';
+import LiveSensorData from '@/components/iot/LiveSensorData';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
 import DoctorAppointmentView from '@/components/dashboard/DoctorAppointmentView';
 import MedicationPage from '@/components/medications/MedicationPage';
@@ -43,9 +44,9 @@ const Dashboard = () => {
         } />
         <Route path="/records" element={<HealthRecordsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
+        <Route path="/iot-devices" element={<LiveSensorData />} />
         <Route path="/profile" element={<ProfileSection />} />
-        <Route path="/vitals" element={<div>Vitals Page</div>} />
+        <Route path="/vitals" element={<LiveSensorData />} />
         <Route path="/settings" element={<SettingsSection />} />
         <Route path="/pharmacy" element={<PharmacyStore />} />
       </Routes>

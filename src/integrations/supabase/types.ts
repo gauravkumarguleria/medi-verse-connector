@@ -69,6 +69,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sensor_data: {
+        Row: {
+          humidity: number
+          id: number
+          mq135: number
+          mq3_1: number
+          mq3_2: number
+          temperature: number
+          timestamp: string | null
+        }
+        Insert: {
+          humidity: number
+          id?: number
+          mq135: number
+          mq3_1: number
+          mq3_2: number
+          temperature: number
+          timestamp?: string | null
+        }
+        Update: {
+          humidity?: number
+          id?: number
+          mq135?: number
+          mq3_1?: number
+          mq3_2?: number
+          temperature?: number
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
