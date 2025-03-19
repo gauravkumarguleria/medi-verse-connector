@@ -46,7 +46,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user } = useUser();
 
   const isActiveRoute = (route: string) => {
-    return location.pathname.includes(route);
+    return location.pathname === route || (route !== '/dashboard' && location.pathname.startsWith(route));
   };
 
   const handleLogout = () => {
