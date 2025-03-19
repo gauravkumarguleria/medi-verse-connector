@@ -32,6 +32,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserProfile = async (userId: string) => {
     try {
       setIsLoading(true);
+      
+      console.log('Fetching user profile for ID:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -44,6 +47,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data) {
+        console.log('Profile data retrieved:', data);
         setUser({
           id: data.id,
           name: data.name || '',
@@ -63,6 +67,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           allergies: data.allergies,
           conditions: data.conditions
         });
+      } else {
+        console.log('No profile data found for user ID:', userId);
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -76,9 +82,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkUser = async () => {
       try {
         const { data } = await supabase.auth.getSession();
+        console.log('Auth session data:', data);
+        
         if (data && data.session) {
+          console.log('User is authenticated with ID:', data.session.user.id);
           await fetchUserProfile(data.session.user.id);
         } else {
+          console.log('No authenticated session found, using initial user data');
           setIsLoading(false);
         }
       } catch (error) {
@@ -92,9 +102,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
+        
         if (session && event === 'SIGNED_IN') {
+          console.log('User signed in:', session.user.id);
           await fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out, resetting to initial user');
           setUser(initialUser);
         }
       }
@@ -110,7 +124,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUserProfile = async () => {
     const { data } = await supabase.auth.getSession();
     if (data && data.session) {
+      console.log('Refreshing user profile for:', data.session.user.id);
       await fetchUserProfile(data.session.user.id);
+    } else {
+      console.log('Cannot refresh profile: No active session');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to view your profile.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -129,6 +151,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const userId = authData.session.user.id;
+      console.log('Updating profile for user ID:', userId);
       
       // Format the data for Supabase (snake_case)
       const formattedData = {
@@ -149,11 +172,45 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: userData.role
       };
 
-      // Update the profile in Supabase
-      const { error } = await supabase
+      console.log('Sending update with data:', formattedData);
+
+      // First, check if the profile exists
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .update(formattedData)
-        .eq('id', userId);
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking if profile exists:', fetchError);
+        toast({
+          title: "Error updating profile",
+          description: fetchError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      let error;
+      
+      if (!existingProfile) {
+        console.log('Profile does not exist, creating new one');
+        // Profile doesn't exist, create it
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ ...formattedData, id: userId });
+          
+        error = insertError;
+      } else {
+        console.log('Profile exists, updating');
+        // Profile exists, update it
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update(formattedData)
+          .eq('id', userId);
+          
+        error = updateError;
+      }
 
       if (error) {
         console.error('Error updating profile:', error);
@@ -171,11 +228,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...userData,
       }));
 
+      console.log('Profile updated successfully');
+
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
         variant: "default",
       });
+      
+      // Refresh the profile to ensure we have the latest data
+      await fetchUserProfile(userId);
+      
     } catch (error) {
       console.error('Error in updateUser:', error);
       toast({

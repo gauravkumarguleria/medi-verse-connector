@@ -15,6 +15,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -28,12 +29,24 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const { updateUser } = useUser();
+  const { updateUser, refreshUserProfile } = useUser();
 
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session) {
+        setIsAuthenticated(true);
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     // Update auth type if URL parameter changes
@@ -45,9 +58,6 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       if (authType === 'register' && !selectedRole) {
         toast({
           title: "Please select a role",
@@ -58,15 +68,28 @@ const Auth = () => {
         return;
       }
       
-      // For registration, update the user context with the selected role but don't authenticate yet
       if (authType === 'register' && selectedRole) {
-        // We store user info but don't set isAuthenticated = true
-        updateUser({
-          name,
+        // Register the user with Supabase
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
-          role: selectedRole,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+          password,
+          options: {
+            data: {
+              name,
+              role: selectedRole,
+              avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+            }
+          }
         });
+        
+        if (signUpError) {
+          toast({
+            title: "Registration Failed",
+            description: signUpError.message,
+            variant: "destructive",
+          });
+          return;
+        }
         
         // Display success toast
         toast({
@@ -79,24 +102,37 @@ const Auth = () => {
         // Switch to login tab
         setAuthType('login');
       } else {
-        // For login, fetch user data and authenticate
-        updateUser({
-          name: "John Doe",
+        // For login, sign in with Supabase
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
-          role: "patient",
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=John`,
+          password,
         });
         
-        // Display success toast
-        toast({
-          title: "Login Successful",
-          description: "Welcome back to MediVerse!",
-        });
+        if (signInError) {
+          toast({
+            title: "Login Failed",
+            description: signInError.message,
+            variant: "destructive",
+          });
+          return;
+        }
         
-        // Set authenticated to redirect to dashboard
-        setIsAuthenticated(true);
+        if (signInData && signInData.user) {
+          // Refresh the user profile to get the latest data
+          await refreshUserProfile();
+          
+          // Display success toast
+          toast({
+            title: "Login Successful",
+            description: "Welcome back to MediVerse!",
+          });
+          
+          // Set authenticated to redirect to dashboard
+          setIsAuthenticated(true);
+        }
       }
     } catch (error) {
+      console.error("Authentication error:", error);
       toast({
         title: "Authentication Failed",
         description: "Please check your credentials and try again",

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   User, 
@@ -32,9 +31,10 @@ import { Switch } from '@/components/ui/switch';
 import GlassCard from '@/components/ui/GlassCard';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSection: React.FC = () => {
-  const { user, updateUser, isLoading } = useUser();
+  const { user, updateUser, isLoading, refreshUserProfile } = useUser();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('personal');
   const [isEditing, setIsEditing] = useState(false);
@@ -62,8 +62,30 @@ const ProfileSection: React.FC = () => {
     newsletters: false
   });
 
+  // Auto-refresh user profile when component mounts
+  useEffect(() => {
+    const checkAuthAndRefresh = async () => {
+      // Check if we're actually authenticated
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session) {
+        console.log('Profile page mounted, refreshing user data');
+        refreshUserProfile();
+      } else {
+        console.log('No active session found on profile page');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to view your profile.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    checkAuthAndRefresh();
+  }, []);
+
   // Update form data when user data changes
   useEffect(() => {
+    console.log('User data updated, refreshing form:', user);
     setFormData({
       name: user.name || '',
       email: user.email || '',
@@ -97,6 +119,19 @@ const ProfileSection: React.FC = () => {
   };
 
   const handleSaveChanges = async () => {
+    // Check if user is authenticated before saving
+    const { data } = await supabase.auth.getSession();
+    if (!data || !data.session) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to update your profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log('Saving profile changes:', formData);
+    
     // Save the user details to Supabase
     await updateUser({
       name: formData.name,
