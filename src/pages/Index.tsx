@@ -29,6 +29,7 @@ import FeatureSection from '@/components/sections/FeatureSection';
 import VideoBackground from '@/components/ui/VideoBackground';
 import AnimatedGradient from '@/components/ui/AnimatedGradient';
 import AnimatedLogo from '@/components/ui/AnimatedLogo';
+import ScrollFadeIn from '@/components/ui/ScrollFadeIn';
 import { Feature } from '@/types';
 
 const Index = () => {
@@ -260,168 +261,182 @@ const Index = () => {
       </section>
 
       {/* Features Overview Section */}
-      <section id="learn-more" className="py-20 bg-gradient-to-b from-background to-secondary/20" ref={featuresSectionRef}>
-        <div className="container px-4 md:px-6 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style={{transitionDelay: '200ms'}}>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Comprehensive Healthcare Features</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our platform provides a wide range of features designed to make healthcare accessible, convenient, and effective.
-            </p>
+      <section id="learn-more" className="py-20 bg-gradient-to-b from-background to-secondary/20">
+        <ScrollFadeIn>
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">Comprehensive Healthcare Features</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Our platform provides a wide range of features designed to make healthcare accessible, convenient, and effective.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {features.map((feature, index) => (
+                <ScrollFadeIn key={index} delay={index * 100} direction="up">
+                  <FeatureCard feature={feature} index={index} />
+                </ScrollFadeIn>
+              ))}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <FeatureCard key={index} feature={feature} index={index} />
-            ))}
-          </div>
-        </div>
+        </ScrollFadeIn>
       </section>
 
       {/* Detailed Feature Section */}
-      <FeatureSection />
+      <ScrollFadeIn>
+        <FeatureSection />
+      </ScrollFadeIn>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-gradient-to-b from-background to-primary/5" ref={howItWorksRef}>
-        <div className="container px-4 md:px-6 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style={{transitionDelay: '200ms'}}>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">How It Works</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Getting started with our platform is simple and straightforward.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {howItWorks.map((step) => (
-              <div key={step.step} className="relative transform hover:scale-105 transition-transform duration-300">
-                <div className="flex flex-col items-center text-center">
-                  <div className="relative mb-6">
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center group">
-                      <div className="transform group-hover:scale-110 transition-transform duration-300">
-                        {step.icon}
+      <section className="py-20 bg-gradient-to-b from-background to-primary/5">
+        <ScrollFadeIn>
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Getting started with our platform is simple and straightforward.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {howItWorks.map((step) => (
+                <ScrollFadeIn key={step.step} delay={step.step * 100} direction="up">
+                  <div className="relative transform hover:scale-105 transition-transform duration-300">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="relative mb-6">
+                        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center group">
+                          <div className="transform group-hover:scale-110 transition-transform duration-300">
+                            {step.icon}
+                          </div>
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold animate-bounce" style={{animationDuration: '2s', animationDelay: `${step.step * 0.2}s`}}>
+                          {step.step}
+                        </div>
                       </div>
+                      <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                      <p className="text-muted-foreground">{step.description}</p>
                     </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold animate-bounce" style={{animationDuration: '2s', animationDelay: `${step.step * 0.2}s`}}>
-                      {step.step}
-                    </div>
+                    
+                    {step.step < howItWorks.length && (
+                      <div className="hidden md:block absolute top-1/4 right-0 transform translate-x-1/2 animate-pulse">
+                        <ChevronRight className="h-8 w-8 text-primary/30" />
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-                  <p className="text-muted-foreground">{step.description}</p>
-                </div>
-                
-                {step.step < howItWorks.length && (
-                  <div className="hidden md:block absolute top-1/4 right-0 transform translate-x-1/2 animate-pulse">
-                    <ChevronRight className="h-8 w-8 text-primary/30" />
-                  </div>
-                )}
-              </div>
-            ))}
+                </ScrollFadeIn>
+              ))}
+            </div>
           </div>
-        </div>
+        </ScrollFadeIn>
       </section>
       
       {/* Testimonials Section */}
-      <section className="py-20 bg-secondary/10 relative overflow-hidden" ref={testimonialsRef}>
+      <section className="py-20 bg-secondary/10 relative overflow-hidden">
         <CircleBackground />
-        <div className="container px-4 md:px-6 relative z-10 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style={{transitionDelay: '200ms'}}>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">What Our Users Say</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Hear from doctors, patients, and pharmacists who use our platform.
-            </p>
+        <ScrollFadeIn>
+          <div className="container px-4 md:px-6 relative z-10">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">What Our Users Say</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Hear from doctors, patients, and pharmacists who use our platform.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((testimonial) => (
+                <ScrollFadeIn key={testimonial.id} delay={testimonial.id * 100} direction="up">
+                  <GlassCard 
+                    className="p-6 transform hover:scale-105 transition-transform duration-300 hover:shadow-lg"
+                  >
+                    <div className="flex items-center mb-4">
+                      <div className="mr-4 overflow-hidden rounded-full">
+                        <img 
+                          src={testimonial.image} 
+                          alt={testimonial.name} 
+                          className="w-14 h-14 rounded-full object-cover transform hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{testimonial.name}</h4>
+                        <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                      </div>
+                    </div>
+                    <div className="mb-4 flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-400 fill-yellow-400 animate-pulse' : 'text-gray-300'}`} 
+                          style={{animationDuration: '3s', animationDelay: `${i * 0.1}s`}}
+                        />
+                      ))}
+                    </div>
+                    <div className="mb-4">
+                      <Quote className="h-6 w-6 text-primary/40 mb-2 transform hover:rotate-12 transition-transform duration-300" />
+                      <p className="text-muted-foreground italic">{testimonial.quote}</p>
+                    </div>
+                  </GlassCard>
+                </ScrollFadeIn>
+              ))}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <GlassCard 
-                key={testimonial.id} 
-                className="p-6 transform hover:scale-105 transition-transform duration-300 hover:shadow-lg"
-                style={{animationDelay: `${testimonial.id * 100}ms`}}
-              >
-                <div className="flex items-center mb-4">
-                  <div className="mr-4 overflow-hidden rounded-full">
-                    <img 
-                      src={testimonial.image} 
-                      alt={testimonial.name} 
-                      className="w-14 h-14 rounded-full object-cover transform hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">{testimonial.name}</h4>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                </div>
-                <div className="mb-4 flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-400 fill-yellow-400 animate-pulse' : 'text-gray-300'}`} 
-                      style={{animationDuration: '3s', animationDelay: `${i * 0.1}s`}}
-                    />
-                  ))}
-                </div>
-                <div className="mb-4">
-                  <Quote className="h-6 w-6 text-primary/40 mb-2 transform hover:rotate-12 transition-transform duration-300" />
-                  <p className="text-muted-foreground italic">{testimonial.quote}</p>
-                </div>
-              </GlassCard>
-            ))}
-          </div>
-        </div>
+        </ScrollFadeIn>
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-primary/5" ref={statsRef}>
-        <div className="container px-4 md:px-6 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style={{transitionDelay: '200ms'}}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
-            {statsData.map((stat, index) => (
-              <div 
-                key={index} 
-                className="text-center transform hover:scale-105 transition-transform duration-300"
-                style={{animationDelay: `${index * 100}ms`}}
-              >
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 rounded-full bg-primary/10 transform hover:rotate-12 transition-transform duration-300">
-                    {stat.icon}
+      <section className="py-16 bg-primary/5">
+        <ScrollFadeIn>
+          <div className="container px-4 md:px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
+              {statsData.map((stat, index) => (
+                <ScrollFadeIn key={index} delay={index * 100} direction="up">
+                  <div className="text-center transform hover:scale-105 transition-transform duration-300">
+                    <div className="flex justify-center mb-4">
+                      <div className="p-3 rounded-full bg-primary/10 transform hover:rotate-12 transition-transform duration-300">
+                        {stat.icon}
+                      </div>
+                    </div>
+                    <div className="text-3xl md:text-4xl font-bold text-primary mb-2 animate-count">{stat.value}</div>
+                    <p className="text-muted-foreground">{stat.label}</p>
                   </div>
-                </div>
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2 animate-count">{stat.value}</div>
-                <p className="text-muted-foreground">{stat.label}</p>
-              </div>
-            ))}
+                </ScrollFadeIn>
+              ))}
+            </div>
           </div>
-        </div>
+        </ScrollFadeIn>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-background" ref={benefitsRef}>
-        <div className="container px-4 md:px-6 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style={{transitionDelay: '200ms'}}>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose Our Platform</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              We offer numerous advantages that make healthcare management easier and more efficient.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {benefits.map((benefit, index) => (
-              <GlassCard
-                key={index}
-                className="p-6 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-xl"
-                style={{animationDelay: `${index * 100}ms`}}
-              >
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 rounded-full bg-primary/10 group">
-                    <div className="transform group-hover:rotate-12 transition-transform duration-300">
-                      {benefit.icon}
+      <section className="py-20 bg-background">
+        <ScrollFadeIn>
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">Why Choose Our Platform</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                We offer numerous advantages that make healthcare management easier and more efficient.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {benefits.map((benefit, index) => (
+                <ScrollFadeIn key={index} delay={index * 100} direction="up">
+                  <GlassCard
+                    className="p-6 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-xl"
+                  >
+                    <div className="flex justify-center mb-4">
+                      <div className="p-3 rounded-full bg-primary/10 group">
+                        <div className="transform group-hover:rotate-12 transition-transform duration-300">
+                          {benefit.icon}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
-                <p className="text-muted-foreground">{benefit.description}</p>
-              </GlassCard>
-            ))}
+                    <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
+                    <p className="text-muted-foreground">{benefit.description}</p>
+                  </GlassCard>
+                </ScrollFadeIn>
+              ))}
+            </div>
           </div>
-        </div>
+        </ScrollFadeIn>
       </section>
 
       {/* Newsletter Section with gradient animation */}
@@ -460,46 +475,49 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {roleFeatures.map((role, index) => (
-              <GlassCard 
-                key={index} 
-                className="text-center flex flex-col items-center transform hover:scale-105 transition-all duration-300 hover:shadow-xl group"
-                style={{animationDelay: `${index * 100}ms`}}
-              >
-                <div className="mb-4 transform group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">{role.icon}</div>
-                <h3 className="text-xl font-semibold mb-2">{role.role}</h3>
-                <p className="text-sm text-muted-foreground mb-6">{role.description}</p>
-                <AnimatedButton 
-                  variant="outline" 
-                  className="mt-auto" 
-                  href={role.link}
-                  shine={true}
+              <ScrollFadeIn key={index} delay={index * 100} direction="up">
+                <GlassCard 
+                  className="text-center flex flex-col items-center transform hover:scale-105 transition-all duration-300 hover:shadow-xl group"
                 >
-                  Register as {role.role}
-                </AnimatedButton>
-              </GlassCard>
+                  <div className="mb-4 transform group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">{role.icon}</div>
+                  <h3 className="text-xl font-semibold mb-2">{role.role}</h3>
+                  <p className="text-sm text-muted-foreground mb-6">{role.description}</p>
+                  <AnimatedButton 
+                    variant="outline" 
+                    className="mt-auto" 
+                    href={role.link}
+                    shine={true}
+                  >
+                    Register as {role.role}
+                  </AnimatedButton>
+                </GlassCard>
+              </ScrollFadeIn>
             ))}
           </div>
         </div>
       </section>
       
       {/* CTA Section */}
-      <section className="py-20 bg-primary/5 relative overflow-hidden" ref={ctaRef}>
-        <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent opacity-70"></div>
-        <div className="container px-4 md:px-6 relative z-10 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style={{transitionDelay: '200ms'}}>
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Healthcare Experience?</h2>
-            <p className="text-muted-foreground mb-8">
-              Join thousands of users who are already benefiting from our comprehensive healthcare platform.
-            </p>
-            <AnimatedButton size="lg" href="/auth?type=register" shine={true} className="animate-pulse-slow">
-              Get Started Now
-            </AnimatedButton>
+      <section className="py-20 bg-primary/5 relative overflow-hidden">
+        <ScrollFadeIn>
+          <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent opacity-70"></div>
+          <div className="container px-4 md:px-6 relative z-10">
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Healthcare Experience?</h2>
+              <p className="text-muted-foreground mb-8">
+                Join thousands of users who are already benefiting from our comprehensive healthcare platform.
+              </p>
+              <AnimatedButton size="lg" href="/auth?type=register" shine={true} className="animate-pulse-slow">
+                Get Started Now
+              </AnimatedButton>
+            </div>
           </div>
-        </div>
+        </ScrollFadeIn>
       </section>
 
       {/* Add keyframes animations */}
-      <style jsx>{`
+      <style>
+        {`
         .animate-in {
           opacity: 1 !important;
           transform: translateY(0) !important;
@@ -513,7 +531,8 @@ const Index = () => {
         .animate-count {
           animation: count 1s forwards;
         }
-      `}</style>
+        `}
+      </style>
 
       <Footer />
     </div>
