@@ -86,15 +86,16 @@ const Navbar: React.FC = () => {
       )}
     >
       <div className="container flex items-center justify-between h-16">
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6">
-          <Logo />
-          <NavItems items={navItems} className="items-center gap-4" />
+        {/* Logo (Left) */}
+        <Logo />
+
+        {/* Navigation Items (Center) */}
+        <div className="hidden md:flex items-center justify-center flex-1">
+          <NavItems items={navItems} className="items-center gap-6" />
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center justify-between w-full">
-          <Logo />
+        <div className="md:hidden flex items-center">
           <Button
             variant="ghost"
             size="icon"
@@ -105,8 +106,10 @@ const Navbar: React.FC = () => {
           </Button>
         </div>
 
-        {/* Actions */}
-        <NavbarActions isAuthenticated={isAuthenticated} user={user} />
+        {/* Actions (Right) */}
+        <div className="hidden md:flex items-center">
+          <NavbarActions isAuthenticated={isAuthenticated} user={user} />
+        </div>
       </div>
 
       {/* Mobile Menu */}

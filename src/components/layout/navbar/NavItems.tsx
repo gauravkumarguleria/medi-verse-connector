@@ -21,13 +21,13 @@ const NavItems: React.FC<NavItemsProps> = ({
   itemClassName,
 }) => {
   return (
-    <nav className={cn("flex", className)}>
+    <nav className={cn("flex justify-center", className)}>
       {items.map((item) => (
         <Link
           key={item.name}
           to={item.href}
           className={cn(
-            "text-sm font-medium transition-colors hover:text-primary",
+            "text-sm font-medium transition-colors hover:text-primary mx-3",
             item.active ? "text-primary" : "text-muted-foreground",
             itemClassName
           )}
