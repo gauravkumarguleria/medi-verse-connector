@@ -103,11 +103,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   // Handle navigation with proper path construction
   const handleNavigation = (path: string) => {
-    if (path === '/dashboard') {
-      navigate(path);
-    } else {
-      navigate(path);
-    }
+    navigate(path);
   };
 
   // Get relevant menu items based on user role
