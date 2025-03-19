@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Navigate, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import RoleSelector from '@/components/ui/RoleSelector';
 import CircleBackground from '@/components/ui/CircleBackground';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import { UserRole } from '@/types';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -170,6 +171,7 @@ const Auth = () => {
         description: "Please check your credentials and try again",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
