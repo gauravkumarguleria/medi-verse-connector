@@ -28,7 +28,8 @@ import {
   ClipboardList,
   MessageSquare,
   HeartPulse,
-  CircuitBoard
+  CircuitBoard,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ThemeModeToggle } from '../ui/ThemeModeToggle';
@@ -155,6 +156,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             icon: <ClipboardList className="h-5 w-5" />,
             onClick: () => navigate('/dashboard/records'),
             isActive: isActiveRoute('/dashboard/records'),
+          },
+          {
+            label: 'Pharmacy Store',
+            icon: <ShoppingBag className="h-5 w-5" />,
+            onClick: () => navigate('/dashboard/pharmacy'),
+            isActive: isActiveRoute('/dashboard/pharmacy'),
           },
         ],
       },
