@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   User, 
@@ -10,7 +11,8 @@ import {
   Bell,
   FileText,
   Save,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import { 
   Card, 
@@ -32,24 +34,24 @@ import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 
 const ProfileSection: React.FC = () => {
-  const { user, updateUser } = useUser();
+  const { user, updateUser, isLoading } = useUser();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('personal');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1990-05-15',
-    address: '123 Health Street',
-    city: 'San Francisco',
-    state: 'California',
-    zipCode: '94105',
-    bloodType: 'O+',
-    height: '175',
-    weight: '70',
-    allergies: 'None',
-    conditions: 'None'
+    name: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    bloodType: '',
+    height: '',
+    weight: '',
+    allergies: '',
+    conditions: ''
   });
 
   const [notificationsEnabled, setNotificationsEnabled] = useState({
@@ -60,13 +62,23 @@ const ProfileSection: React.FC = () => {
     newsletters: false
   });
 
+  // Update form data when user data changes
   useEffect(() => {
-    // Update form data when user data changes
-    setFormData(prev => ({
-      ...prev,
-      name: user.name,
-      email: user.email
-    }));
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      dateOfBirth: user.dateOfBirth || '',
+      address: user.address || '',
+      city: user.city || '',
+      state: user.state || '',
+      zipCode: user.zipCode || '',
+      bloodType: user.bloodType || '',
+      height: user.height || '',
+      weight: user.weight || '',
+      allergies: user.allergies || '',
+      conditions: user.conditions || ''
+    });
   }, [user]);
 
   const handleNotificationToggle = (key: keyof typeof notificationsEnabled) => {
@@ -84,34 +96,59 @@ const ProfileSection: React.FC = () => {
     }));
   };
 
-  const handleSaveChanges = () => {
-    // Save the user details
-    updateUser({
+  const handleSaveChanges = async () => {
+    // Save the user details to Supabase
+    await updateUser({
       name: formData.name,
-      email: formData.email
+      email: formData.email,
+      phone: formData.phone,
+      dateOfBirth: formData.dateOfBirth,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      zipCode: formData.zipCode,
+      bloodType: formData.bloodType,
+      height: formData.height,
+      weight: formData.weight,
+      allergies: formData.allergies,
+      conditions: formData.conditions
     });
     
     setIsEditing(false);
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully.",
-      variant: "default",
-    });
   };
 
   const handleCancel = () => {
     // Reset form to current user data
-    setFormData(prev => ({
-      ...prev,
-      name: user.name,
-      email: user.email
-    }));
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      dateOfBirth: user.dateOfBirth || '',
+      address: user.address || '',
+      city: user.city || '',
+      state: user.state || '',
+      zipCode: user.zipCode || '',
+      bloodType: user.bloodType || '',
+      height: user.height || '',
+      weight: user.weight || '',
+      allergies: user.allergies || '',
+      conditions: user.conditions || ''
+    });
     setIsEditing(false);
   };
 
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading profile...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-up space-y-8">
@@ -127,13 +164,13 @@ const ProfileSection: React.FC = () => {
                 <X className="mr-2 h-4 w-4" />
                 Cancel
               </Button>
-              <Button onClick={handleSaveChanges}>
-                <Save className="mr-2 h-4 w-4" />
+              <Button onClick={handleSaveChanges} disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Save Changes
               </Button>
             </>
           ) : (
-            <Button onClick={toggleEdit}>Edit Profile</Button>
+            <Button onClick={toggleEdit} disabled={isLoading}>Edit Profile</Button>
           )}
         </div>
       </div>
@@ -144,7 +181,7 @@ const ProfileSection: React.FC = () => {
           <div className="flex flex-col items-center text-center">
             <Avatar className="h-24 w-24 mb-4">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <h3 className="text-xl font-semibold mb-1">{user.name}</h3>
             <p className="text-muted-foreground mb-4">{user.email}</p>
@@ -156,6 +193,7 @@ const ProfileSection: React.FC = () => {
                 variant="secondary" 
                 className="w-full"
                 onClick={toggleEdit}
+                disabled={isLoading}
               >
                 {isEditing ? 'Cancel Editing' : 'Edit Profile'}
               </Button>
@@ -167,7 +205,7 @@ const ProfileSection: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Member since Jan 2023</span>
+                <span className="text-sm">Member since {new Date(user.createdAt || Date.now()).toLocaleDateString()}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -205,7 +243,7 @@ const ProfileSection: React.FC = () => {
                         id="name" 
                         value={formData.name} 
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -215,7 +253,7 @@ const ProfileSection: React.FC = () => {
                         type="email" 
                         value={formData.email}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -224,7 +262,7 @@ const ProfileSection: React.FC = () => {
                         id="phone" 
                         value={formData.phone}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -233,7 +271,7 @@ const ProfileSection: React.FC = () => {
                         id="dateOfBirth" 
                         value={formData.dateOfBirth}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                   </div>
@@ -244,7 +282,7 @@ const ProfileSection: React.FC = () => {
                       id="address" 
                       value={formData.address}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={!isEditing || isLoading}
                     />
                   </div>
                   
@@ -255,7 +293,7 @@ const ProfileSection: React.FC = () => {
                         id="city" 
                         value={formData.city}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -264,7 +302,7 @@ const ProfileSection: React.FC = () => {
                         id="state" 
                         value={formData.state}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -273,7 +311,7 @@ const ProfileSection: React.FC = () => {
                         id="zipCode" 
                         value={formData.zipCode}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                   </div>
@@ -281,8 +319,11 @@ const ProfileSection: React.FC = () => {
                 <CardFooter className="flex justify-between">
                   {isEditing && (
                     <>
-                      <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                      <Button onClick={handleSaveChanges}>Save Changes</Button>
+                      <Button variant="outline" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+                      <Button onClick={handleSaveChanges} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Changes
+                      </Button>
                     </>
                   )}
                 </CardFooter>
@@ -301,7 +342,7 @@ const ProfileSection: React.FC = () => {
                         id="bloodType" 
                         value={formData.bloodType}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -310,7 +351,7 @@ const ProfileSection: React.FC = () => {
                         id="height" 
                         value={formData.height}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -319,7 +360,7 @@ const ProfileSection: React.FC = () => {
                         id="weight" 
                         value={formData.weight}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -328,7 +369,7 @@ const ProfileSection: React.FC = () => {
                         id="allergies" 
                         value={formData.allergies}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                   </div>
@@ -339,15 +380,18 @@ const ProfileSection: React.FC = () => {
                       id="conditions" 
                       value={formData.conditions}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={!isEditing || isLoading}
                     />
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   {isEditing && (
                     <>
-                      <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                      <Button onClick={handleSaveChanges}>Save Changes</Button>
+                      <Button variant="outline" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+                      <Button onClick={handleSaveChanges} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Changes
+                      </Button>
                     </>
                   )}
                 </CardFooter>

@@ -7,6 +7,17 @@ export interface User {
   profilePicture?: string;
   avatar?: string;
   createdAt?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  bloodType?: string;
+  height?: string;
+  weight?: string;
+  allergies?: string;
+  conditions?: string;
 }
 
 export interface Doctor {
