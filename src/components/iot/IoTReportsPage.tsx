@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
@@ -28,6 +27,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
 
   // Enable realtime for sensor_data table when component mounts
   useEffect(() => {
+    console.log('IoTReportsPage mounted - initializing data and subscriptions');
     IoTService.enableRealtimeForTable('sensor_data').catch(console.error);
     
     // Always fetch 10 sensor readings initially
@@ -49,6 +49,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
       .subscribe();
     
     return () => {
+      console.log('IoTReportsPage unmounted - cleaning up');
       clearInterval(intervalId);
       supabase.removeChannel(channel);
     };
