@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Navigate } from 'react-router-dom';
+import { useSearchParams, Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const type = searchParams.get('type') || 'login';
   const preselectedRole = searchParams.get('role') as UserRole | null;
   
@@ -41,12 +42,14 @@ const Auth = () => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
       if (data && data.session) {
+        console.log('User is already authenticated, redirecting to dashboard');
         setIsAuthenticated(true);
+        navigate('/dashboard');
       }
     };
     
     checkAuth();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     // Update auth type if URL parameter changes
@@ -118,6 +121,8 @@ const Auth = () => {
         }
         
         if (signInData && signInData.user) {
+          console.log('Login successful, user:', signInData.user.id);
+          
           // Refresh the user profile to get the latest data
           await refreshUserProfile();
           
@@ -127,8 +132,9 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // Set authenticated to redirect to dashboard
-          setIsAuthenticated(true);
+          // Directly navigate to dashboard instead of relying on isAuthenticated state
+          console.log('Navigating to dashboard after successful login');
+          navigate('/dashboard');
         }
       }
     } catch (error) {
@@ -143,8 +149,10 @@ const Auth = () => {
     }
   };
 
-  // Redirect to dashboard only if authenticated
+  // Redirect to dashboard only if authenticated state is set
+  // (This is a backup redirect if the navigate() in login handler doesn't work)
   if (isAuthenticated) {
+    console.log('isAuthenticated state is true, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 

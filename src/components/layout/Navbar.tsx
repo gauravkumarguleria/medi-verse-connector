@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -17,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -55,10 +55,19 @@ const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
   }, [location]);
 
-  const handleLogout = () => {
-    // In a real application, this would call your logout function
-    // For now, we'll just redirect to home
-    window.location.href = '/';
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error logging out:', error);
+      } else {
+        // Successfully logged out, redirect to home
+        console.log('User logged out successfully');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   const handleProfileClick = () => {
