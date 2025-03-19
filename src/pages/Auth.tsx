@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -110,7 +109,6 @@ const Auth = () => {
         setAuthType('login');
         setIsLoading(false);
       } else {
-        // Login flow
         console.log("Attempting login with:", { email, password });
         setLoginProgress(25);
         
@@ -131,7 +129,7 @@ const Auth = () => {
           return;
         }
         
-        setLoginProgress(50);
+        setLoginProgress(100);
         
         if (signInData && signInData.user) {
           console.log('Login successful, user:', signInData.user.id);
@@ -140,32 +138,7 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          setLoginProgress(75);
-          
-          try {
-            // Manual profile refresh
-            await refreshUserProfile();
-            console.log('Profile refreshed, redirecting to dashboard');
-            setLoginProgress(100);
-            
-            // Use setTimeout to ensure state updates complete before navigation
-            setTimeout(() => {
-              // Try React Router navigation first
-              navigate('/dashboard');
-              
-              // Use a fallback for direct navigation after a short delay
-              setTimeout(() => {
-                if (window.location.pathname !== '/dashboard') {
-                  console.log('Fallback: using direct location change');
-                  window.location.href = '/dashboard';
-                }
-              }, 300);
-            }, 300);
-          } catch (error) {
-            console.error('Error during profile refresh:', error);
-            // Force direct navigation as fallback
-            window.location.href = '/dashboard';
-          }
+          window.location.href = '/dashboard';
         }
       }
     } catch (error) {
