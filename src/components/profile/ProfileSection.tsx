@@ -1,196 +1,622 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  MapPin, 
+  Shield, 
+  KeyRound,
+  Bell,
+  FileText,
+  Save,
+  X,
+  Loader2
+} from 'lucide-react';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import GlassCard from '@/components/ui/GlassCard';
 import { useUser } from '@/contexts/UserContext';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-const ProfileSection = () => {
-  const { user, isLoading, refreshUserProfile } = useUser();
-  const [isRefreshing, setIsRefreshing] = useState(false);
+const ProfileSection: React.FC = () => {
+  const { user, updateUser, isLoading, refreshUserProfile } = useUser();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('personal');
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    bloodType: '',
+    height: '',
+    weight: '',
+    allergies: '',
+    conditions: ''
+  });
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState({
+    appointments: true,
+    medications: true,
+    messages: true,
+    reports: false,
+    newsletters: false
+  });
+
+  // Auto-refresh user profile when component mounts
   useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        await refreshUserProfile();
-      } catch (error) {
-        console.error('Error loading profile:', error);
+    const checkAuthAndRefresh = async () => {
+      // Check if we're actually authenticated
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session) {
+        console.log('Profile page mounted, refreshing user data');
+        refreshUserProfile();
+      } else {
+        console.log('No active session found on profile page');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to view your profile.",
+          variant: "destructive",
+        });
       }
     };
     
-    loadProfile();
-  }, [refreshUserProfile]);
+    checkAuthAndRefresh();
+  }, []);
+
+  // Update form data when user data changes
+  useEffect(() => {
+    console.log('User data updated, refreshing form:', user);
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      dateOfBirth: user.dateOfBirth || '',
+      address: user.address || '',
+      city: user.city || '',
+      state: user.state || '',
+      zipCode: user.zipCode || '',
+      bloodType: user.bloodType || '',
+      height: user.height || '',
+      weight: user.weight || '',
+      allergies: user.allergies || '',
+      conditions: user.conditions || ''
+    });
+  }, [user]);
+
+  const handleNotificationToggle = (key: keyof typeof notificationsEnabled) => {
+    setNotificationsEnabled(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSaveChanges = async () => {
+    // Check if user is authenticated before saving
+    const { data } = await supabase.auth.getSession();
+    if (!data || !data.session) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to update your profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log('Saving profile changes:', formData);
+    
+    // Save the user details to Supabase
+    await updateUser({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      dateOfBirth: formData.dateOfBirth,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      zipCode: formData.zipCode,
+      bloodType: formData.bloodType,
+      height: formData.height,
+      weight: formData.weight,
+      allergies: formData.allergies,
+      conditions: formData.conditions
+    });
+    
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    // Reset form to current user data
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      dateOfBirth: user.dateOfBirth || '',
+      address: user.address || '',
+      city: user.city || '',
+      state: user.state || '',
+      zipCode: user.zipCode || '',
+      bloodType: user.bloodType || '',
+      height: user.height || '',
+      weight: user.weight || '',
+      allergies: user.allergies || '',
+      conditions: user.conditions || ''
+    });
+    setIsEditing(false);
+  };
+
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col space-y-4">
-          <Skeleton className="h-12 w-1/4 mb-4" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-1/2 mb-2" />
-                <Skeleton className="h-4 w-3/4" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <Skeleton className="h-16 w-16 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-5 w-24" />
-                    <Skeleton className="h-4 w-28" />
-                  </div>
-                </div>
-                {Array(5).fill(0).map((_, i) => (
-                  <div key={i} className="space-y-1">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-1/2 mb-2" />
-                <Skeleton className="h-4 w-3/4" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {Array(6).fill(0).map((_, i) => (
-                  <div key={i} className="space-y-1">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading profile...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-up space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">My Profile</h1>
+          <p className="text-muted-foreground">Manage your account and settings</p>
+        </div>
+        <div className="flex gap-4">
+          {isEditing ? (
+            <>
+              <Button variant="outline" onClick={handleCancel}>
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button onClick={handleSaveChanges} disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Save Changes
+              </Button>
+            </>
+          ) : (
+            <Button onClick={toggleEdit} disabled={isLoading}>Edit Profile</Button>
+          )}
         </div>
       </div>
-    );
-  }
 
-  if (!user) {
-    return (
-      <div className="container mx-auto p-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Not Available</CardTitle>
-            <CardDescription>Your profile information could not be loaded. Please try again later.</CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button 
-              onClick={() => refreshUserProfile()}
-              disabled={isRefreshing}
-            >
-              Retry
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
+      <div className="grid md:grid-cols-3 gap-8">
+        {/* Profile Summary Card */}
+        <GlassCard className="md:col-span-1 p-6">
+          <div className="flex flex-col items-center text-center">
+            <Avatar className="h-24 w-24 mb-4">
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
+            <h3 className="text-xl font-semibold mb-1">{user.name}</h3>
+            <p className="text-muted-foreground mb-4">{user.email}</p>
+            <Badge className="mb-6">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
+            
+            <div className="w-full mt-4">
+              <Button variant="outline" className="w-full mb-2">Change Avatar</Button>
+              <Button 
+                variant="secondary" 
+                className="w-full"
+                onClick={toggleEdit}
+                disabled={isLoading}
+              >
+                {isEditing ? 'Cancel Editing' : 'Edit Profile'}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="mt-8 pt-6 border-t">
+            <h4 className="font-medium mb-4">Account Information</h4>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">Member since {new Date(user.createdAt || Date.now()).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">Last appointment: May 15, 2023</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">Premium Plan</span>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
 
-  
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Manage your personal details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-4 mb-6">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback>{user.name?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="text-xl font-semibold">{user.name}</h2>
-                <p className="text-muted-foreground capitalize">{user.role}</p>
-              </div>
-            </div>
+        {/* Profile Tabs */}
+        <div className="md:col-span-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full mb-6">
+              <TabsTrigger value="personal" className="flex-1">Personal Info</TabsTrigger>
+              <TabsTrigger value="security" className="flex-1">Security</TabsTrigger>
+              <TabsTrigger value="notifications" className="flex-1">Notifications</TabsTrigger>
+              <TabsTrigger value="preferences" className="flex-1">Preferences</TabsTrigger>
+            </TabsList>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
-                <div className="p-2 border rounded-md">{user.email}</div>
-              </div>
+            <TabsContent value="personal" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personal Information</CardTitle>
+                  <CardDescription>Update your personal details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input 
+                        id="name" 
+                        value={formData.name} 
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input 
+                        id="phone" 
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                      <Input 
+                        id="dateOfBirth" 
+                        value={formData.dateOfBirth}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input 
+                      id="address" 
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      disabled={!isEditing || isLoading}
+                    />
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input 
+                        id="city" 
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input 
+                        id="state" 
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">Zip Code</Label>
+                      <Input 
+                        id="zipCode" 
+                        value={formData.zipCode}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  {isEditing && (
+                    <>
+                      <Button variant="outline" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+                      <Button onClick={handleSaveChanges} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Changes
+                      </Button>
+                    </>
+                  )}
+                </CardFooter>
+              </Card>
               
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Phone</label>
-                <div className="p-2 border rounded-md">{user.phone || 'Not provided'}</div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Date of Birth</label>
-                <div className="p-2 border rounded-md">{user.dateOfBirth || 'Not provided'}</div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Address</label>
-                <div className="p-2 border rounded-md">{user.address || 'Not provided'}</div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">City</label>
-                  <div className="p-2 border rounded-md">{user.city || 'Not provided'}</div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">State</label>
-                  <div className="p-2 border rounded-md">{user.state || 'Not provided'}</div>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">ZIP Code</label>
-                <div className="p-2 border rounded-md">{user.zipCode || 'Not provided'}</div>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" onClick={() => refreshUserProfile()}>Refresh</Button>
-          </CardFooter>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Medical Information</CardTitle>
-            <CardDescription>Your health data and medical records</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">Blood Type</label>
-              <div className="p-2 border rounded-md">{user.bloodType || 'Not provided'}</div>
-            </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Medical Information</CardTitle>
+                  <CardDescription>Update your medical details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bloodType">Blood Type</Label>
+                      <Input 
+                        id="bloodType" 
+                        value={formData.bloodType}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="height">Height (cm)</Label>
+                      <Input 
+                        id="height" 
+                        value={formData.height}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weight">Weight (kg)</Label>
+                      <Input 
+                        id="weight" 
+                        value={formData.weight}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="allergies">Allergies</Label>
+                      <Input 
+                        id="allergies" 
+                        value={formData.allergies}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="conditions">Medical Conditions</Label>
+                    <Input 
+                      id="conditions" 
+                      value={formData.conditions}
+                      onChange={handleInputChange}
+                      disabled={!isEditing || isLoading}
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  {isEditing && (
+                    <>
+                      <Button variant="outline" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+                      <Button onClick={handleSaveChanges} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Changes
+                      </Button>
+                    </>
+                  )}
+                </CardFooter>
+              </Card>
+            </TabsContent>
             
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Height</label>
-                <div className="p-2 border rounded-md">{user.height || 'Not provided'}</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Weight</label>
-                <div className="p-2 border rounded-md">{user.weight || 'Not provided'}</div>
-              </div>
-            </div>
+            <TabsContent value="security" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security Settings</CardTitle>
+                  <CardDescription>Manage your account security</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Input id="currentPassword" type="password" />
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <Input id="newPassword" type="password" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                      <Input id="confirmPassword" type="password" />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline">Cancel</Button>
+                  <Button>Update Password</Button>
+                </CardFooter>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Two-Factor Authentication</CardTitle>
+                  <CardDescription>Enhance your account security</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="font-medium">Two-Factor Authentication</p>
+                      <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                    </div>
+                    <Switch id="2fa" defaultChecked={true} />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline">Setup 2FA</Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
             
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">Allergies</label>
-              <div className="p-2 border rounded-md min-h-20">{user.allergies || 'None reported'}</div>
-            </div>
+            <TabsContent value="notifications" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardDescription>Manage how you receive notifications</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">Appointment Reminders</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Get notified about upcoming appointments</p>
+                    </div>
+                    <Switch 
+                      checked={notificationsEnabled.appointments}
+                      onCheckedChange={() => handleNotificationToggle('appointments')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">Medication Reminders</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Get reminders to take your medications</p>
+                    </div>
+                    <Switch 
+                      checked={notificationsEnabled.medications}
+                      onCheckedChange={() => handleNotificationToggle('medications')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">Messages</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Get notified about new messages</p>
+                    </div>
+                    <Switch 
+                      checked={notificationsEnabled.messages}
+                      onCheckedChange={() => handleNotificationToggle('messages')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">Health Reports</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Get notified when new reports are available</p>
+                    </div>
+                    <Switch 
+                      checked={notificationsEnabled.reports}
+                      onCheckedChange={() => handleNotificationToggle('reports')}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
             
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">Medical Conditions</label>
-              <div className="p-2 border rounded-md min-h-20">{user.conditions || 'None reported'}</div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline">Update Medical Info</Button>
-          </CardFooter>
-        </Card>
+            <TabsContent value="preferences" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>App Preferences</CardTitle>
+                  <CardDescription>Customize your app experience</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <p className="font-medium">Language</p>
+                      <p className="text-sm text-muted-foreground">Choose your preferred language</p>
+                    </div>
+                    <div className="w-48">
+                      <select className="w-full border p-2 rounded-md">
+                        <option>English</option>
+                        <option>Spanish</option>
+                        <option>French</option>
+                        <option>German</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <p className="font-medium">Date Format</p>
+                      <p className="text-sm text-muted-foreground">Choose your preferred date format</p>
+                    </div>
+                    <div className="w-48">
+                      <select className="w-full border p-2 rounded-md">
+                        <option>MM/DD/YYYY</option>
+                        <option>DD/MM/YYYY</option>
+                        <option>YYYY-MM-DD</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <p className="font-medium">Temperature Unit</p>
+                      <p className="text-sm text-muted-foreground">Choose your preferred temperature unit</p>
+                    </div>
+                    <div className="w-48">
+                      <select className="w-full border p-2 rounded-md">
+                        <option>Celsius (°C)</option>
+                        <option>Fahrenheit (°F)</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div className="space-y-0.5">
+                      <p className="font-medium">Weight Unit</p>
+                      <p className="text-sm text-muted-foreground">Choose your preferred weight unit</p>
+                    </div>
+                    <div className="w-48">
+                      <select className="w-full border p-2 rounded-md">
+                        <option>Kilograms (kg)</option>
+                        <option>Pounds (lb)</option>
+                      </select>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline">Reset to Default</Button>
+                  <Button>Save Preferences</Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

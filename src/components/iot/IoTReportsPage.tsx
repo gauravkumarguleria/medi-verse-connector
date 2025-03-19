@@ -14,7 +14,6 @@ import { Progress } from '@/components/ui/progress';
 import { DeviceData, DeviceInfo } from '@/types/iotReports';
 import { supabase } from '@/integrations/supabase/client';
 import SensorDataService from '@/services/SensorDataService';
-import { toast } from '@/hooks/use-toast';
 
 interface IoTReportsPageProps {
   hideLayout?: boolean;

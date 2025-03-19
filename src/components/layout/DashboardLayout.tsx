@@ -1,4 +1,5 @@
-import React, { ReactNode, useState, useEffect } from 'react';
+
+import React, { ReactNode, useState } from 'react';
 import Navbar from './Navbar';
 import { 
   Sidebar, 
@@ -33,8 +34,6 @@ import {
 import { Button } from '../ui/button';
 import { ThemeModeToggle } from '../ui/ThemeModeToggle';
 import { useUser } from '@/contexts/UserContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -43,67 +42,20 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [sidebarHidden, setSidebarHidden] = useState(false); // Changed default to false to show sidebar
   const { user } = useUser();
-
-  // Check if user is authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data || !data.session) {
-          console.log('User not authenticated, redirecting to login');
-          navigate('/login');
-        }
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-        navigate('/login');
-      }
-    };
-    
-    checkAuth();
-  }, [navigate]);
 
   const isActiveRoute = (route: string) => {
     return location.pathname === route || (route !== '/dashboard' && location.pathname.startsWith(route));
   };
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error logging out:', error);
-        toast({
-          title: "Logout Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        // Successfully logged out, redirect to home
-        console.log('User logged out successfully');
-        toast({
-          title: "Logged Out",
-          description: "You have been successfully logged out",
-        });
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('Error during logout:', error);
-      toast({
-        title: "Logout Failed",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
+  const handleLogout = () => {
+    // For demo purposes, just navigate to home
+    navigate('/');
   };
 
   const toggleSidebar = () => {
     setSidebarHidden(!sidebarHidden);
-  };
-
-  // Handle navigation with proper path construction
-  const handleNavigation = (path: string) => {
-    navigate(path);
   };
 
   // Get relevant menu items based on user role
@@ -115,7 +67,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Dashboard',
             icon: <Home className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard'),
+            onClick: () => navigate('/dashboard'),
             isActive: isActiveRoute('/dashboard') && !location.pathname.includes('/dashboard/'),
           },
         ],
@@ -126,13 +78,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Profile',
             icon: <User className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/profile'),
+            onClick: () => navigate('/dashboard/profile'),
             isActive: isActiveRoute('/dashboard/profile'),
           },
           {
             label: 'Settings',
             icon: <Settings className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/settings'),
+            onClick: () => navigate('/dashboard/settings'),
             isActive: isActiveRoute('/dashboard/settings'),
           },
         ],
@@ -140,7 +92,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     ];
 
     // Doctor-specific menu items
-    if (user?.role === 'doctor') {
+    if (user.role === 'doctor') {
       return [
         ...commonItems.slice(0, 1),
         {
@@ -149,19 +101,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {
               label: 'Appointments',
               icon: <CalendarClock className="h-5 w-5" />,
-              onClick: () => handleNavigation('/dashboard/appointments'),
+              onClick: () => navigate('/dashboard/appointments'),
               isActive: isActiveRoute('/dashboard/appointments'),
             },
             {
               label: 'Patient Records',
               icon: <ClipboardList className="h-5 w-5" />,
-              onClick: () => handleNavigation('/dashboard/records'),
+              onClick: () => navigate('/dashboard/records'),
               isActive: isActiveRoute('/dashboard/records'),
             },
             {
               label: 'Prescriptions',
               icon: <Pill className="h-5 w-5" />,
-              onClick: () => handleNavigation('/dashboard/medications'),
+              onClick: () => navigate('/dashboard/medications'),
               isActive: isActiveRoute('/dashboard/medications'),
             },
           ],
@@ -172,7 +124,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {
               label: 'Messages',
               icon: <MessageSquare className="h-5 w-5" />,
-              onClick: () => handleNavigation('/dashboard/messages'),
+              onClick: () => navigate('/dashboard/messages'),
               isActive: isActiveRoute('/dashboard/messages'),
             },
           ],
@@ -190,25 +142,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Appointments',
             icon: <CalendarClock className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/appointments'),
+            onClick: () => navigate('/dashboard/appointments'),
             isActive: isActiveRoute('/dashboard/appointments'),
           },
           {
             label: 'Medications',
             icon: <Pill className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/medications'),
+            onClick: () => navigate('/dashboard/medications'),
             isActive: isActiveRoute('/dashboard/medications'),
           },
           {
             label: 'Health Records',
             icon: <ClipboardList className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/records'),
+            onClick: () => navigate('/dashboard/records'),
             isActive: isActiveRoute('/dashboard/records'),
           },
           {
             label: 'Pharmacy Store',
             icon: <ShoppingBag className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/pharmacy'),
+            onClick: () => navigate('/dashboard/pharmacy'),
             isActive: isActiveRoute('/dashboard/pharmacy'),
           },
         ],
@@ -219,7 +171,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Messages',
             icon: <MessageSquare className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/messages'),
+            onClick: () => navigate('/dashboard/messages'),
             isActive: isActiveRoute('/dashboard/messages'),
           },
         ],
@@ -230,13 +182,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Vital Signs',
             icon: <HeartPulse className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/vitals'),
+            onClick: () => navigate('/dashboard/vitals'),
             isActive: isActiveRoute('/dashboard/vitals'),
           },
           {
             label: 'IoT Devices',
             icon: <CircuitBoard className="h-5 w-5" />,
-            onClick: () => handleNavigation('/dashboard/iot-devices'),
+            onClick: () => navigate('/dashboard/iot-devices'),
             isActive: isActiveRoute('/dashboard/iot-devices'),
           },
         ],
@@ -288,8 +240,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-5 w-5 text-muted-foreground" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">{user?.name || 'User'}</span>
-                      <span className="text-xs text-muted-foreground capitalize">{user?.role || 'patient'}</span>
+                      <span className="text-sm font-medium">{user.name}</span>
+                      <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
                     </div>
                   </div>
                   <ThemeModeToggle />

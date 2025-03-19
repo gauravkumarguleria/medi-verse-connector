@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,12 +11,11 @@ import CircleBackground from '@/components/ui/CircleBackground';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import { UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Progress } from '@/components/ui/progress';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -28,34 +28,31 @@ const Auth = () => {
   );
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(preselectedRole);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [loginProgress, setLoginProgress] = useState(0);
-  const { refreshUserProfile } = useUser();
+  const { updateUser, refreshUserProfile } = useUser();
 
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   
-  // Check if user is already authenticated on mount
+  // Check if user is already authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data && data.session) {
-          console.log('User is already authenticated, redirecting to dashboard');
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error('Error checking authentication status:', error);
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session) {
+        console.log('User is already authenticated, redirecting to dashboard');
+        setIsAuthenticated(true);
+        navigate('/dashboard');
       }
     };
     
     checkAuth();
   }, [navigate]);
 
-  // Update auth type when URL parameter changes
   useEffect(() => {
+    // Update auth type if URL parameter changes
     setAuthType(type === 'register' ? 'register' : 'login');
   }, [type]);
 
@@ -64,19 +61,18 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      if (authType === 'register') {
-        if (!selectedRole) {
-          toast({
-            title: "Please select a role",
-            description: "You need to select a role to register",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log('Registering with:', { email, password, name, role: selectedRole });
-        
+      if (authType === 'register' && !selectedRole) {
+        toast({
+          title: "Please select a role",
+          description: "You need to select a role to register",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (authType === 'register' && selectedRole) {
+        // Register the user with Supabase
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -90,55 +86,55 @@ const Auth = () => {
         });
         
         if (signUpError) {
-          console.error('Registration error:', signUpError);
           toast({
             title: "Registration Failed",
             description: signUpError.message,
             variant: "destructive",
           });
-          setIsLoading(false);
           return;
         }
         
+        // Display success toast
         toast({
           title: "Registration Successful",
           description: `Your ${selectedRole} account has been created successfully.`,
         });
         
+        // Show registration success message
         setRegistrationSuccess(true);
+        // Switch to login tab
         setAuthType('login');
-        setIsLoading(false);
       } else {
-        console.log("Attempting login with:", { email, password });
-        setLoginProgress(25);
-        
+        // For login, sign in with Supabase
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         
         if (signInError) {
-          console.error("Login error:", signInError);
           toast({
             title: "Login Failed",
             description: signInError.message,
             variant: "destructive",
           });
-          setIsLoading(false);
-          setLoginProgress(0);
           return;
         }
         
-        setLoginProgress(100);
-        
         if (signInData && signInData.user) {
           console.log('Login successful, user:', signInData.user.id);
+          
+          // Refresh the user profile to get the latest data
+          await refreshUserProfile();
+          
+          // Display success toast
           toast({
             title: "Login Successful",
             description: "Welcome back to MediVerse!",
           });
           
-          window.location.href = '/dashboard';
+          // Directly navigate to dashboard instead of relying on isAuthenticated state
+          console.log('Navigating to dashboard after successful login');
+          navigate('/dashboard');
         }
       }
     } catch (error) {
@@ -148,10 +144,17 @@ const Auth = () => {
         description: "Please check your credentials and try again",
         variant: "destructive",
       });
-      setLoginProgress(0);
+    } finally {
       setIsLoading(false);
     }
   };
+
+  // Redirect to dashboard only if authenticated state is set
+  // (This is a backup redirect if the navigate() in login handler doesn't work)
+  if (isAuthenticated) {
+    console.log('isAuthenticated state is true, redirecting to dashboard');
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-secondary/30 relative">
@@ -178,18 +181,6 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           
-          {isLoading && authType === 'login' && loginProgress > 0 && (
-            <div className="px-6 pb-2">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Logging in...</span>
-                  <span>{loginProgress}%</span>
-                </div>
-                <Progress value={loginProgress} className="h-2" />
-              </div>
-            </div>
-          )}
-          
           {registrationSuccess && authType === 'login' && (
             <div className="px-6 pb-2">
               <Alert className="bg-green-50 border-green-200">
@@ -207,6 +198,7 @@ const Auth = () => {
             className="w-full" 
             onValueChange={(value) => {
               setAuthType(value as 'login' | 'register');
+              // Reset success state when switching to register tab
               if (value === 'register') {
                 setRegistrationSuccess(false);
               }
@@ -257,12 +249,7 @@ const Auth = () => {
                     type="submit"
                     disabled={isLoading}
                   >
-                    {isLoading ? (
-                      <span className="flex items-center justify-center">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        Logging in...
-                      </span>
-                    ) : "Login"}
+                    {isLoading ? "Logging in..." : "Login"}
                   </AnimatedButton>
                   <div className="text-center text-sm text-muted-foreground">
                     Don't have an account?{" "}
@@ -330,12 +317,7 @@ const Auth = () => {
                     type="submit"
                     disabled={isLoading}
                   >
-                    {isLoading ? (
-                      <span className="flex items-center justify-center">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        Creating Account...
-                      </span>
-                    ) : "Create Account"}
+                    {isLoading ? "Creating Account..." : "Create Account"}
                   </AnimatedButton>
                   <div className="text-center text-sm text-muted-foreground">
                     Already have an account?{" "}

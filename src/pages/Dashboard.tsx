@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardMain from '@/components/dashboard/DashboardMain';
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
 import IoTReportsPage from '@/components/iot/IoTReportsPage';
@@ -15,80 +15,42 @@ import ProfileSection from '@/components/profile/ProfileSection';
 import SettingsSection from '@/components/settings/SettingsSection';
 import PharmacyStore from '@/components/pharmacy/PharmacyStore';
 import { useUser } from '@/contexts/UserContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isLoading, refreshUserProfile } = useUser();
+  const { user } = useUser();
+  const currentPath = location.pathname.split('/').pop() || 'overview';
   
-  // Check authentication
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data || !data.session) {
-          console.log('User not authenticated, redirecting to login');
-          navigate('/login');
-        } else {
-          // Refresh user profile when dashboard loads
-          refreshUserProfile();
-        }
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-        navigate('/login');
-      }
-    };
-    
-    checkAuth();
-  }, [navigate, refreshUserProfile]);
-  
-  // If still loading user data, show a loading skeleton
-  if (isLoading) {
-    return (
-      <div className="flex flex-col space-y-4 p-8 w-full">
-        <Skeleton className="h-12 w-48 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-64 w-full rounded-lg" />
-          <Skeleton className="h-64 w-full rounded-lg" />
-          <Skeleton className="h-64 w-full rounded-lg" />
-        </div>
-        <Skeleton className="h-40 w-full mt-6 rounded-lg" />
-      </div>
-    );
-  }
-  
-  // If user isn't loaded yet (but not in loading state), return empty
-  if (!user && !isLoading) {
-    return null;
-  }
-  
-  console.log('Current location path:', location.pathname);
+  const handleTabChange = (value: string) => {
+    navigate(`/dashboard/${value === 'overview' ? '' : value}`);
+  };
   
   return (
-    <Routes>
-      <Route path="/" element={user?.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
-      <Route path="overview" element={user?.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
-      <Route path="iot-reports" element={<IoTReportsPage hideLayout />} />
-      <Route path="iot-devices" element={<IoTReportsPage hideLayout />} />
-      <Route path="vitals" element={<LiveSensorData />} />
-      <Route path="appointments" element={
-        user?.role === 'doctor' 
-          ? <DoctorAppointmentView /> 
-          : <AppointmentPage hideLayout />
-      } />
-      <Route path="medications" element={
-        user?.role === 'doctor'
-          ? <DoctorMedicationPage />
-          : <MedicationPage />
-      } />
-      <Route path="records" element={<HealthRecordsPage />} />
-      <Route path="messages" element={<MessagesPage />} />
-      <Route path="profile" element={<ProfileSection />} />
-      <Route path="settings" element={<SettingsSection />} />
-      <Route path="pharmacy" element={<PharmacyStore />} />
-    </Routes>
+    <DashboardLayout>
+      <Routes>
+        <Route path="/" element={user.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
+        <Route path="/overview" element={user.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
+        <Route path="/iot-reports" element={<IoTReportsPage hideLayout />} />
+        <Route path="/appointments" element={
+          user.role === 'doctor' 
+            ? <DoctorAppointmentView /> 
+            : <AppointmentPage hideLayout />
+        } />
+        <Route path="/medications" element={
+          user.role === 'doctor'
+            ? <DoctorMedicationPage />
+            : <MedicationPage />
+        } />
+        <Route path="/records" element={<HealthRecordsPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
+        <Route path="/profile" element={<ProfileSection />} />
+        <Route path="/vitals" element={<LiveSensorData />} />
+        <Route path="/settings" element={<SettingsSection />} />
+        <Route path="/pharmacy" element={<PharmacyStore />} />
+      </Routes>
+    </DashboardLayout>
   );
 };
 
