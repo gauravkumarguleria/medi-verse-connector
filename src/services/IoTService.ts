@@ -1,4 +1,3 @@
-
 import { IoTReport, IoTDevice, SystemAdjustment } from '../types/iotReports';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -221,7 +220,7 @@ export const IoTService = {
   enableRealtimeForTable: async (tableName: string): Promise<void> => {
     try {
       // Add the table to the realtime publication
-      const { error } = await supabase.rpc('supabase_enable_realtime', {
+      const { error } = await supabase.rpc('enable_realtime_for_table', {
         table_name: tableName
       });
 
