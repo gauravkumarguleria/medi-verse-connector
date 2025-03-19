@@ -132,6 +132,11 @@ const PharmacyStore: React.FC = () => {
   // Get unique categories
   const categories = ['all', ...new Set(pharmacyProducts.map(product => product.category))];
   
+  // Format price in Indian Rupees
+  const formatPrice = (price: number) => {
+    return `₹${price.toFixed(2)}`;
+  };
+  
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -175,7 +180,7 @@ const PharmacyStore: React.FC = () => {
                         </div>
                         <div className="ml-4">
                           <h3 className="font-medium">{item.product.name}</h3>
-                          <p className="text-sm text-muted-foreground">${item.product.price.toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">{formatPrice(item.product.price)}</p>
                         </div>
                       </div>
                       
@@ -214,7 +219,7 @@ const PharmacyStore: React.FC = () => {
                   <Separator />
                   <div className="flex justify-between font-medium">
                     <span>Total</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>{formatPrice(cartTotal)}</span>
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={clearCart} variant="outline" className="flex-1">
@@ -302,7 +307,7 @@ const PharmacyStore: React.FC = () => {
               
               <CardFooter className="flex justify-between items-center pt-2">
                 <div className="font-medium">
-                  ${product.price.toFixed(2)}
+                  {formatPrice(product.price)}
                 </div>
                 <Button onClick={() => addToCart(product)}>
                   Add to Cart
