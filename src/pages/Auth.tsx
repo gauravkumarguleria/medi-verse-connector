@@ -58,37 +58,6 @@ const Auth = () => {
     setAuthType(type === 'register' ? 'register' : 'login');
   }, [type]);
 
-  // Set up auth state listener to handle redirects when auth state changes
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
-        
-        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          console.log('User signed in, navigating to dashboard');
-          try {
-            await refreshUserProfile();
-            // Use setTimeout to ensure navigation happens after state updates
-            setTimeout(() => {
-              console.log('Navigating to dashboard after refreshing profile');
-              navigate('/dashboard');
-            }, 100);
-          } catch (error) {
-            console.error('Error refreshing user profile:', error);
-            // Still navigate even if profile refresh fails
-            navigate('/dashboard');
-          }
-        }
-      }
-    );
-
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
-  }, [navigate, refreshUserProfile]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -165,13 +134,14 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // Force a redirection to dashboard after successful login
+          // Refresh user profile before redirecting
           try {
             await refreshUserProfile();
-            console.log('Profile refreshed, forcing navigation to dashboard');
-            window.location.href = '/dashboard'; // Use direct location change as a fallback
+            console.log('Profile refreshed, redirecting to dashboard');
+            navigate('/dashboard');
           } catch (error) {
             console.error('Error during profile refresh:', error);
+            // Fallback: direct navigation if refresh fails
             navigate('/dashboard');
           }
         }

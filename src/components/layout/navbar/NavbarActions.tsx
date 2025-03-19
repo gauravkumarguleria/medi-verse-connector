@@ -15,13 +15,15 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated, user }) 
   const [authenticated, setAuthenticated] = useState<boolean>(isAuthenticated);
   const [currentUser, setCurrentUser] = useState<UserType | undefined>(user);
 
-  // Add a useEffect to check authentication status directly
+  // Check authentication status directly from Supabase
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        setAuthenticated(!!data.session);
-        if (data.session) {
+        const sessionExists = !!data.session;
+        setAuthenticated(sessionExists);
+        
+        if (sessionExists && user) {
           setCurrentUser(user);
         }
       } catch (error) {
@@ -36,9 +38,13 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated, user }) 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed in NavbarActions:', event);
-        setAuthenticated(!!session);
-        if (session) {
+        const sessionExists = !!session;
+        setAuthenticated(sessionExists);
+        
+        if (sessionExists && user) {
           setCurrentUser(user);
+        } else if (!sessionExists) {
+          setCurrentUser(undefined);
         }
       }
     );
