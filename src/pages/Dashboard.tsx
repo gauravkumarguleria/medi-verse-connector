@@ -44,7 +44,7 @@ const Dashboard = () => {
         } />
         <Route path="/records" element={<HealthRecordsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
+        <Route path="/iot-devices" element={<LiveSensorData />} />
         <Route path="/profile" element={<ProfileSection />} />
         <Route path="/vitals" element={<LiveSensorData />} />
         <Route path="/settings" element={<SettingsSection />} />
