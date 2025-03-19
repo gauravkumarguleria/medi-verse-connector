@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
@@ -73,7 +74,7 @@ import { Doctor, Appointment } from '@/types';
 const mockDoctors: Doctor[] = [
   {
     id: '1',
-    name: 'Dr. Sarah Williams',
+    name: 'Dr. Arjun Sharma',
     specialty: 'Cardiologist',
     experience: 10,
     rating: 4.8,
@@ -82,7 +83,7 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: '2',
-    name: 'Dr. Michael Chen',
+    name: 'Dr. Priya Patel',
     specialty: 'Dermatologist',
     experience: 8,
     rating: 4.7,
@@ -91,7 +92,7 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: '3',
-    name: 'Dr. Jessica Brooks',
+    name: 'Dr. Rajesh Gupta',
     specialty: 'Neurologist',
     experience: 12,
     rating: 4.9,
@@ -100,7 +101,7 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: '4',
-    name: 'Dr. Robert Kim',
+    name: 'Dr. Kavita Reddy',
     specialty: 'Pediatrician',
     experience: 15,
     rating: 4.9,
@@ -109,7 +110,7 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: '5',
-    name: 'Dr. Emily Patterson',
+    name: 'Dr. Vikram Singh',
     specialty: 'Psychiatrist',
     experience: 9,
     rating: 4.6,

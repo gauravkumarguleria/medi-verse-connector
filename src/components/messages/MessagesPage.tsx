@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Search, Plus, MessageCircle, Send, MoreVertical, Paperclip, ChevronLeft, Share2, File, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,7 @@ const conversations = [
     id: '1',
     recipient: {
       id: 'doc1',
-      name: 'Dr. Sarah Williams',
+      name: 'Dr. Arjun Sharma',
       avatar: 'https://i.pravatar.cc/150?img=32',
       status: 'online',
       role: 'Cardiologist'
@@ -35,7 +36,7 @@ const conversations = [
     id: '2',
     recipient: {
       id: 'doc2',
-      name: 'Dr. Michael Chen',
+      name: 'Dr. Priya Patel',
       avatar: 'https://i.pravatar.cc/150?img=56',
       status: 'offline',
       role: 'Dermatologist'
@@ -88,7 +89,7 @@ const conversations = [
 const messageHistory = [
   {
     id: 'm1',
-    text: 'Hello Dr. Williams, I\'ve been experiencing some chest discomfort lately.',
+    text: 'Hello Dr. Sharma, I\'ve been experiencing some chest discomfort lately.',
     time: '10:30 AM',
     sender: 'user',
     status: 'delivered'
