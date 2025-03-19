@@ -19,6 +19,7 @@ interface UserContextType {
   isLoading: boolean;
   updateUser: (userData: Partial<User>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -81,6 +82,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const checkUser = async () => {
       try {
+        setIsLoading(true);
         const { data } = await supabase.auth.getSession();
         console.log('Auth session data:', data);
         
@@ -104,8 +106,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
         
-        if (session && event === 'SIGNED_IN') {
-          console.log('User signed in:', session.user.id);
+        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          console.log('User signed in or token refreshed:', session.user.id);
           await fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out, resetting to initial user');
@@ -122,17 +124,67 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshUserProfile = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data && data.session) {
-      console.log('Refreshing user profile for:', data.session.user.id);
-      await fetchUserProfile(data.session.user.id);
-    } else {
-      console.log('Cannot refresh profile: No active session');
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session) {
+        console.log('Refreshing user profile for:', data.session.user.id);
+        await fetchUserProfile(data.session.user.id);
+      } else {
+        console.log('Cannot refresh profile: No active session');
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to view your profile.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
       toast({
-        title: "Authentication Error",
-        description: "You must be logged in to view your profile.",
+        title: "Error",
+        description: "Failed to refresh your profile.",
         variant: "destructive",
       });
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error);
+        toast({
+          title: "Error",
+          description: "Failed to sign out. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Reset user state to initial
+      setUser(initialUser);
+      
+      // Clear any local storage items related to auth if needed
+      localStorage.removeItem('supabase.auth.token');
+      
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
+      
+      // Force window reload to clear any cached state
+      window.location.href = '/';
+      
+    } catch (error) {
+      console.error('Error in signOut function:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred during sign out.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -252,7 +304,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, isLoading, updateUser, refreshUserProfile }}>
+    <UserContext.Provider value={{ user, isLoading, updateUser, refreshUserProfile, signOut }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Navigate } from 'react-router-dom';
+import { useSearchParams, Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import RoleSelector from '@/components/ui/RoleSelector';
 import CircleBackground from '@/components/ui/CircleBackground';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import { UserRole } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -18,6 +18,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const type = searchParams.get('type') || 'login';
   const preselectedRole = searchParams.get('role') as UserRole | null;
@@ -29,12 +30,13 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const { updateUser, refreshUserProfile } = useUser();
+  const { refreshUserProfile } = useUser();
 
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const { toast } = useToast();
   
   // Check if user is already authenticated
   useEffect(() => {
@@ -109,15 +111,19 @@ const Auth = () => {
         });
         
         if (signInError) {
+          console.error("Login error:", signInError);
           toast({
             title: "Login Failed",
             description: signInError.message,
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
         
         if (signInData && signInData.user) {
+          console.log("Login successful, user:", signInData.user);
+          
           // Refresh the user profile to get the latest data
           await refreshUserProfile();
           
@@ -129,6 +135,9 @@ const Auth = () => {
           
           // Set authenticated to redirect to dashboard
           setIsAuthenticated(true);
+          
+          // Force navigation to dashboard
+          navigate('/dashboard');
         }
       }
     } catch (error) {

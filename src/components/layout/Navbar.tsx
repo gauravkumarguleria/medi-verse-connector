@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -17,15 +16,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Use the user context instead of mock data
-  const { user } = useUser();
+  const { user, signOut } = useUser();
   const userInitials = user.name.split(' ').map(n => n[0]).join('');
 
   // Check if user is on the dashboard to show different navigation
@@ -55,10 +56,18 @@ const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
   }, [location]);
 
-  const handleLogout = () => {
-    // In a real application, this would call your logout function
-    // For now, we'll just redirect to home
-    window.location.href = '/';
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // Navigation is handled in signOut function
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast({
+        title: "Logout Failed",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleProfileClick = () => {
