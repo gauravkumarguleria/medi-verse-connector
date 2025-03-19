@@ -1,45 +1,55 @@
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { UserProvider } from './contexts/UserContext';
+import { ThemeProvider } from './components/ui/ThemeProvider';
+import { Toaster } from './components/ui/toaster';
+import Preloader from './components/ui/Preloader';
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import DashboardLayout from './components/layout/DashboardLayout';
+import About from './pages/About';
+import Features from './pages/Features';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Features from "./pages/Features";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import Preloader from "./components/ui/Preloader";
-import { ThemeProvider } from "./components/ui/ThemeProvider";
-import { UserProvider } from "./contexts/UserContext";
+function App() {
+  const [loading, setLoading] = useState(true);
 
-const queryClient = new QueryClient();
+  useEffect(() => {
+    // Simulate loading time
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+  }, []);
 
-const App = () => (
-  <ThemeProvider defaultTheme="system" storageKey="mediverse-theme">
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+  return (
+    <Router>
+      <Preloader />
+      <ThemeProvider>
         <UserProvider>
-          <Preloader />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard/*" element={
+              <DashboardLayout>
+                <Routes>
+                  <Route index element={<Dashboard />} />
+                </Routes>
+              </DashboardLayout>
+            } />
+            <Route path="/about" element={<About />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
           <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard/*" element={<Dashboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
         </UserProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+      </ThemeProvider>
+    </Router>
+  );
+}
 
 export default App;

@@ -62,7 +62,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated, user }) 
       {(authenticated && currentUser && currentUser.id !== "1") ? (
         <UserMenu user={currentUser} />
       ) : (
-        <Link to="/auth" className="text-sm font-medium transition-colors hover:text-primary">
+        <Link to="/login" className="text-sm font-medium transition-colors hover:text-primary">
           Login
         </Link>
       )}
