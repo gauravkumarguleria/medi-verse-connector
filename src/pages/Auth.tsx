@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -42,7 +41,6 @@ const Auth = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('Checking if user is already authenticated...');
         const { data } = await supabase.auth.getSession();
         if (data && data.session) {
           console.log('User is already authenticated, redirecting to dashboard');
@@ -54,12 +52,6 @@ const Auth = () => {
     };
     
     checkAuth();
-    
-    // Clear form on component mount
-    setEmail('');
-    setPassword('');
-    setName('');
-    setLoginProgress(0);
   }, [navigate]);
 
   // Update auth type when URL parameter changes
@@ -137,25 +129,16 @@ const Auth = () => {
           return;
         }
         
-        setLoginProgress(75);
+        setLoginProgress(100);
         
         if (signInData && signInData.user) {
           console.log('Login successful, user:', signInData.user.id);
-          
-          // Refresh the user profile to ensure we have the latest data
-          await refreshUserProfile();
-          
-          setLoginProgress(100);
-          
           toast({
             title: "Login Successful",
             description: "Welcome back to MediVerse!",
           });
           
-          // Use a timeout to ensure the progress bar completes
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 500);
+          window.location.href = '/dashboard';
         }
       }
     } catch (error) {
