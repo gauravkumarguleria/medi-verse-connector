@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,7 +68,11 @@ const Auth = () => {
           console.log('User signed in, navigating to dashboard');
           try {
             await refreshUserProfile();
-            navigate('/dashboard');
+            // Use setTimeout to ensure navigation happens after state updates
+            setTimeout(() => {
+              console.log('Navigating to dashboard after refreshing profile');
+              navigate('/dashboard');
+            }, 100);
           } catch (error) {
             console.error('Error refreshing user profile:', error);
             // Still navigate even if profile refresh fails
@@ -161,8 +166,14 @@ const Auth = () => {
           });
           
           // Force a redirection to dashboard after successful login
-          await refreshUserProfile();
-          navigate('/dashboard');
+          try {
+            await refreshUserProfile();
+            console.log('Profile refreshed, forcing navigation to dashboard');
+            window.location.href = '/dashboard'; // Use direct location change as a fallback
+          } catch (error) {
+            console.error('Error during profile refresh:', error);
+            navigate('/dashboard');
+          }
         }
       }
     } catch (error) {
