@@ -71,7 +71,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({
           <UserMenu user={currentUser} />
         </div>
       ) : (
-        <Link to="/auth" className="text-sm font-medium transition-colors hover:text-primary">
+        <Link to="/login" className="text-sm font-medium transition-colors hover:text-primary">
           Login
         </Link>
       )}

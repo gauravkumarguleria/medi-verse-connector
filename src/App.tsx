@@ -7,6 +7,7 @@ import { Toaster } from './components/ui/toaster';
 import Preloader from './components/ui/Preloader';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DashboardLayout from './components/layout/DashboardLayout';
 import About from './pages/About';
@@ -54,7 +55,7 @@ function App() {
   // Protected route wrapper
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!isAuthenticated && !loading) {
-      return <Navigate to="/auth" replace />;
+      return <Navigate to="/login" replace />;
     }
     
     return <>{children}</>;
@@ -67,8 +68,7 @@ function App() {
         <UserProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            {/* Redirect /login to /auth */}
-            <Route path="/login" element={<Navigate to="/auth" replace />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/about" element={<About />} />
             <Route path="/features" element={<Features />} />
