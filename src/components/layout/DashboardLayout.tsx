@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import { 
@@ -102,6 +101,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     setSidebarHidden(!sidebarHidden);
   };
 
+  // Handle navigation with proper path construction
+  const handleNavigation = (path: string) => {
+    if (path === '/dashboard') {
+      navigate(path);
+    } else {
+      navigate(path);
+    }
+  };
+
   // Get relevant menu items based on user role
   const getMenuItems = () => {
     const commonItems = [
@@ -111,7 +119,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Dashboard',
             icon: <Home className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard'),
+            onClick: () => handleNavigation('/dashboard'),
             isActive: isActiveRoute('/dashboard') && !location.pathname.includes('/dashboard/'),
           },
         ],
@@ -122,13 +130,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Profile',
             icon: <User className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/profile'),
+            onClick: () => handleNavigation('/dashboard/profile'),
             isActive: isActiveRoute('/dashboard/profile'),
           },
           {
             label: 'Settings',
             icon: <Settings className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/settings'),
+            onClick: () => handleNavigation('/dashboard/settings'),
             isActive: isActiveRoute('/dashboard/settings'),
           },
         ],
@@ -145,19 +153,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {
               label: 'Appointments',
               icon: <CalendarClock className="h-5 w-5" />,
-              onClick: () => navigate('/dashboard/appointments'),
+              onClick: () => handleNavigation('/dashboard/appointments'),
               isActive: isActiveRoute('/dashboard/appointments'),
             },
             {
               label: 'Patient Records',
               icon: <ClipboardList className="h-5 w-5" />,
-              onClick: () => navigate('/dashboard/records'),
+              onClick: () => handleNavigation('/dashboard/records'),
               isActive: isActiveRoute('/dashboard/records'),
             },
             {
               label: 'Prescriptions',
               icon: <Pill className="h-5 w-5" />,
-              onClick: () => navigate('/dashboard/medications'),
+              onClick: () => handleNavigation('/dashboard/medications'),
               isActive: isActiveRoute('/dashboard/medications'),
             },
           ],
@@ -168,7 +176,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {
               label: 'Messages',
               icon: <MessageSquare className="h-5 w-5" />,
-              onClick: () => navigate('/dashboard/messages'),
+              onClick: () => handleNavigation('/dashboard/messages'),
               isActive: isActiveRoute('/dashboard/messages'),
             },
           ],
@@ -186,25 +194,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Appointments',
             icon: <CalendarClock className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/appointments'),
+            onClick: () => handleNavigation('/dashboard/appointments'),
             isActive: isActiveRoute('/dashboard/appointments'),
           },
           {
             label: 'Medications',
             icon: <Pill className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/medications'),
+            onClick: () => handleNavigation('/dashboard/medications'),
             isActive: isActiveRoute('/dashboard/medications'),
           },
           {
             label: 'Health Records',
             icon: <ClipboardList className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/records'),
+            onClick: () => handleNavigation('/dashboard/records'),
             isActive: isActiveRoute('/dashboard/records'),
           },
           {
             label: 'Pharmacy Store',
             icon: <ShoppingBag className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/pharmacy'),
+            onClick: () => handleNavigation('/dashboard/pharmacy'),
             isActive: isActiveRoute('/dashboard/pharmacy'),
           },
         ],
@@ -215,7 +223,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Messages',
             icon: <MessageSquare className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/messages'),
+            onClick: () => handleNavigation('/dashboard/messages'),
             isActive: isActiveRoute('/dashboard/messages'),
           },
         ],
@@ -226,13 +234,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {
             label: 'Vital Signs',
             icon: <HeartPulse className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/vitals'),
+            onClick: () => handleNavigation('/dashboard/vitals'),
             isActive: isActiveRoute('/dashboard/vitals'),
           },
           {
             label: 'IoT Devices',
             icon: <CircuitBoard className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/iot-devices'),
+            onClick: () => handleNavigation('/dashboard/iot-devices'),
             isActive: isActiveRoute('/dashboard/iot-devices'),
           },
         ],

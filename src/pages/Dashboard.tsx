@@ -16,6 +16,7 @@ import SettingsSection from '@/components/settings/SettingsSection';
 import PharmacyStore from '@/components/pharmacy/PharmacyStore';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -38,14 +39,19 @@ const Dashboard = () => {
     };
     
     checkAuth();
-  }, [navigate, isLoading]);
+  }, [navigate]);
   
-  // If still loading user data, don't render components yet
+  // If still loading user data, show a loading skeleton
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <span className="ml-3">Loading...</span>
+      <div className="flex flex-col space-y-4 p-8 w-full">
+        <Skeleton className="h-12 w-48 mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-64 w-full rounded-lg" />
+          <Skeleton className="h-64 w-full rounded-lg" />
+          <Skeleton className="h-64 w-full rounded-lg" />
+        </div>
+        <Skeleton className="h-40 w-full mt-6 rounded-lg" />
       </div>
     );
   }
