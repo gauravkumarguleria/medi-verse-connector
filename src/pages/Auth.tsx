@@ -91,6 +91,7 @@ const Auth = () => {
             description: signUpError.message,
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
         
@@ -104,7 +105,9 @@ const Auth = () => {
         setRegistrationSuccess(true);
         // Switch to login tab
         setAuthType('login');
+        setIsLoading(false);
       } else {
+        console.log("Attempting login with:", { email, password });
         // For login, sign in with Supabase
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -112,11 +115,13 @@ const Auth = () => {
         });
         
         if (signInError) {
+          console.error("Login error:", signInError);
           toast({
             title: "Login Failed",
             description: signInError.message,
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
         
@@ -135,6 +140,13 @@ const Auth = () => {
           // Directly navigate to dashboard instead of relying on isAuthenticated state
           console.log('Navigating to dashboard after successful login');
           navigate('/dashboard');
+        } else {
+          console.error("No user data returned from login");
+          toast({
+            title: "Login Failed",
+            description: "Could not retrieve user data",
+            variant: "destructive",
+          });
         }
       }
     } catch (error) {
