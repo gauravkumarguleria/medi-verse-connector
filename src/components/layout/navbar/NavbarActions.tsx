@@ -11,9 +11,9 @@ interface NavbarActionsProps {
   user?: UserType;
 }
 
-const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated, user }) => {
-  const [authenticated, setAuthenticated] = useState<boolean>(isAuthenticated);
-  const [currentUser, setCurrentUser] = useState<UserType | undefined>(user);
+const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated: initialIsAuthenticated, user: initialUser }) => {
+  const [authenticated, setAuthenticated] = useState<boolean>(initialIsAuthenticated);
+  const [currentUser, setCurrentUser] = useState<UserType | undefined>(initialUser);
 
   // Check authentication status directly from Supabase
   useEffect(() => {
@@ -23,8 +23,8 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated, user }) 
         const sessionExists = !!data.session;
         setAuthenticated(sessionExists);
         
-        if (sessionExists && user) {
-          setCurrentUser(user);
+        if (sessionExists && initialUser) {
+          setCurrentUser(initialUser);
         }
       } catch (error) {
         console.error('Auth check error:', error);
@@ -41,8 +41,8 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated, user }) 
         const sessionExists = !!session;
         setAuthenticated(sessionExists);
         
-        if (sessionExists && user) {
-          setCurrentUser(user);
+        if (sessionExists && initialUser) {
+          setCurrentUser(initialUser);
         } else if (!sessionExists) {
           setCurrentUser(undefined);
         }
@@ -54,7 +54,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({ isAuthenticated, user }) 
         authListener.subscription.unsubscribe();
       }
     };
-  }, [user, isAuthenticated]);
+  }, [initialUser, initialIsAuthenticated]);
 
   return (
     <div className="flex items-center gap-2">

@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import { 
   Sidebar, 
@@ -34,6 +34,8 @@ import {
 import { Button } from '../ui/button';
 import { ThemeModeToggle } from '../ui/ThemeModeToggle';
 import { useUser } from '@/contexts/UserContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -42,16 +44,58 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarHidden, setSidebarHidden] = useState(false); // Changed default to false to show sidebar
+  const [sidebarHidden, setSidebarHidden] = useState(false);
   const { user } = useUser();
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data || !data.session) {
+          console.log('User not authenticated, redirecting to login');
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        navigate('/login');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   const isActiveRoute = (route: string) => {
     return location.pathname === route || (route !== '/dashboard' && location.pathname.startsWith(route));
   };
 
-  const handleLogout = () => {
-    // For demo purposes, just navigate to home
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error logging out:', error);
+        toast({
+          title: "Logout Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        // Successfully logged out, redirect to home
+        console.log('User logged out successfully');
+        toast({
+          title: "Logged Out",
+          description: "You have been successfully logged out",
+        });
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast({
+        title: "Logout Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleSidebar = () => {
@@ -92,7 +136,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     ];
 
     // Doctor-specific menu items
-    if (user.role === 'doctor') {
+    if (user?.role === 'doctor') {
       return [
         ...commonItems.slice(0, 1),
         {
@@ -240,8 +284,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-5 w-5 text-muted-foreground" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">{user.name}</span>
-                      <span className="text-xs text-muted-foreground capitalize">{user.role}</span>
+                      <span className="text-sm font-medium">{user?.name || 'User'}</span>
+                      <span className="text-xs text-muted-foreground capitalize">{user?.role || 'patient'}</span>
                     </div>
                   </div>
                   <ThemeModeToggle />
