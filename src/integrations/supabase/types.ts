@@ -15,6 +15,7 @@ export type Database = {
           id: number
           mq135: number
           mq3_1: number
+          mq3_2: number | null
           temperature: number
           timestamp: string | null
         }
@@ -23,6 +24,7 @@ export type Database = {
           id?: number
           mq135: number
           mq3_1: number
+          mq3_2?: number | null
           temperature: number
           timestamp?: string | null
         }
@@ -31,6 +33,7 @@ export type Database = {
           id?: number
           mq135?: number
           mq3_1?: number
+          mq3_2?: number | null
           temperature?: number
           timestamp?: string | null
         }

@@ -30,7 +30,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const { updateUser, refreshUserProfile } = useUser();
+  const { refreshUserProfile } = useUser();
 
   // Form state
   const [email, setEmail] = useState('');
@@ -44,7 +44,6 @@ const Auth = () => {
         const { data } = await supabase.auth.getSession();
         if (data && data.session) {
           console.log('User is already authenticated, redirecting to dashboard');
-          setIsAuthenticated(true);
           navigate('/dashboard');
         }
       } catch (error) {
@@ -59,6 +58,27 @@ const Auth = () => {
     // Update auth type if URL parameter changes
     setAuthType(type === 'register' ? 'register' : 'login');
   }, [type]);
+
+  // Set up an auth state listener
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
+        
+        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          console.log('User signed in, navigating to dashboard');
+          await refreshUserProfile();
+          navigate('/dashboard');
+        }
+      }
+    );
+
+    return () => {
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
+    };
+  }, [navigate, refreshUserProfile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,30 +153,13 @@ const Auth = () => {
         
         if (signInData && signInData.user) {
           console.log('Login successful, user:', signInData.user.id);
-          
-          // Refresh the user profile to get the latest data
-          await refreshUserProfile();
-          
-          // Display success toast
           toast({
             title: "Login Successful",
             description: "Welcome back to MediVerse!",
           });
           
-          // Set authenticated state and navigate
-          setIsAuthenticated(true);
-          console.log('Setting authenticated state to true, navigating to dashboard');
-          
-          // Force navigation to dashboard
-          navigate('/dashboard');
-        } else {
-          console.error("No user data returned from login");
-          toast({
-            title: "Login Failed",
-            description: "Could not retrieve user data",
-            variant: "destructive",
-          });
-          setIsLoading(false);
+          // The navigation will be handled by the auth state change listener
+          // No need to manually navigate here
         }
       }
     } catch (error) {
@@ -169,12 +172,6 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
-
-  // If already authenticated, redirect to dashboard
-  if (isAuthenticated) {
-    console.log('isAuthenticated state is true, redirecting to dashboard');
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-secondary/30 relative">
