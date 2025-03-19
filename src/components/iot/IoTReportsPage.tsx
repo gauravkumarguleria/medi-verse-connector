@@ -30,11 +30,11 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
   useEffect(() => {
     IoTService.enableRealtimeForTable('sensor_data').catch(console.error);
     
-    // Initial fetch of sensor data
-    fetchSensorData();
+    // Always fetch 10 sensor readings initially
+    fetchSensorData(10);
     
     // Set up polling for updates
-    const intervalId = setInterval(fetchSensorData, 30 * 1000); // Refresh every 30 seconds
+    const intervalId = setInterval(() => fetchSensorData(10), 30 * 1000); // Refresh every 30 seconds
     
     // Set up real-time subscription
     const channel = supabase
@@ -43,7 +43,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
         { event: 'INSERT', schema: 'public', table: 'sensor_data' }, 
         () => {
           console.log('New sensor data received, refreshing...');
-          fetchSensorData();
+          fetchSensorData(10);
         }
       )
       .subscribe();
@@ -54,9 +54,10 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
     };
   }, []);
 
-  const fetchSensorData = async () => {
+  const fetchSensorData = async (limit: number = 10) => {
     try {
-      const readings = await SensorDataService.getLatestReadings(10);
+      console.log(`Fetching ${limit} sensor readings as placeholders...`);
+      const readings = await SensorDataService.getLatestReadings(limit);
       if (readings.length > 0) {
         const average = SensorDataService.calculateAverageReadings(readings);
         setLatestData({
@@ -65,6 +66,9 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
           activityLevel: Math.round(average.humidity), // Using humidity as proxy for activity
           batteryLevel: 80 // Fixed value for battery
         });
+        console.log('Average sensor data calculated:', average);
+      } else {
+        console.log('No sensor readings available');
       }
     } catch (error) {
       console.error('Error fetching sensor data:', error);
@@ -96,6 +100,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
     setTimeRange(range);
   };
 
+  // Use placeholder chart data if no device data is available
   const chartData = deviceData || [
     { time: '00:00', value: 4000 },
     { time: '03:00', value: 3000 },
