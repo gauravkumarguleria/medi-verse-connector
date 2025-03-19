@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -124,7 +123,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const refreshUserProfile = async () => {
+  const refreshUserProfile = async (): Promise<void> => {
     try {
       const { data } = await supabase.auth.getSession();
       if (data && data.session) {
@@ -142,7 +141,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         console.log('User profile refreshed successfully');
-        return profileData;
+        // Don't return profileData - this function should return void
       } else {
         console.log('Cannot refresh profile: No active session');
         toast({
@@ -150,7 +149,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: "You must be logged in to view your profile.",
           variant: "destructive",
         });
-        return null;
       }
     } catch (error) {
       console.error('Error refreshing user profile:', error);
@@ -159,7 +157,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Failed to refresh your profile. Please try again.",
         variant: "destructive",
       });
-      return null;
     }
   };
 
