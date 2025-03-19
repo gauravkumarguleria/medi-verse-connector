@@ -16,6 +16,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Progress } from '@/components/ui/progress';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -29,6 +30,7 @@ const Auth = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(preselectedRole);
   const [isLoading, setIsLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [loginProgress, setLoginProgress] = useState(0);
   const { refreshUserProfile } = useUser();
 
   // Form state
@@ -110,6 +112,7 @@ const Auth = () => {
       } else {
         // Login flow
         console.log("Attempting login with:", { email, password });
+        setLoginProgress(25);
         
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -124,8 +127,11 @@ const Auth = () => {
             variant: "destructive",
           });
           setIsLoading(false);
+          setLoginProgress(0);
           return;
         }
+        
+        setLoginProgress(50);
         
         if (signInData && signInData.user) {
           console.log('Login successful, user:', signInData.user.id);
@@ -134,15 +140,31 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // Refresh user profile before redirecting
+          setLoginProgress(75);
+          
           try {
+            // Manual profile refresh
             await refreshUserProfile();
             console.log('Profile refreshed, redirecting to dashboard');
-            navigate('/dashboard');
+            setLoginProgress(100);
+            
+            // Use setTimeout to ensure state updates complete before navigation
+            setTimeout(() => {
+              // Try React Router navigation first
+              navigate('/dashboard');
+              
+              // Use a fallback for direct navigation after a short delay
+              setTimeout(() => {
+                if (window.location.pathname !== '/dashboard') {
+                  console.log('Fallback: using direct location change');
+                  window.location.href = '/dashboard';
+                }
+              }, 300);
+            }, 300);
           } catch (error) {
             console.error('Error during profile refresh:', error);
-            // Fallback: direct navigation if refresh fails
-            navigate('/dashboard');
+            // Force direct navigation as fallback
+            window.location.href = '/dashboard';
           }
         }
       }
@@ -153,7 +175,7 @@ const Auth = () => {
         description: "Please check your credentials and try again",
         variant: "destructive",
       });
-    } finally {
+      setLoginProgress(0);
       setIsLoading(false);
     }
   };
@@ -182,6 +204,18 @@ const Auth = () => {
                 : 'Join MediVerse and revolutionize your healthcare experience'}
             </CardDescription>
           </CardHeader>
+          
+          {isLoading && authType === 'login' && loginProgress > 0 && (
+            <div className="px-6 pb-2">
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Logging in...</span>
+                  <span>{loginProgress}%</span>
+                </div>
+                <Progress value={loginProgress} className="h-2" />
+              </div>
+            </div>
+          )}
           
           {registrationSuccess && authType === 'login' && (
             <div className="px-6 pb-2">
