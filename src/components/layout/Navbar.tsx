@@ -24,7 +24,7 @@ const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
 
   // Add scroll event listener
   useEffect(() => {
@@ -99,6 +99,9 @@ const Navbar: React.FC = () => {
     { name: 'Contact', href: '/contact', active: location.pathname === '/contact' },
   ];
 
+  // Check if the user is authenticated and loaded
+  const isAuthenticated = !isLoading && user && user.id !== "1";
+
   return (
     <div
       className={cn(
@@ -148,7 +151,7 @@ const Navbar: React.FC = () => {
         {/* Actions */}
         <div className="flex items-center gap-2">
           <ThemeModeToggle />
-          {user ? (
+          {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -199,7 +202,7 @@ const Navbar: React.FC = () => {
                 {item.name}
               </Link>
             ))}
-             {user ? (
+             {isAuthenticated ? (
               <>
                 <Button variant="ghost" className="justify-start" onClick={handleProfileClick}>
                   <User className="mr-2 h-4 w-4" />
