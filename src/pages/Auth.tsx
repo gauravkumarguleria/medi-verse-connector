@@ -40,11 +40,15 @@ const Auth = () => {
   // Check if user is already authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data && data.session) {
-        console.log('User is already authenticated, redirecting to dashboard');
-        setIsAuthenticated(true);
-        navigate('/dashboard');
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data && data.session) {
+          console.log('User is already authenticated, redirecting to dashboard');
+          setIsAuthenticated(true);
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error('Error checking authentication status:', error);
       }
     };
     
@@ -72,6 +76,7 @@ const Auth = () => {
       }
       
       if (authType === 'register' && selectedRole) {
+        console.log('Registering with:', { email, password, name, role: selectedRole });
         // Register the user with Supabase
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
@@ -86,6 +91,7 @@ const Auth = () => {
         });
         
         if (signUpError) {
+          console.error('Registration error:', signUpError);
           toast({
             title: "Registration Failed",
             description: signUpError.message,
@@ -137,8 +143,11 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // Directly navigate to dashboard instead of relying on isAuthenticated state
-          console.log('Navigating to dashboard after successful login');
+          // Set authenticated state and navigate
+          setIsAuthenticated(true);
+          console.log('Setting authenticated state to true, navigating to dashboard');
+          
+          // Force navigation to dashboard
           navigate('/dashboard');
         } else {
           console.error("No user data returned from login");
@@ -147,6 +156,7 @@ const Auth = () => {
             description: "Could not retrieve user data",
             variant: "destructive",
           });
+          setIsLoading(false);
         }
       }
     } catch (error) {
@@ -156,13 +166,11 @@ const Auth = () => {
         description: "Please check your credentials and try again",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
 
-  // Redirect to dashboard only if authenticated state is set
-  // (This is a backup redirect if the navigate() in login handler doesn't work)
+  // If already authenticated, redirect to dashboard
   if (isAuthenticated) {
     console.log('isAuthenticated state is true, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;

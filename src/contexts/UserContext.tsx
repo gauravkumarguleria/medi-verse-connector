@@ -43,7 +43,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching user profile:', error);
-        return;
+        return null;
       }
 
       if (data) {
@@ -67,11 +67,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           allergies: data.allergies,
           conditions: data.conditions
         });
+        return data;
       } else {
         console.log('No profile data found for user ID:', userId);
+        return null;
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -122,17 +125,41 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshUserProfile = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data && data.session) {
-      console.log('Refreshing user profile for:', data.session.user.id);
-      await fetchUserProfile(data.session.user.id);
-    } else {
-      console.log('Cannot refresh profile: No active session');
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session) {
+        console.log('Refreshing user profile for:', data.session.user.id);
+        const profileData = await fetchUserProfile(data.session.user.id);
+        
+        if (!profileData) {
+          console.error('Failed to refresh user profile - no data returned');
+          toast({
+            title: "Profile Error",
+            description: "Could not load your profile data. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        console.log('User profile refreshed successfully');
+        return profileData;
+      } else {
+        console.log('Cannot refresh profile: No active session');
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to view your profile.",
+          variant: "destructive",
+        });
+        return null;
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
       toast({
-        title: "Authentication Error",
-        description: "You must be logged in to view your profile.",
+        title: "Profile Error",
+        description: "Failed to refresh your profile. Please try again.",
         variant: "destructive",
       });
+      return null;
     }
   };
 
