@@ -1,45 +1,95 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Features from "./pages/Features";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import Preloader from "./components/ui/Preloader";
-import { ThemeProvider } from "./components/ui/ThemeProvider";
-import { UserProvider } from "./contexts/UserContext";
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { UserProvider } from './contexts/UserContext';
+import { ThemeProvider } from './components/ui/ThemeProvider';
+import { Toaster } from './components/ui/toaster';
+import Preloader from './components/ui/Preloader';
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import DashboardLayout from './components/layout/DashboardLayout';
+import About from './pages/About';
+import Features from './pages/Features';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
+import { supabase } from './integrations/supabase/client';
 
-const queryClient = new QueryClient();
+function App() {
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-const App = () => (
-  <ThemeProvider defaultTheme="system" storageKey="mediverse-theme">
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setIsAuthenticated(!!data.session);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthenticated(false);
+      } finally {
+        // Simulate loading time
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }
+    };
+    
+    checkAuth();
+    
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      setIsAuthenticated(!!session);
+    });
+    
+    return () => {
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
+    };
+  }, []);
+
+  // Protected route wrapper
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!isAuthenticated && !loading) {
+      return <Navigate to="/auth" replace />;
+    }
+    
+    return <>{children}</>;
+  };
+
+  return (
+    <Router>
+      <Preloader />
+      <ThemeProvider>
         <UserProvider>
-          <Preloader />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            {/* Redirect /login to /auth */}
+            <Route path="/login" element={<Navigate to="/auth" replace />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/contact" element={<Contact />} />
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="/dashboard/*" element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
           <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard/*" element={<Dashboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
         </UserProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+      </ThemeProvider>
+    </Router>
+  );
+}
 
 export default App;

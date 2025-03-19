@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { IoTService } from '@/services/IoTService';
@@ -13,6 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { DeviceData, DeviceInfo } from '@/types/iotReports';
+import { supabase } from '@/integrations/supabase/client';
+import SensorDataService from '@/services/SensorDataService';
+import { toast } from '@/hooks/use-toast';
 
 interface IoTReportsPageProps {
   hideLayout?: boolean;
@@ -22,6 +24,58 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = React.useState('heartRate');
   const [timeRange, setTimeRange] = React.useState('1h');
+  const [latestData, setLatestData] = React.useState<any>(null);
+
+  // Enable realtime for sensor_data table when component mounts
+  useEffect(() => {
+    console.log('IoTReportsPage mounted - initializing data and subscriptions');
+    IoTService.enableRealtimeForTable('sensor_data').catch(console.error);
+    
+    // Always fetch 10 sensor readings initially
+    fetchSensorData(10);
+    
+    // Set up polling for updates
+    const intervalId = setInterval(() => fetchSensorData(10), 30 * 1000); // Refresh every 30 seconds
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('sensor_data_changes')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'sensor_data' }, 
+        () => {
+          console.log('New sensor data received, refreshing...');
+          fetchSensorData(10);
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      console.log('IoTReportsPage unmounted - cleaning up');
+      clearInterval(intervalId);
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchSensorData = async (limit: number = 10) => {
+    try {
+      console.log(`Fetching ${limit} sensor readings as placeholders...`);
+      const readings = await SensorDataService.getLatestReadings(limit);
+      if (readings.length > 0) {
+        const average = SensorDataService.calculateAverageReadings(readings);
+        setLatestData({
+          heartRate: Math.round(average.temperature * 1.2), // Simulating heart rate based on temperature
+          temperature: average.temperature,
+          activityLevel: Math.round(average.humidity), // Using humidity as proxy for activity
+          batteryLevel: 80 // Fixed value for battery
+        });
+        console.log('Average sensor data calculated:', average);
+      } else {
+        console.log('No sensor readings available');
+      }
+    } catch (error) {
+      console.error('Error fetching sensor data:', error);
+    }
+  };
 
   const { data: deviceList, isLoading: isDeviceListLoading } = useQuery({
     queryKey: ['deviceList'],
@@ -48,15 +102,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
     setTimeRange(range);
   };
 
-  const latestData = deviceData && deviceData.length > 0 
-    ? {
-        heartRate: 72,
-        temperature: 36.7,
-        activityLevel: 65,
-        batteryLevel: 78
-      } 
-    : null;
-
+  // Use placeholder chart data if no device data is available
   const chartData = deviceData || [
     { time: '00:00', value: 4000 },
     { time: '03:00', value: 3000 },
@@ -87,12 +133,12 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">
-              {latestData ? `${latestData.heartRate} BPM` : 'N/A'}
+              {latestData ? `${latestData.heartRate} BPM` : 'Loading...'}
             </div>
             <Separator className="my-2" />
             <div className="flex items-center text-sm text-muted-foreground">
               <Clock className="h-4 w-4 mr-2" />
-              Updated 5 minutes ago
+              Updated just now
             </div>
           </CardContent>
         </Card>
@@ -107,12 +153,12 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">
-              {latestData ? `${latestData.temperature}°C` : 'N/A'}
+              {latestData ? `${latestData.temperature.toFixed(1)}°C` : 'Loading...'}
             </div>
             <Separator className="my-2" />
             <div className="flex items-center text-sm text-muted-foreground">
               <Clock className="h-4 w-4 mr-2" />
-              Updated 5 minutes ago
+              Updated just now
             </div>
           </CardContent>
         </Card>
@@ -127,12 +173,12 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">
-              {latestData ? `${latestData.activityLevel}` : 'N/A'}
+              {latestData ? `${latestData.activityLevel}` : 'Loading...'}
             </div>
             <Separator className="my-2" />
             <div className="flex items-center text-sm text-muted-foreground">
               <Clock className="h-4 w-4 mr-2" />
-              Updated 5 minutes ago
+              Updated just now
             </div>
           </CardContent>
         </Card>
@@ -147,13 +193,13 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">
-              {latestData ? `${latestData.batteryLevel}%` : 'N/A'}
+              {latestData ? `${latestData.batteryLevel}%` : 'Loading...'}
             </div>
             <Separator className="my-2" />
             <Progress value={latestData ? latestData.batteryLevel : 0} />
             <div className="flex items-center text-sm text-muted-foreground">
               <Clock className="h-4 w-4 mr-2" />
-              Updated 5 minutes ago
+              Updated just now
             </div>
           </CardContent>
         </Card>

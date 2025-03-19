@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      gas_data: {
+        Row: {
+          humidity: number
+          id: number
+          mq135: number
+          mq3_1: number
+          mq3_2: number | null
+          temperature: number
+          timestamp: string | null
+        }
+        Insert: {
+          humidity: number
+          id?: number
+          mq135: number
+          mq3_1: number
+          mq3_2?: number | null
+          temperature: number
+          timestamp?: string | null
+        }
+        Update: {
+          humidity?: number
+          id?: number
+          mq135?: number
+          mq3_1?: number
+          mq3_2?: number | null
+          temperature?: number
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -69,12 +99,47 @@ export type Database = {
         }
         Relationships: []
       }
+      sensor_data: {
+        Row: {
+          humidity: number
+          id: number
+          mq135: number
+          mq3_1: number
+          mq3_2: number
+          temperature: number
+          timestamp: string | null
+        }
+        Insert: {
+          humidity: number
+          id?: number
+          mq135: number
+          mq3_1: number
+          mq3_2: number
+          temperature: number
+          timestamp?: string | null
+        }
+        Update: {
+          humidity?: number
+          id?: number
+          mq135?: number
+          mq3_1?: number
+          mq3_2?: number
+          temperature?: number
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      enable_realtime_for_table: {
+        Args: {
+          table_name: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

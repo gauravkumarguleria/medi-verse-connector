@@ -1,4 +1,5 @@
 import { IoTReport, IoTDevice, SystemAdjustment } from '../types/iotReports';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mock data for IoT reports
 const mockIoTReports: IoTReport[] = [
@@ -213,6 +214,25 @@ export const IoTService = {
         resolve(mockIoTDevices);
       }, 800);
     });
+  },
+
+  // Enable realtime subscriptions for a table
+  enableRealtimeForTable: async (tableName: string): Promise<void> => {
+    try {
+      // Add the table to the realtime publication
+      const { error } = await supabase.rpc('enable_realtime_for_table', {
+        table_name: tableName
+      });
+
+      if (error) {
+        console.error('Error enabling realtime for table:', error);
+        throw error;
+      }
+
+      console.log(`Realtime enabled for table: ${tableName}`);
+    } catch (err) {
+      console.error('Error in enableRealtimeForTable:', err);
+    }
   }
 };
 
