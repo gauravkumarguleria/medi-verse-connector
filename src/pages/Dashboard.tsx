@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isLoading } = useUser();
+  const { user, isLoading, refreshUserProfile } = useUser();
   
   // Check authentication
   useEffect(() => {
@@ -31,6 +31,9 @@ const Dashboard = () => {
         if (!data || !data.session) {
           console.log('User not authenticated, redirecting to login');
           navigate('/login');
+        } else {
+          // Refresh user profile when dashboard loads
+          refreshUserProfile();
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
@@ -39,7 +42,7 @@ const Dashboard = () => {
     };
     
     checkAuth();
-  }, [navigate]);
+  }, [navigate, refreshUserProfile]);
   
   // If still loading user data, show a loading skeleton
   if (isLoading) {
@@ -61,28 +64,30 @@ const Dashboard = () => {
     return null;
   }
   
+  console.log('Current location path:', location.pathname);
+  
   return (
     <Routes>
       <Route path="/" element={user?.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
-      <Route path="/overview" element={user?.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
-      <Route path="/iot-reports" element={<IoTReportsPage hideLayout />} />
-      <Route path="/iot-devices" element={<IoTReportsPage hideLayout />} />
-      <Route path="/vitals" element={<LiveSensorData />} />
-      <Route path="/appointments" element={
+      <Route path="overview" element={user?.role === 'doctor' ? <DoctorDashboard /> : <DashboardMain />} />
+      <Route path="iot-reports" element={<IoTReportsPage hideLayout />} />
+      <Route path="iot-devices" element={<IoTReportsPage hideLayout />} />
+      <Route path="vitals" element={<LiveSensorData />} />
+      <Route path="appointments" element={
         user?.role === 'doctor' 
           ? <DoctorAppointmentView /> 
           : <AppointmentPage hideLayout />
       } />
-      <Route path="/medications" element={
+      <Route path="medications" element={
         user?.role === 'doctor'
           ? <DoctorMedicationPage />
           : <MedicationPage />
       } />
-      <Route path="/records" element={<HealthRecordsPage />} />
-      <Route path="/messages" element={<MessagesPage />} />
-      <Route path="/profile" element={<ProfileSection />} />
-      <Route path="/settings" element={<SettingsSection />} />
-      <Route path="/pharmacy" element={<PharmacyStore />} />
+      <Route path="records" element={<HealthRecordsPage />} />
+      <Route path="messages" element={<MessagesPage />} />
+      <Route path="profile" element={<ProfileSection />} />
+      <Route path="settings" element={<SettingsSection />} />
+      <Route path="pharmacy" element={<PharmacyStore />} />
     </Routes>
   );
 };

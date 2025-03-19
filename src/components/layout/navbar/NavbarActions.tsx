@@ -60,10 +60,16 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({
   }, [initialUser, initialIsAuthenticated]);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-4">
       <ThemeModeToggle />
       {(authenticated && currentUser && currentUser.id !== "1") ? (
-        <UserMenu user={currentUser} />
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex flex-col items-end mr-2">
+            <span className="text-sm font-medium">{currentUser.name}</span>
+            <span className="text-xs text-muted-foreground capitalize">{currentUser.role}</span>
+          </div>
+          <UserMenu user={currentUser} />
+        </div>
       ) : (
         <Link to="/login" className="text-sm font-medium transition-colors hover:text-primary">
           Login
