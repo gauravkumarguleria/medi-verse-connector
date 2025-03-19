@@ -10,8 +10,18 @@ import { Thermometer, Droplets, Wind, Activity, BarChart2, History } from 'lucid
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import SensorDataService, { SensorReading, AverageSensorData } from '@/services/SensorDataService';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 // Configuration for the charts
 const chartConfig = {
@@ -44,11 +54,15 @@ const LiveSensorData: React.FC = () => {
   const [averageData, setAverageData] = useState<AverageSensorData | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const fetchData = async () => {
     try {
-      const limit = timeRange === '10m' ? 10 : timeRange === '30m' ? 30 : timeRange === '1h' ? 60 : 10;
+      setIsLoading(true);
+      const limit = 10; // Always fetch the 10 most recent readings
       const data = await SensorDataService.getLatestReadings(limit);
+      
+      // Update readings state with new data
       setReadings(data);
       
       // Calculate average of the readings
@@ -58,19 +72,28 @@ const LiveSensorData: React.FC = () => {
       // Generate time series data for charts
       const timeSeriesData = SensorDataService.getTimeSeriesData(data);
       setChartData(timeSeriesData);
+      
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching sensor data:', error);
+      toast({
+        title: "Error fetching sensor data",
+        description: "Unable to retrieve the latest sensor readings",
+        variant: "destructive",
+      });
+      setIsLoading(false);
     }
   };
   
   // Set up real-time subscription
   useEffect(() => {
+    // Initial data fetch
     fetchData();
     
     // Set up polling for updates
     const intervalId = setInterval(fetchData, refreshInterval * 1000);
     
-    // Set up real-time subscription
+    // Set up real-time subscription for new sensor readings
     const channel = supabase
       .channel('sensor_data_changes')
       .on('postgres_changes', 
@@ -78,15 +101,21 @@ const LiveSensorData: React.FC = () => {
         (payload) => {
           console.log('New sensor data received:', payload);
           fetchData(); // Refresh data when new readings come in
+          
+          toast({
+            title: "New Sensor Reading",
+            description: "A new sensor reading has been recorded",
+          });
         }
       )
       .subscribe();
     
+    // Cleanup function
     return () => {
       clearInterval(intervalId);
       supabase.removeChannel(channel);
     };
-  }, [timeRange, refreshInterval]);
+  }, [refreshInterval]); // Re-establish the interval if the refresh rate changes
   
   const handleMetricChange = (value: string) => {
     setSelectedMetric(value);
@@ -113,17 +142,6 @@ const LiveSensorData: React.FC = () => {
         return <Activity className="h-4 w-4" />;
       default:
         return <BarChart2 className="h-4 w-4" />;
-    }
-  };
-  
-  const getMetricUnit = (metric: string) => {
-    switch (metric) {
-      case 'temperature':
-        return '°C';
-      case 'humidity':
-        return '%';
-      default:
-        return 'ppm';
     }
   };
   
@@ -230,7 +248,7 @@ const LiveSensorData: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {averageData ? `${averageData.mq3_1.toFixed(2)}` : 'N/A'}
+              {averageData ? `${averageData.mq3_1.toFixed(2)} ppm` : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
               Average of last {readings.length} readings
@@ -247,7 +265,7 @@ const LiveSensorData: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {averageData ? `${averageData.mq3_2.toFixed(2)}` : 'N/A'}
+              {averageData ? `${averageData.mq3_2.toFixed(2)} ppm` : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
               Average of last {readings.length} readings
@@ -264,7 +282,7 @@ const LiveSensorData: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {averageData ? `${averageData.mq135.toFixed(2)}` : 'N/A'}
+              {averageData ? `${averageData.mq135.toFixed(2)} ppm` : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
               Average of last {readings.length} readings
@@ -322,44 +340,42 @@ const LiveSensorData: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Recent Readings</CardTitle>
-          <CardDescription>Raw sensor data from the most recent measurements</CardDescription>
+          <CardDescription>Latest 10 sensor readings with timestamps</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted">
-                  <tr className="text-left">
-                    <th className="p-2 font-medium">Time</th>
-                    <th className="p-2 font-medium">Temperature</th>
-                    <th className="p-2 font-medium">Humidity</th>
-                    <th className="p-2 font-medium">MQ3-1</th>
-                    <th className="p-2 font-medium">MQ3-2</th>
-                    <th className="p-2 font-medium">MQ135</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {readings.length > 0 ? (
-                    readings.map((reading) => (
-                      <tr key={reading.id} className="border-t">
-                        <td className="p-2">{new Date(reading.timestamp).toLocaleString()}</td>
-                        <td className="p-2">{reading.temperature.toFixed(1)}°C</td>
-                        <td className="p-2">{reading.humidity.toFixed(1)}%</td>
-                        <td className="p-2">{reading.mq3_1.toFixed(2)}</td>
-                        <td className="p-2">{reading.mq3_2.toFixed(2)}</td>
-                        <td className="p-2">{reading.mq135.toFixed(2)}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="p-4 text-center text-muted-foreground">
-                        No readings available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Temperature</TableHead>
+                  <TableHead>Humidity</TableHead>
+                  <TableHead>MQ3-1</TableHead>
+                  <TableHead>MQ3-2</TableHead>
+                  <TableHead>MQ135</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {readings.length > 0 ? (
+                  readings.map((reading) => (
+                    <TableRow key={reading.id}>
+                      <TableCell>{new Date(reading.timestamp).toLocaleString()}</TableCell>
+                      <TableCell>{reading.temperature.toFixed(1)}°C</TableCell>
+                      <TableCell>{reading.humidity.toFixed(1)}%</TableCell>
+                      <TableCell>{reading.mq3_1.toFixed(2)} ppm</TableCell>
+                      <TableCell>{reading.mq3_2.toFixed(2)} ppm</TableCell>
+                      <TableCell>{reading.mq135.toFixed(2)} ppm</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      {isLoading ? 'Loading sensor data...' : 'No readings available'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
