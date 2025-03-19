@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import { 
@@ -52,12 +53,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       try {
         const { data } = await supabase.auth.getSession();
         if (!data || !data.session) {
-          console.log('User not authenticated, redirecting to login');
-          navigate('/login');
+          console.log('User not authenticated, redirecting to auth');
+          navigate('/auth');
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
-        navigate('/login');
+        navigate('/auth');
       }
     };
     
