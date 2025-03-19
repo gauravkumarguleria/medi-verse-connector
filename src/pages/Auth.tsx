@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -161,7 +160,9 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // Login success - redirection will be handled by the auth state change listener
+          // Force a redirection to dashboard after successful login
+          await refreshUserProfile();
+          navigate('/dashboard');
         }
       }
     } catch (error) {
