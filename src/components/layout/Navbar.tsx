@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import ThemeModeToggle from '@/components/ui/ThemeModeToggle';
+import { ThemeModeToggle } from '@/components/ui/ThemeModeToggle';
 import AnimatedLogo from '@/components/ui/AnimatedLogo';
 import { Button } from '@/components/ui/button';
 import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
