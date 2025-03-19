@@ -208,7 +208,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <Sidebar side="left" variant="sidebar" collapsible="icon" className="z-30">
               <SidebarHeader className="p-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-primary">MediVerse</h2>
+                  <div className="flex-1"></div>
                   <SidebarTrigger />
                 </div>
               </SidebarHeader>
