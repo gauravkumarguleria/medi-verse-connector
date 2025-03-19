@@ -41,7 +41,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarHidden, setSidebarHidden] = useState(true); // Set default to true (sidebar hidden)
+  const [sidebarHidden, setSidebarHidden] = useState(false); // Changed default to false to show sidebar
   const { user } = useUser();
 
   const isActiveRoute = (route: string) => {
@@ -198,7 +198,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <Navbar />
         <div className="flex-1 pt-16 flex w-full">
           {!sidebarHidden && (
-            <Sidebar side="left" variant="sidebar" collapsible="icon" className="z-10">
+            <Sidebar side="left" variant="sidebar" collapsible="icon" className="z-30">
               <SidebarHeader className="p-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-primary">MediVerse</h2>

@@ -27,7 +27,9 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({ className, size = 'md' }) =
     paths.forEach((path, index) => {
       // Reset any existing animations
       path.style.animation = 'none';
-      path.offsetHeight; // Trigger reflow
+      
+      // Force reflow without using offsetHeight directly
+      void path.getBoundingClientRect();
       
       // Apply staggered animations
       path.style.animation = `pulse 2s infinite ${index * 0.2}s`;
@@ -89,7 +91,7 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({ className, size = 'md' }) =
       </svg>
       
       {/* Add keyframes animation for pulse */}
-      <style jsx>{`
+      <style>{`
         @keyframes pulse {
           0%, 100% { 
             opacity: 1;
