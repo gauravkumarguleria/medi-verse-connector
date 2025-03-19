@@ -11,7 +11,7 @@ import CircleBackground from '@/components/ui/CircleBackground';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import { UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2 } from 'lucide-react';
@@ -28,7 +28,6 @@ const Auth = () => {
   );
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(preselectedRole);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { refreshUserProfile } = useUser();
 
@@ -37,7 +36,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   
-  // Check if user is already authenticated
+  // Check if user is already authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -54,12 +53,12 @@ const Auth = () => {
     checkAuth();
   }, [navigate]);
 
+  // Update auth type when URL parameter changes
   useEffect(() => {
-    // Update auth type if URL parameter changes
     setAuthType(type === 'register' ? 'register' : 'login');
   }, [type]);
 
-  // Set up an auth state listener
+  // Set up auth state listener to handle redirects when auth state changes
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -67,8 +66,14 @@ const Auth = () => {
         
         if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
           console.log('User signed in, navigating to dashboard');
-          await refreshUserProfile();
-          navigate('/dashboard');
+          try {
+            await refreshUserProfile();
+            navigate('/dashboard');
+          } catch (error) {
+            console.error('Error refreshing user profile:', error);
+            // Still navigate even if profile refresh fails
+            navigate('/dashboard');
+          }
         }
       }
     );
@@ -85,19 +90,19 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      if (authType === 'register' && !selectedRole) {
-        toast({
-          title: "Please select a role",
-          description: "You need to select a role to register",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      if (authType === 'register' && selectedRole) {
+      if (authType === 'register') {
+        if (!selectedRole) {
+          toast({
+            title: "Please select a role",
+            description: "You need to select a role to register",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
         console.log('Registering with:', { email, password, name, role: selectedRole });
-        // Register the user with Supabase
+        
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -121,20 +126,18 @@ const Auth = () => {
           return;
         }
         
-        // Display success toast
         toast({
           title: "Registration Successful",
           description: `Your ${selectedRole} account has been created successfully.`,
         });
         
-        // Show registration success message
         setRegistrationSuccess(true);
-        // Switch to login tab
         setAuthType('login');
         setIsLoading(false);
       } else {
+        // Login flow
         console.log("Attempting login with:", { email, password });
-        // For login, sign in with Supabase
+        
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -158,8 +161,7 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // The navigation will be handled by the auth state change listener
-          // No need to manually navigate here
+          // Login success - redirection will be handled by the auth state change listener
         }
       }
     } catch (error) {
@@ -215,7 +217,6 @@ const Auth = () => {
             className="w-full" 
             onValueChange={(value) => {
               setAuthType(value as 'login' | 'register');
-              // Reset success state when switching to register tab
               if (value === 'register') {
                 setRegistrationSuccess(false);
               }
@@ -266,7 +267,12 @@ const Auth = () => {
                     type="submit"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Logging in..." : "Login"}
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                        Logging in...
+                      </span>
+                    ) : "Login"}
                   </AnimatedButton>
                   <div className="text-center text-sm text-muted-foreground">
                     Don't have an account?{" "}
@@ -334,7 +340,12 @@ const Auth = () => {
                     type="submit"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                        Creating Account...
+                      </span>
+                    ) : "Create Account"}
                   </AnimatedButton>
                   <div className="text-center text-sm text-muted-foreground">
                     Already have an account?{" "}
