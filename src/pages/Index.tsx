@@ -120,7 +120,7 @@ const Index = () => {
   const testimonials = [
     {
       id: 1,
-      name: "Sarah Johnson",
+      name: "Sia Aggarwal",
       role: "Patient",
       image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
       quote: "This platform has transformed how I manage my health. I can track my medications, book appointments, and access my records all in one place!",
@@ -128,7 +128,7 @@ const Index = () => {
     },
     {
       id: 2,
-      name: "Dr. Michael Chen",
+      name: "Dr. Hoshiar Chand",
       role: "Cardiologist",
       image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
       quote: "As a doctor, this platform has streamlined my practice. I can easily communicate with patients, manage appointments, and access medical histories.",
@@ -136,7 +136,7 @@ const Index = () => {
     },
     {
       id: 3,
-      name: "Lisa Rodriguez",
+      name: "Luv Kumar",
       role: "Pharmacist",
       image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
       quote: "The medication management system is excellent. I can verify prescriptions quickly and communicate directly with doctors for any clarifications.",
