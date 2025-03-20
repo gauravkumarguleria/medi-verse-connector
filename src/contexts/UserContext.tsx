@@ -17,6 +17,7 @@ const initialUser: User = {
 interface UserContextType {
   user: User;
   isLoading: boolean;
+  isAuthenticated: boolean; // Add isAuthenticated flag
   updateUser: (userData: Partial<User>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -27,6 +28,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(initialUser);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Add authentication state
   const { toast } = useToast();
 
   // This function fetches the user's profile from Supabase
@@ -68,11 +70,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           allergies: data.allergies,
           conditions: data.conditions
         });
+        setIsAuthenticated(true);
       } else {
         console.log('No profile data found for user ID:', userId);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +85,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for authenticated user on component mount
   useEffect(() => {
+    // First set up the auth state listener to catch any changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
+        
+        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          console.log('User signed in or token refreshed:', session.user.id);
+          await fetchUserProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out, resetting to initial user');
+          setUser(initialUser);
+          setIsAuthenticated(false);
+        }
+      }
+    );
+
+    // Then check for existing session
     const checkUser = async () => {
       try {
         setIsLoading(true);
@@ -91,30 +113,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await fetchUserProfile(data.session.user.id);
         } else {
           console.log('No authenticated session found, using initial user data');
+          setIsAuthenticated(false);
           setIsLoading(false);
         }
       } catch (error) {
         console.error('Error checking user:', error);
+        setIsAuthenticated(false);
         setIsLoading(false);
       }
     };
 
     checkUser();
-
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
-        
-        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          console.log('User signed in or token refreshed:', session.user.id);
-          await fetchUserProfile(session.user.id);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out, resetting to initial user');
-          setUser(initialUser);
-        }
-      }
-    );
 
     return () => {
       if (authListener && authListener.subscription) {
@@ -131,6 +140,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await fetchUserProfile(data.session.user.id);
       } else {
         console.log('Cannot refresh profile: No active session');
+        setIsAuthenticated(false);
         toast({
           title: "Authentication Error",
           description: "You must be logged in to view your profile.",
@@ -139,6 +149,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error refreshing user profile:', error);
+      setIsAuthenticated(false);
       toast({
         title: "Error",
         description: "Failed to refresh your profile.",
@@ -164,6 +175,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Reset user state to initial
       setUser(initialUser);
+      setIsAuthenticated(false);
       
       // Clear any local storage items related to auth if needed
       localStorage.removeItem('supabase.auth.token');
@@ -304,7 +316,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, isLoading, updateUser, refreshUserProfile, signOut }}>
+    <UserContext.Provider value={{ user, isLoading, isAuthenticated, updateUser, refreshUserProfile, signOut }}>
       {children}
     </UserContext.Provider>
   );

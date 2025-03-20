@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -26,7 +27,7 @@ const Navbar: React.FC = () => {
   const { toast } = useToast();
   
   // Use the user context instead of mock data
-  const { user, signOut } = useUser();
+  const { user, signOut, isAuthenticated } = useUser();
   const userInitials = user.name.split(' ').map(n => n[0]).join('');
 
   // Check if user is on the dashboard to show different navigation
@@ -140,7 +141,7 @@ const Navbar: React.FC = () => {
         <div className="hidden md:flex items-center gap-4">
           <ThemeModeToggle />
           
-          {isOnDashboard ? (
+          {isAuthenticated && isOnDashboard ? (
             <div className="flex items-center gap-3">
               <div className="text-sm font-medium mr-1">
                 <span className="text-muted-foreground">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
@@ -263,7 +264,7 @@ const Navbar: React.FC = () => {
             </div>
           )}
           
-          {isOnDashboard && (
+          {isAuthenticated && isOnDashboard && (
             <>
               <button 
                 onClick={handleProfileClick}
@@ -291,7 +292,7 @@ const Navbar: React.FC = () => {
           
           <div className="flex items-center justify-between py-2">
             <ThemeModeToggle />
-            {!isOnDashboard && (
+            {!isAuthenticated && !isOnDashboard && (
               <div className="flex gap-4 ml-4">
                 <Button asChild variant="outline" className="flex-1">
                   <Link to="/auth?type=login">Login</Link>

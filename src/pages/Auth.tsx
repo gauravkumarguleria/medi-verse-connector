@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
@@ -28,39 +28,38 @@ const Auth = () => {
   );
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(preselectedRole);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const { refreshUserProfile } = useUser();
+  const { refreshUserProfile, isAuthenticated } = useUser();
+  const [showPassword, setShowPassword] = useState(false);
 
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Check if user is already authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data && data.session) {
-        setIsAuthenticated(true);
-      }
-    };
-    
-    checkAuth();
-  }, []);
-
   useEffect(() => {
     // Update auth type if URL parameter changes
     setAuthType(type === 'register' ? 'register' : 'login');
   }, [type]);
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const clearError = () => {
+    setErrorMessage(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    clearError();
     
     try {
       if (authType === 'register' && !selectedRole) {
+        setErrorMessage("Please select a role to register");
         toast({
           title: "Please select a role",
           description: "You need to select a role to register",
@@ -85,6 +84,7 @@ const Auth = () => {
         });
         
         if (signUpError) {
+          setErrorMessage(signUpError.message);
           toast({
             title: "Registration Failed",
             description: signUpError.message,
@@ -112,6 +112,7 @@ const Auth = () => {
         
         if (signInError) {
           console.error("Login error:", signInError);
+          setErrorMessage(signInError.message);
           toast({
             title: "Login Failed",
             description: signInError.message,
@@ -133,18 +134,20 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // Set authenticated to redirect to dashboard
-          setIsAuthenticated(true);
-          
           // Force navigation to dashboard
           navigate('/dashboard');
         }
       }
     } catch (error) {
       console.error("Authentication error:", error);
+      let message = "Please check your credentials and try again";
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      setErrorMessage(message);
       toast({
         title: "Authentication Failed",
-        description: "Please check your credentials and try again",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -152,7 +155,7 @@ const Auth = () => {
     }
   };
 
-  // Redirect to dashboard only if authenticated
+  // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -194,11 +197,21 @@ const Auth = () => {
             </div>
           )}
           
+          {errorMessage && (
+            <div className="px-6 pb-2">
+              <Alert variant="destructive">
+                <AlertTitle>Authentication Error</AlertTitle>
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            </div>
+          )}
+          
           <Tabs 
             value={authType}
             className="w-full" 
             onValueChange={(value) => {
               setAuthType(value as 'login' | 'register');
+              clearError();
               // Reset success state when switching to register tab
               if (value === 'register') {
                 setRegistrationSuccess(false);
@@ -234,14 +247,23 @@ const Auth = () => {
                         Forgot password?
                       </a>
                     </div>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="••••••••" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="password" 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="••••••••" 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        onClick={togglePasswordVisibility}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
@@ -260,6 +282,7 @@ const Auth = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         setAuthType('register');
+                        clearError();
                         setRegistrationSuccess(false);
                       }}
                     >
@@ -296,14 +319,23 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="••••••••" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Input 
+                        id="password" 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="••••••••" 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        onClick={togglePasswordVisibility}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-3">
                     <Label>Select Your Role</Label>
@@ -328,6 +360,7 @@ const Auth = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         setAuthType('login');
+                        clearError();
                       }}
                     >
                       Login
