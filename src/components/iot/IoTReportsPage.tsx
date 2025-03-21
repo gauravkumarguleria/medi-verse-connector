@@ -8,13 +8,16 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Heart, Activity, Thermometer, AreaChart, Battery, Clock, Smartphone, WifiIcon } from 'lucide-react';
+import { Heart, Activity, Thermometer, AreaChart, Battery, Clock, Smartphone, WifiIcon, Download, FileDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { DeviceData, DeviceInfo } from '@/types/iotReports';
 import { supabase } from '@/integrations/supabase/client';
 import SensorDataService from '@/services/SensorDataService';
+import { Button } from '@/components/ui/button';
+import { generateIoTReport } from '@/services/PDFService';
+import { toast } from '@/hooks/use-toast';
 
 interface IoTReportsPageProps {
   hideLayout?: boolean;
@@ -96,6 +99,44 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
     setTimeRange(range);
   };
 
+  const handleDownloadReport = async () => {
+    if (!latestData) {
+      toast({
+        title: "No data available",
+        description: "There is no data to generate a report",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const dateStr = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      const filename = `health-metrics-report-${dateStr}.pdf`;
+      const pdf = generateIoTReport(latestData, deviceData || [], selectedMetric, timeRange);
+      
+      pdf.save(filename);
+      
+      toast({
+        title: "Report downloaded",
+        description: `${filename} has been downloaded successfully`,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Download failed",
+        description: "Failed to generate the PDF report",
+        variant: "destructive"
+      });
+    }
+  };
+
   const chartData = deviceData || [
     { time: '00:00', value: 4000 },
     { time: '03:00', value: 3000 },
@@ -110,9 +151,19 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
 
   const content = (
     <div className="space-y-6 animate-fade-up">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold">IoT Health Monitoring</h1>
-        <p className="text-muted-foreground">Monitor your health metrics from connected devices</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">IoT Health Monitoring</h1>
+          <p className="text-muted-foreground">Monitor your health metrics from connected devices</p>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleDownloadReport}
+          className="flex items-center gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Download Report
+        </Button>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
