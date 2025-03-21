@@ -47,8 +47,12 @@ export const generateIoTReport = (
     ['Device Battery', `${latestData.batteryLevel}%`, getBatteryStatus(latestData.batteryLevel)]
   ];
   
-  autoTable(pdf, {
-    startY: 50,
+  // Track Y positions manually
+  let currentY = 50;
+  
+  // Generate current metrics table
+  const currentTableResult = autoTable(pdf, {
+    startY: currentY,
     head: [currentMetricsData[0]],
     body: currentMetricsData.slice(1),
     theme: 'grid',
@@ -61,16 +65,20 @@ export const generateIoTReport = (
     }
   });
   
+  // Update current Y position
+  currentY = (currentTableResult.finalY || 120) + 20;
+  
   // Add metric trends section title
   pdf.setFontSize(16);
   pdf.setTextColor(33, 37, 41);
-  pdf.text(`${getMetricLabel(metricType)} Trends (Last ${getTimeRangeLabel(timeRange)})`, 20, pdf.lastAutoTable.finalY + 20);
+  pdf.text(`${getMetricLabel(metricType)} Trends (Last ${getTimeRangeLabel(timeRange)})`, 20, currentY);
   
   // Metric trends table
   const tableData = chartData.map(item => [item.time, item.value.toString(), getMetricUnit(metricType)]);
   
-  autoTable(pdf, {
-    startY: pdf.lastAutoTable.finalY + 25,
+  // Generate trends table
+  const trendsTableResult = autoTable(pdf, {
+    startY: currentY + 5,
     head: [['Time', 'Value', 'Unit']],
     body: tableData,
     theme: 'grid',
@@ -79,16 +87,19 @@ export const generateIoTReport = (
     alternateRowStyles: { fillColor: [240, 240, 240] }
   });
   
+  // Update current Y position
+  currentY = (trendsTableResult.finalY || 200) + 20;
+  
   // Add recommendations
   pdf.setFontSize(16);
   pdf.setTextColor(33, 37, 41);
-  pdf.text('Health Recommendations', 20, pdf.lastAutoTable.finalY + 20);
+  pdf.text('Health Recommendations', 20, currentY);
   
   pdf.setFontSize(12);
   pdf.setTextColor(80, 80, 80);
   
   const recommendations = getRecommendations(latestData);
-  let yPosition = pdf.lastAutoTable.finalY + 30;
+  let yPosition = currentY + 10;
   
   recommendations.forEach(recommendation => {
     pdf.text(`• ${recommendation}`, 20, yPosition);
