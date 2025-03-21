@@ -51,7 +51,7 @@ export const generateIoTReport = (
   let currentY = 50;
   
   // Generate current metrics table
-  const currentTableResult = autoTable(pdf, {
+  autoTable(pdf, {
     startY: currentY,
     head: [currentMetricsData[0]],
     body: currentMetricsData.slice(1),
@@ -62,11 +62,11 @@ export const generateIoTReport = (
       0: { cellWidth: 60 },
       1: { cellWidth: 60 },
       2: { cellWidth: 60 }
+    },
+    didDrawPage: (data) => {
+      currentY = data.cursor.y + 20;
     }
   });
-  
-  // Update current Y position
-  currentY = (currentTableResult.finalY || 120) + 20;
   
   // Add metric trends section title
   pdf.setFontSize(16);
@@ -77,18 +77,18 @@ export const generateIoTReport = (
   const tableData = chartData.map(item => [item.time, item.value.toString(), getMetricUnit(metricType)]);
   
   // Generate trends table
-  const trendsTableResult = autoTable(pdf, {
+  autoTable(pdf, {
     startY: currentY + 5,
     head: [['Time', 'Value', 'Unit']],
     body: tableData,
     theme: 'grid',
     styles: { fontSize: 12, cellPadding: 5 },
     headStyles: { fillColor: [59, 130, 246], textColor: 255 },
-    alternateRowStyles: { fillColor: [240, 240, 240] }
+    alternateRowStyles: { fillColor: [240, 240, 240] },
+    didDrawPage: (data) => {
+      currentY = data.cursor.y + 20;
+    }
   });
-  
-  // Update current Y position
-  currentY = (trendsTableResult.finalY || 200) + 20;
   
   // Add recommendations
   pdf.setFontSize(16);
