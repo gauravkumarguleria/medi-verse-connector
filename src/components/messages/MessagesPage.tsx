@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ConversationList from './ConversationList';
 import MessageContent from './MessageContent';
@@ -66,6 +65,7 @@ const MessagesPage = () => {
               hour: '2-digit',
               minute: '2-digit',
             }),
+            status: 'delivered',
             attachment: newMessage.attachment_url ? {
               name: newMessage.attachment_name || 'file',
               size: 0, // We don't have this info from the database
@@ -115,6 +115,7 @@ const MessagesPage = () => {
           hour: '2-digit',
           minute: '2-digit',
         }),
+        status: 'sending'
       };
 
       setMessageHistory(prev => [...prev, newMessage]);
@@ -130,6 +131,7 @@ const MessagesPage = () => {
               hour: '2-digit',
               minute: '2-digit',
             }),
+            status: 'delivered'
           };
           
           setMessageHistory(prev => [...prev, responseMessage]);
