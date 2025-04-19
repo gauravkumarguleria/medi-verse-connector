@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback } from 'react';
 import { 
   Send, 
@@ -22,47 +21,32 @@ interface MessageContentProps {
   currentConversation: Conversation | undefined;
   messageHistory: Message[];
   onBack: () => void;
+  onSendMessage: (text: string, attachments: File[]) => void;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
 const MessageContent = ({
   selectedConversation,
   currentConversation,
   messageHistory,
-  onBack
+  onBack,
+  onSendMessage,
+  messagesEndRef
 }: MessageContentProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   const handleSendMessage = () => {
     if (newMessage.trim() || attachments.length > 0) {
-      // In a real app, send message and attachments to the API
-      console.log('Sending message:', newMessage);
-      console.log('Attachments:', attachments);
+      // Call the parent component's handler for message sending
+      onSendMessage(newMessage, attachments);
       
-      // Simulate message sending
-      if (attachments.length > 0) {
-        toast({
-          title: "Message with files sent",
-          description: "Your message has been delivered successfully."
-        });
-      } else {
-        toast({
-          title: "Message sent",
-          description: "Your message has been delivered successfully."
-        });
-      }
-      
+      // Reset local state
       setNewMessage('');
       setAttachments([]);
-      scrollToBottom();
     }
   };
 
