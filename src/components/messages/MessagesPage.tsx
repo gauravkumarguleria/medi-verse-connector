@@ -1,185 +1,165 @@
-import React, { useState, useRef, useEffect } from 'react';
-import ConversationList from './ConversationList';
-import MessageContent from './MessageContent';
-import { conversations, messageHistory as initialMessageHistory } from './mockData';
-import { supabase } from '@/integrations/supabase/client';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '@/contexts/UserContext';
-import { Message } from './types';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import ChatList from './ChatList';
+import ChatWindow from './ChatWindow';
+import { mockContacts, mockChats } from './mockData';
+import { Chat } from './types';
 
 const MessagesPage = () => {
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [messageHistory, setMessageHistory] = useState<Message[]>(initialMessageHistory);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [chats, setChats] = useState<Chat[]>(mockChats);
   const { user } = useUser();
   const isMobile = useIsMobile();
-
-  const handleSelectConversation = (id: string) => {
-    setSelectedConversation(id);
-    setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
+  
+  const handleSelectChat = (chatId: string) => {
+    // Mark chat as read when selected
+    setChats(prev => 
+      prev.map(chat => 
+        chat.id === chatId 
+          ? { ...chat, unreadCount: 0 } 
+          : chat
+      )
+    );
+    setSelectedChat(chatId);
   };
 
-  // Set up realtime messaging
-  useEffect(() => {
-    if (!selectedConversation) return;
-
-    // Enable realtime for messages table
-    const enableRealtime = async () => {
-      try {
-        await supabase.rpc('enable_realtime_for_table', { table_name: 'messages' });
-        console.log('Realtime enabled for messages table');
-      } catch (error) {
-        console.error('Error enabling realtime:', error);
-      }
-    };
-
-    enableRealtime();
-
-    // Subscribe to real-time updates for messages
-    const channel = supabase
-      .channel('messages_updates')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'messages',
-          filter: `conversation_id=eq.${selectedConversation}` 
-        }, 
-        (payload) => {
-          console.log('New message received:', payload);
-          // Add the new message to our state
-          const newMessage = payload.new as any;
-          
-          // Convert the message to our Message type
-          const message: Message = {
-            id: newMessage.id,
-            sender: newMessage.sender_id === user.id ? 'user' : 'recipient',
-            text: newMessage.content,
-            time: new Date(newMessage.created_at).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            status: 'delivered',
-            attachment: newMessage.attachment_url ? {
-              name: newMessage.attachment_name || 'file',
-              size: 0, // We don't have this info from the database
-              type: newMessage.attachment_type || 'application/octet-stream',
-              url: newMessage.attachment_url
-            } : undefined
-          };
-          
-          setMessageHistory(prev => [...prev, message]);
-          
-          // Scroll to bottom on new message
-          setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
-          
-          // Show notification if the message is from the other person
-          if (message.sender !== 'user') {
-            toast({
-              title: "New message",
-              description: `${currentConversation?.recipient.name}: ${message.text.substring(0, 30)}${message.text.length > 30 ? '...' : ''}`
-            });
-          }
-        }
-      )
-      .subscribe();
+  const handleSendMessage = (text: string, attachments: File[] = []) => {
+    if (!selectedChat || (!text.trim() && attachments.length === 0)) return;
     
-    // Cleanup subscription on unmount or when conversation changes
-    return () => {
-      supabase.removeChannel(channel);
+    // Get current chat
+    const currentChat = chats.find(chat => chat.id === selectedChat);
+    if (!currentChat) return;
+    
+    // Create new message
+    const newMessage = {
+      id: `msg-${Date.now()}`,
+      text,
+      senderId: user.id,
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      attachments: attachments.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type
+      }))
     };
-  }, [selectedConversation, user.id]);
-
-  const currentConversation = conversations.find(conv => conv.id === selectedConversation);
-
-  // Function to handle sending a new message
-  const handleSendMessage = async (text: string, attachments: File[]) => {
-    if (!selectedConversation || (!text.trim() && attachments.length === 0)) return;
-
-    try {
-      // In a real app, save message to the database
-      // For now, we'll just update our local state
-      const newMessage: Message = {
-        id: `temp-${Date.now()}`,
-        sender: 'user',
-        text,
-        time: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        status: 'sending'
-      };
-
-      setMessageHistory(prev => [...prev, newMessage]);
-
-      // Simulate the recipient typing and responding after a delay
-      if (Math.random() > 0.3) { // 70% chance of getting a response
-        setTimeout(() => {
-          const responseMessage: Message = {
-            id: `temp-${Date.now() + 1}`,
-            sender: 'recipient',
-            text: `This is an automated response to: "${text}"`,
-            time: new Date().toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            status: 'delivered'
-          };
+    
+    // Update chat with new message
+    setChats(prev => 
+      prev.map(chat => 
+        chat.id === selectedChat 
+          ? { 
+              ...chat, 
+              messages: [...(chat.messages || []), newMessage],
+              lastMessage: {
+                text,
+                timestamp: new Date().toISOString(),
+                senderId: user.id
+              }
+            } 
+          : chat
+      )
+    );
+    
+    // Simulate receiving a message after a delay (for demo)
+    if (Math.random() > 0.3) {
+      setTimeout(() => {
+        const responseMessage = {
+          id: `msg-${Date.now()}`,
+          text: `This is a response to: "${text}"`,
+          senderId: currentChat.contactId,
+          timestamp: new Date().toISOString(),
+          status: 'delivered'
+        };
+        
+        setChats(prev => 
+          prev.map(chat => 
+            chat.id === selectedChat 
+              ? { 
+                  ...chat, 
+                  messages: [...(chat.messages || []), responseMessage],
+                  lastMessage: {
+                    text: responseMessage.text,
+                    timestamp: responseMessage.timestamp,
+                    senderId: responseMessage.senderId
+                  }
+                } 
+              : chat
+          )
+        );
+        
+        // If chat is not currently selected, increment unread count
+        if (selectedChat !== currentChat.id) {
+          setChats(prev => 
+            prev.map(chat => 
+              chat.id === currentChat.id 
+                ? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 } 
+                : chat
+            )
+          );
           
-          setMessageHistory(prev => [...prev, responseMessage]);
-          
-          // Scroll to bottom on new message
-          setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
-        }, 1500 + Math.random() * 2000); // Random delay between 1.5-3.5 seconds
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive"
-      });
+          // Show notification for new message
+          toast({
+            title: "New message",
+            description: `${currentChat.contactName}: ${responseMessage.text.substring(0, 30)}${responseMessage.text.length > 30 ? '...' : ''}`
+          });
+        }
+      }, 1000 + Math.random() * 2000);
     }
+  };
+
+  const createNewChat = (contactId: string, contactName: string) => {
+    const newChatId = `chat-${Date.now()}`;
+    const newChat = {
+      id: newChatId,
+      contactId,
+      contactName,
+      contactAvatar: `/avatars/${contactId}.jpg`,
+      lastMessage: {
+        text: "New conversation started",
+        timestamp: new Date().toISOString(),
+        senderId: user.id
+      },
+      messages: [],
+      unreadCount: 0,
+      isOnline: Math.random() > 0.5
+    };
+    
+    setChats(prev => [newChat, ...prev]);
+    setSelectedChat(newChatId);
   };
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col">
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">Messages</h1>
-        <p className="text-muted-foreground">Communicate with your healthcare providers</p>
+      <div className="mb-4">
+        <h1 className="text-2xl md:text-3xl font-bold">Messages</h1>
+        <p className="text-muted-foreground">Connect with your healthcare team</p>
       </div>
 
-      <div className="flex h-full rounded-lg border overflow-hidden bg-background">
-        <ConversationList 
-          conversations={conversations}
+      <div className="flex-1 flex rounded-lg overflow-hidden border bg-background shadow">
+        <ChatList
+          chats={chats}
+          contacts={mockContacts}
+          selectedChatId={selectedChat}
+          onSelectChat={handleSelectChat}
+          onNewChat={createNewChat}
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          selectedConversation={selectedConversation}
-          onSelectConversation={handleSelectConversation}
-          className={selectedConversation && isMobile ? 'hidden' : 'block w-full md:w-1/3'}
+          onSearchChange={setSearchQuery}
+          className={selectedChat && isMobile ? 'hidden' : 'w-full md:w-1/3'}
         />
-
-        <MessageContent 
-          selectedConversation={selectedConversation}
-          currentConversation={currentConversation}
-          messageHistory={messageHistory}
-          onBack={() => setSelectedConversation(null)}
+        
+        <ChatWindow
+          selectedChatId={selectedChat}
+          chats={chats}
+          onBack={() => setSelectedChat(null)}
           onSendMessage={handleSendMessage}
-          messagesEndRef={messagesEndRef}
-          className={!selectedConversation && isMobile ? 'hidden' : 'block w-full md:w-2/3'}
+          className={!selectedChat && isMobile ? 'hidden' : 'w-full md:w-2/3'}
+          currentUserId={user.id}
         />
       </div>
     </div>

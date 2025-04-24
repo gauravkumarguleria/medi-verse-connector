@@ -23,10 +23,9 @@ export interface Conversation {
 
 export interface Attachment {
   name: string;
-  size: string | number;
+  size: number;
   type: string;
   url?: string;
-  data?: File;
 }
 
 export interface Message {
@@ -36,4 +35,44 @@ export interface Message {
   sender: 'user' | 'recipient';
   status: 'delivered' | 'read' | 'sending' | 'error';
   attachment?: Attachment;
+}
+
+// New WhatsApp-like interfaces
+export interface MessageAttachment {
+  name: string;
+  size: number;
+  type?: string;
+  url?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  text: string;
+  timestamp: string;
+  senderId: string;
+  status: 'sent' | 'delivered' | 'read' | 'error';
+  attachments?: MessageAttachment[];
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  avatar: string;
+  role: string;
+  lastSeen?: string;
+}
+
+export interface Chat {
+  id: string;
+  contactId: string;
+  contactName: string;
+  contactAvatar: string;
+  lastMessage?: {
+    text: string;
+    timestamp: string;
+    senderId: string;
+  };
+  unreadCount: number;
+  isOnline: boolean;
+  messages?: ChatMessage[];
 }
