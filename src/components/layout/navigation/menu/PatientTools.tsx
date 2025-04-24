@@ -1,5 +1,11 @@
 
-import { MenuGroup, MenuLink } from '@/components/ui/sidebar';
+import { 
+  SidebarGroup, 
+  SidebarGroupLabel, 
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton
+} from '@/components/ui/sidebar';
 import { Heart, Calendar, PillIcon, AlarmClock, WifiIcon, Activity, Database } from 'lucide-react';
 
 interface PatientToolsProps {
@@ -8,43 +14,75 @@ interface PatientToolsProps {
 
 export const PatientTools = ({ currentPath }: PatientToolsProps) => {
   return (
-    <MenuGroup title="Health Tools">
-      <MenuLink 
-        href="/dashboard/medications" 
-        icon={<PillIcon size={18} />}
-        isActive={currentPath === '/dashboard/medications'}
-      >
-        Medications
-      </MenuLink>
-      <MenuLink 
-        href="/dashboard/appointments" 
-        icon={<Calendar size={18} />}
-        isActive={currentPath === '/dashboard/appointments'}
-      >
-        Appointments
-      </MenuLink>
-      <MenuLink 
-        href="/dashboard/records" 
-        icon={<Heart size={18} />}
-        isActive={currentPath === '/dashboard/records'}
-      >
-        Health Records
-      </MenuLink>
-      <MenuLink 
-        href="/dashboard/iot-devices" 
-        icon={<Database size={18} />}
-        isActive={currentPath === '/dashboard/iot-devices'}
-        className="text-primary font-medium"
-      >
-        IoT Devices
-      </MenuLink>
-      <MenuLink 
-        href="/dashboard/iot-reports" 
-        icon={<Activity size={18} />}
-        isActive={currentPath === '/dashboard/iot-reports'}
-      >
-        Health Reports
-      </MenuLink>
-    </MenuGroup>
+    <SidebarGroup>
+      <SidebarGroupLabel>Health Tools</SidebarGroupLabel>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton 
+            asChild
+            isActive={currentPath === '/dashboard/medications'}
+            tooltip="Medications"
+          >
+            <a href="/dashboard/medications">
+              <PillIcon size={18} />
+              <span>Medications</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        
+        <SidebarMenuItem>
+          <SidebarMenuButton 
+            asChild
+            isActive={currentPath === '/dashboard/appointments'}
+            tooltip="Appointments"
+          >
+            <a href="/dashboard/appointments">
+              <Calendar size={18} />
+              <span>Appointments</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        
+        <SidebarMenuItem>
+          <SidebarMenuButton 
+            asChild
+            isActive={currentPath === '/dashboard/records'}
+            tooltip="Health Records"
+          >
+            <a href="/dashboard/records">
+              <Heart size={18} />
+              <span>Health Records</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        
+        <SidebarMenuItem>
+          <SidebarMenuButton 
+            asChild
+            isActive={currentPath === '/dashboard/iot-devices'}
+            tooltip="IoT Devices"
+            className={currentPath === '/dashboard/iot-devices' ? "text-primary font-medium" : ""}
+          >
+            <a href="/dashboard/iot-devices">
+              <Database size={18} />
+              <span>IoT Devices</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        
+        <SidebarMenuItem>
+          <SidebarMenuButton 
+            asChild
+            isActive={currentPath === '/dashboard/iot-reports'}
+            tooltip="Health Reports"
+          >
+            <a href="/dashboard/iot-reports">
+              <Activity size={18} />
+              <span>Health Reports</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarGroup>
   );
 };

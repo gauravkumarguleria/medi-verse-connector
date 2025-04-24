@@ -19,11 +19,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
-  const currentPath = location.pathname.split('/').pop() || 'overview';
-  
-  const handleTabChange = (value: string) => {
-    navigate(`/dashboard/${value === 'overview' ? '' : value}`);
-  };
   
   return (
     <DashboardLayout>
