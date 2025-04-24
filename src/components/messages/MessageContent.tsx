@@ -216,20 +216,27 @@ const MessageContent = ({
   }
 
   // Convert Message objects to ChatMessage objects for MessageItem component
-  const convertedMessages = messageHistory.map(message => ({
-    id: message.id,
-    text: message.text,
-    timestamp: message.time,
-    senderId: message.sender === 'user' ? 'current-user' : 'recipient',
-    status: message.status === 'delivered' || message.status === 'read' || 
-            message.status === 'error' ? message.status : 'sent',
-    attachments: message.attachment ? [{
-      name: message.attachment.name,
-      size: message.attachment.size,
-      type: message.attachment.type,
-      url: message.attachment.url
-    }] : undefined
-  }));
+  const convertedMessages = messageHistory.map(message => {
+    // Ensure status is one of the valid values for ChatMessage
+    let status: 'sent' | 'delivered' | 'read' | 'error' = 'sent';
+    if (message.status === 'delivered' || message.status === 'read' || message.status === 'error') {
+      status = message.status;
+    }
+    
+    return {
+      id: message.id,
+      text: message.text,
+      timestamp: message.time,
+      senderId: message.sender === 'user' ? 'current-user' : 'recipient',
+      status: status,
+      attachments: message.attachment ? [{
+        name: message.attachment.name,
+        size: message.attachment.size,
+        type: message.attachment.type,
+        url: message.attachment.url
+      }] : undefined
+    };
+  });
 
   return (
     <div 
