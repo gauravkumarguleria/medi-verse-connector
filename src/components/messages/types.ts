@@ -35,7 +35,6 @@ export interface Contact {
   avatar?: string;
   role: string;
   isOnline?: boolean;
-  // Add this property since it's being used in mockData.ts
   lastSeen?: string;
 }
 
