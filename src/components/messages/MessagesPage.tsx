@@ -6,135 +6,267 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ChatList from './ChatList';
 import ChatWindow from './ChatWindow';
-import { mockContacts, mockChats } from './mockData';
 import { Chat, ChatMessage } from './types';
 
 const MessagesPage = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [chats, setChats] = useState<Chat[]>(mockChats);
+  const [chats, setChats] = useState<Chat[]>([]);
   const { user } = useUser();
   const isMobile = useIsMobile();
+  const [contacts, setContacts] = useState<any[]>([]);
   
-  const handleSelectChat = (chatId: string) => {
-    // Mark chat as read when selected
-    setChats(prev => 
-      prev.map(chat => 
-        chat.id === chatId 
-          ? { ...chat, unreadCount: 0 } 
-          : chat
-      )
-    );
-    setSelectedChat(chatId);
-  };
-
-  const handleSendMessage = (text: string, attachments: File[] = []) => {
-    if (!selectedChat || (!text.trim() && attachments.length === 0)) return;
+  // Fetch chats and contacts on component mount
+  useEffect(() => {
+    fetchChats();
+    fetchContacts();
     
-    // Get current chat
-    const currentChat = chats.find(chat => chat.id === selectedChat);
-    if (!currentChat) return;
-    
-    // Create new message
-    const newMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      text,
-      senderId: user.id,
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-      attachments: attachments.map(file => ({
-        name: file.name,
-        size: file.size,
-        type: file.type
-      }))
-    };
-    
-    // Update chat with new message
-    setChats(prev => 
-      prev.map(chat => 
-        chat.id === selectedChat 
-          ? { 
-              ...chat, 
-              messages: [...(chat.messages || []), newMessage],
-              lastMessage: {
-                text,
-                timestamp: new Date().toISOString(),
-                senderId: user.id,
-                status: 'sent'
-              }
-            } 
-          : chat
-      )
-    );
-    
-    // Simulate receiving a message after a delay (for demo)
-    if (Math.random() > 0.3) {
-      setTimeout(() => {
-        const responseMessage: ChatMessage = {
-          id: `msg-${Date.now()}`,
-          text: `This is a response to: "${text}"`,
-          senderId: currentChat.contactId,
-          timestamp: new Date().toISOString(),
-          status: 'delivered'
-        };
-        
-        setChats(prev => 
-          prev.map(chat => 
-            chat.id === selectedChat 
-              ? { 
-                  ...chat, 
-                  messages: [...(chat.messages || []), responseMessage],
-                  lastMessage: {
-                    text: responseMessage.text,
-                    timestamp: responseMessage.timestamp,
-                    senderId: responseMessage.senderId,
-                    status: responseMessage.status
-                  }
-                } 
-              : chat
-          )
-        );
-        
-        // If chat is not currently selected, increment unread count
-        if (selectedChat !== currentChat.id) {
-          setChats(prev => 
-            prev.map(chat => 
-              chat.id === currentChat.id 
-                ? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 } 
-                : chat
-            )
-          );
-          
-          // Show notification for new message
-          toast({
-            title: "New message",
-            description: `${currentChat.contactName}: ${responseMessage.text.substring(0, 30)}${responseMessage.text.length > 30 ? '...' : ''}`
-          });
+    // Subscribe to new messages
+    const channel = supabase.channel('chat-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chat_messages'
+        },
+        (payload) => {
+          console.log('Real-time message update:', payload);
+          handleRealTimeUpdate(payload);
         }
-      }, 1000 + Math.random() * 2000);
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.id]);
+
+  const handleRealTimeUpdate = (payload: any) => {
+    if (payload.eventType === 'INSERT') {
+      const newMessage = payload.new;
+      // Only update if the message is relevant to the current user
+      if (newMessage.sender_id === user.id || newMessage.receiver_id === user.id) {
+        updateChatsWithNewMessage(newMessage);
+      }
     }
   };
 
-  const createNewChat = (contactId: string, contactName: string) => {
-    const newChatId = `chat-${Date.now()}`;
+  const updateChatsWithNewMessage = (newMessage: any) => {
+    const otherUserId = newMessage.sender_id === user.id ? newMessage.receiver_id : newMessage.sender_id;
+    
+    setChats(prevChats => {
+      const chatIndex = prevChats.findIndex(chat => chat.contactId === otherUserId);
+      
+      if (chatIndex >= 0) {
+        // Update existing chat
+        const updatedChats = [...prevChats];
+        const chat = { ...updatedChats[chatIndex] };
+        
+        // Add message to chat
+        chat.messages = [...(chat.messages || []), {
+          id: newMessage.id,
+          text: newMessage.content,
+          senderId: newMessage.sender_id,
+          timestamp: newMessage.created_at,
+          status: 'delivered'
+        }];
+        
+        // Update last message
+        chat.lastMessage = {
+          text: newMessage.content,
+          timestamp: newMessage.created_at,
+          senderId: newMessage.sender_id,
+          status: 'delivered'
+        };
+        
+        // Update unread count if message is received
+        if (newMessage.sender_id !== user.id) {
+          chat.unreadCount = (chat.unreadCount || 0) + 1;
+        }
+        
+        updatedChats[chatIndex] = chat;
+        return updatedChats;
+      }
+      
+      // If chat doesn't exist, create new chat (this should be rare)
+      return prevChats;
+    });
+  };
+
+  const fetchChats = async () => {
+    try {
+      const { data: messages, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform messages into chat objects
+      const chatMap = new Map<string, Chat>();
+      
+      for (const message of messages) {
+        const otherUserId = message.sender_id === user.id ? message.receiver_id : message.sender_id;
+        
+        if (!chatMap.has(otherUserId)) {
+          // Fetch user details for the other participant
+          const { data: userData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', otherUserId)
+            .single();
+          
+          chatMap.set(otherUserId, {
+            id: otherUserId,
+            contactId: otherUserId,
+            contactName: userData?.name || 'Unknown User',
+            contactAvatar: userData?.avatar,
+            messages: [],
+            unreadCount: 0,
+            isOnline: false // You could implement presence here
+          });
+        }
+        
+        const chat = chatMap.get(otherUserId)!;
+        chat.messages = [...(chat.messages || []), {
+          id: message.id,
+          text: message.content,
+          senderId: message.sender_id,
+          timestamp: message.created_at,
+          status: message.read_at ? 'read' : 'delivered'
+        }];
+        
+        // Set last message
+        chat.lastMessage = {
+          text: message.content,
+          timestamp: message.created_at,
+          senderId: message.sender_id,
+          status: message.read_at ? 'read' : 'delivered'
+        };
+        
+        // Update unread count
+        if (message.sender_id !== user.id && !message.read_at) {
+          chat.unreadCount++;
+        }
+      }
+      
+      setChats(Array.from(chatMap.values()));
+      
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      toast({
+        title: "Error loading chats",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchContacts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', user.id);
+
+      if (error) throw error;
+      
+      setContacts(data.map(profile => ({
+        id: profile.id,
+        name: profile.name || 'Unknown User',
+        avatar: profile.avatar,
+        role: profile.role
+      })));
+      
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      toast({
+        title: "Error loading contacts",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleSelectChat = async (chatId: string) => {
+    setSelectedChat(chatId);
+    
+    // Mark messages as read
+    const chat = chats.find(c => c.id === chatId);
+    if (chat && chat.unreadCount > 0) {
+      try {
+        const { error } = await supabase
+          .from('chat_messages')
+          .update({ read_at: new Date().toISOString() })
+          .eq('receiver_id', user.id)
+          .eq('sender_id', chatId)
+          .is('read_at', null);
+
+        if (error) throw error;
+        
+        // Update local state
+        setChats(prev => 
+          prev.map(chat => 
+            chat.id === chatId 
+              ? { ...chat, unreadCount: 0 } 
+              : chat
+          )
+        );
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    }
+  };
+
+  const handleSendMessage = async (text: string, attachments: File[] = []) => {
+    if (!selectedChat || (!text.trim() && attachments.length === 0)) return;
+    
+    try {
+      // Insert message into database
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .insert({
+          content: text,
+          sender_id: user.id,
+          receiver_id: selectedChat
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Message will be added to UI through real-time subscription
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error sending message",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const createNewChat = async (contactId: string, contactName: string) => {
+    const existingChat = chats.find(chat => chat.contactId === contactId);
+    if (existingChat) {
+      setSelectedChat(existingChat.id);
+      return;
+    }
+    
     const newChat: Chat = {
-      id: newChatId,
+      id: contactId,
       contactId,
       contactName,
-      contactAvatar: `/avatars/${contactId}.jpg`,
-      lastMessage: {
-        text: "New conversation started",
-        timestamp: new Date().toISOString(),
-        senderId: user.id,
-        status: 'sent'
-      },
       messages: [],
       unreadCount: 0,
-      isOnline: Math.random() > 0.5
+      isOnline: false
     };
     
     setChats(prev => [newChat, ...prev]);
-    setSelectedChat(newChatId);
+    setSelectedChat(contactId);
   };
 
   return (
@@ -147,7 +279,7 @@ const MessagesPage = () => {
       <div className="flex-1 flex rounded-lg overflow-hidden border bg-background shadow">
         <ChatList
           chats={chats}
-          contacts={mockContacts}
+          contacts={contacts}
           selectedChatId={selectedChat}
           onSelectChat={handleSelectChat}
           onNewChat={createNewChat}
