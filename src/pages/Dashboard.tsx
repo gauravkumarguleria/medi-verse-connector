@@ -1,4 +1,3 @@
-
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardMain from '@/components/dashboard/DashboardMain';
@@ -13,7 +12,6 @@ import HealthRecordsPage from '@/components/records/HealthRecordsPage';
 import MessagesPage from '@/components/messages/MessagesPage';
 import ProfileSection from '@/components/profile/ProfileSection';
 import SettingsSection from '@/components/settings/SettingsSection';
-import PharmacyStore from '@/components/pharmacy/PharmacyStore';
 import { useUser } from '@/contexts/UserContext';
 
 const Dashboard = () => {
@@ -48,7 +46,6 @@ const Dashboard = () => {
         <Route path="/profile" element={<ProfileSection />} />
         <Route path="/vitals" element={<LiveSensorData />} />
         <Route path="/settings" element={<SettingsSection />} />
-        <Route path="/pharmacy" element={<PharmacyStore />} />
       </Routes>
     </DashboardLayout>
   );
