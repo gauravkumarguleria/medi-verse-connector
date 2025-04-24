@@ -13,12 +13,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Chat } from './types';
+import { Chat, ChatMessage } from './types';
 import Attachment from './Attachment';
 
 interface ChatWindowProps {
@@ -178,8 +178,8 @@ const ChatWindow = ({
         </Button>
         
         <Avatar className="h-10 w-10 mr-3">
-          <Avatar.Image src={selectedChat.contactAvatar} alt={selectedChat.contactName} />
-          <Avatar.Fallback>{selectedChat.contactName.substring(0, 2).toUpperCase()}</Avatar.Fallback>
+          <AvatarImage src={selectedChat.contactAvatar} alt={selectedChat.contactName} />
+          <AvatarFallback>{selectedChat.contactName.substring(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         
         <div className="flex-1">

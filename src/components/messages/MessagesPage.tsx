@@ -7,7 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import ChatList from './ChatList';
 import ChatWindow from './ChatWindow';
 import { mockContacts, mockChats } from './mockData';
-import { Chat } from './types';
+import { Chat, ChatMessage } from './types';
 
 const MessagesPage = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
@@ -36,7 +36,7 @@ const MessagesPage = () => {
     if (!currentChat) return;
     
     // Create new message
-    const newMessage = {
+    const newMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
       text,
       senderId: user.id,
@@ -59,7 +59,8 @@ const MessagesPage = () => {
               lastMessage: {
                 text,
                 timestamp: new Date().toISOString(),
-                senderId: user.id
+                senderId: user.id,
+                status: 'sent'
               }
             } 
           : chat
@@ -69,7 +70,7 @@ const MessagesPage = () => {
     // Simulate receiving a message after a delay (for demo)
     if (Math.random() > 0.3) {
       setTimeout(() => {
-        const responseMessage = {
+        const responseMessage: ChatMessage = {
           id: `msg-${Date.now()}`,
           text: `This is a response to: "${text}"`,
           senderId: currentChat.contactId,
@@ -86,7 +87,8 @@ const MessagesPage = () => {
                   lastMessage: {
                     text: responseMessage.text,
                     timestamp: responseMessage.timestamp,
-                    senderId: responseMessage.senderId
+                    senderId: responseMessage.senderId,
+                    status: responseMessage.status
                   }
                 } 
               : chat
@@ -115,7 +117,7 @@ const MessagesPage = () => {
 
   const createNewChat = (contactId: string, contactName: string) => {
     const newChatId = `chat-${Date.now()}`;
-    const newChat = {
+    const newChat: Chat = {
       id: newChatId,
       contactId,
       contactName,
@@ -123,7 +125,8 @@ const MessagesPage = () => {
       lastMessage: {
         text: "New conversation started",
         timestamp: new Date().toISOString(),
-        senderId: user.id
+        senderId: user.id,
+        status: 'sent'
       },
       messages: [],
       unreadCount: 0,

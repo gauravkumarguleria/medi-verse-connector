@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -83,8 +83,8 @@ const ChatList = ({
               >
                 <div className="relative mr-3">
                   <Avatar className="h-12 w-12">
-                    <Avatar.Image src={chat.contactAvatar} alt={chat.contactName} />
-                    <Avatar.Fallback>{chat.contactName.substring(0, 2).toUpperCase()}</Avatar.Fallback>
+                    <AvatarImage src={chat.contactAvatar} alt={chat.contactName} />
+                    <AvatarFallback>{chat.contactName.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   {chat.isOnline && (
                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-background"></span>
@@ -172,8 +172,8 @@ const ChatList = ({
                       }}
                     >
                       <Avatar className="h-10 w-10 mr-3">
-                        <Avatar.Image src={contact.avatar} alt={contact.name} />
-                        <Avatar.Fallback>{contact.name.substring(0, 2).toUpperCase()}</Avatar.Fallback>
+                        <AvatarImage src={contact.avatar} alt={contact.name} />
+                        <AvatarFallback>{contact.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">{contact.name}</p>

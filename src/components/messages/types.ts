@@ -37,7 +37,7 @@ export interface Message {
   attachment?: Attachment;
 }
 
-// New WhatsApp-like interfaces
+// WhatsApp-like interfaces
 export interface MessageAttachment {
   name: string;
   size: number;
@@ -71,6 +71,7 @@ export interface Chat {
     text: string;
     timestamp: string;
     senderId: string;
+    status?: 'sent' | 'delivered' | 'read' | 'error';
   };
   unreadCount: number;
   isOnline: boolean;
