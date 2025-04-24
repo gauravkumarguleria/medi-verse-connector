@@ -26,7 +26,6 @@ import {
   CalendarClock,
   ClipboardList,
   MessageSquare,
-  HeartPulse,
   CircuitBoard,
   ShoppingBag
 } from 'lucide-react';
@@ -172,12 +171,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {
         group: 'Monitoring',
         items: [
-          {
-            label: 'Vital Signs',
-            icon: <HeartPulse className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/vitals'),
-            isActive: isActiveRoute('/dashboard/vitals'),
-          },
           {
             label: 'IoT Devices',
             icon: <CircuitBoard className="h-5 w-5" />,
