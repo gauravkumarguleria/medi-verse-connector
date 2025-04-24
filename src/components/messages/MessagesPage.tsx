@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { Message } from './types';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MessagesPage = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -14,10 +15,10 @@ const MessagesPage = () => {
   const [messageHistory, setMessageHistory] = useState<Message[]>(initialMessageHistory);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
+  const isMobile = useIsMobile();
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversation(id);
-    // In a real app, mark messages as read here
     setTimeout(() => {
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -159,31 +160,27 @@ const MessagesPage = () => {
         <p className="text-muted-foreground">Communicate with your healthcare providers</p>
       </div>
 
-      <div className="flex h-full rounded-lg border overflow-hidden">
-        {/* Conversation List */}
-        <div className={`${selectedConversation ? 'hidden md:block' : 'block'} w-full md:w-1/3`}>
-          <ConversationList 
-            conversations={conversations}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            selectedConversation={selectedConversation}
-            onSelectConversation={handleSelectConversation}
-          />
-        </div>
+      <div className="flex h-full rounded-lg border overflow-hidden bg-background">
+        <ConversationList 
+          conversations={conversations}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          selectedConversation={selectedConversation}
+          onSelectConversation={handleSelectConversation}
+          className={selectedConversation && isMobile ? 'hidden' : 'block w-full md:w-1/3'}
+        />
 
-        {/* Message Content */}
-        <div className={`${selectedConversation ? 'block' : 'hidden md:block'} w-full md:w-2/3`}>
-          <MessageContent 
-            selectedConversation={selectedConversation}
-            currentConversation={currentConversation}
-            messageHistory={messageHistory}
-            onBack={() => setSelectedConversation(null)}
-            onSendMessage={handleSendMessage}
-            messagesEndRef={messagesEndRef}
-          />
-        </div>
+        <MessageContent 
+          selectedConversation={selectedConversation}
+          currentConversation={currentConversation}
+          messageHistory={messageHistory}
+          onBack={() => setSelectedConversation(null)}
+          onSendMessage={handleSendMessage}
+          messagesEndRef={messagesEndRef}
+          className={!selectedConversation && isMobile ? 'hidden' : 'block w-full md:w-2/3'}
+        />
       </div>
     </div>
   );

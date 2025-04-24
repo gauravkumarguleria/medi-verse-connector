@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { Conversation } from '@/components/messages/types';
+import { cn } from '@/lib/utils';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -17,6 +18,7 @@ interface ConversationListProps {
   setActiveTab: (tab: string) => void;
   selectedConversation: string | null;
   onSelectConversation: (id: string) => void;
+  className?: string;
 }
 
 const ConversationList = ({
@@ -27,6 +29,7 @@ const ConversationList = ({
   setActiveTab,
   selectedConversation,
   onSelectConversation,
+  className
 }: ConversationListProps) => {
   const filteredConversations = conversations.filter(conversation => {
     const matchesSearch = conversation.recipient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -39,14 +42,14 @@ const ConversationList = ({
   });
 
   return (
-    <div className="w-full md:w-1/3 bg-card border-r">
+    <div className={cn("bg-card border-r", className)}>
       <div className="p-4 border-b">
         <Input 
           placeholder="Search messages..." 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          prefixIcon={<Search className="h-4 w-4 text-muted-foreground" />}
           className="mb-4"
+          prefixIcon={<Search className="h-4 w-4 text-muted-foreground" />}
         />
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
@@ -55,17 +58,18 @@ const ConversationList = ({
           </TabsList>
         </Tabs>
       </div>
-      <ScrollArea className="h-[calc(100%-5rem)]">
+      <ScrollArea className="h-[calc(100vh-16rem)]">
         <div className="p-2">
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${
+                className={cn(
+                  "p-3 rounded-lg mb-2 cursor-pointer transition-colors relative",
                   selectedConversation === conversation.id 
                     ? 'bg-primary/10 hover:bg-primary/15' 
                     : 'hover:bg-muted'
-                }`}
+                )}
                 onClick={() => onSelectConversation(conversation.id)}
               >
                 <div className="flex items-center">
@@ -73,9 +77,10 @@ const ConversationList = ({
                     <Avatar className="h-10 w-10">
                       <img src={conversation.recipient.avatar} alt={conversation.recipient.name} />
                     </Avatar>
-                    <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${
+                    <span className={cn(
+                      "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-1 ring-background",
                       conversation.recipient.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
-                    } ring-1 ring-background`}></span>
+                    )}></span>
                   </div>
                   <div className="ml-3 flex-1 overflow-hidden">
                     <div className="flex items-center justify-between">

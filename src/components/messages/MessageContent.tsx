@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useCallback } from 'react';
 import { 
   Send, 
@@ -15,6 +16,7 @@ import FileAttachment from './FileAttachment';
 import { CallActions } from './CallActions';
 import { Conversation, Message } from './types';
 import MessageItem from './MessageItem';
+import { cn } from '@/lib/utils';
 
 interface MessageContentProps {
   selectedConversation: string | null;
@@ -23,6 +25,7 @@ interface MessageContentProps {
   onBack: () => void;
   onSendMessage: (text: string, attachments: File[]) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  className?: string;
 }
 
 const MessageContent = ({
@@ -31,7 +34,8 @@ const MessageContent = ({
   messageHistory,
   onBack,
   onSendMessage,
-  messagesEndRef
+  messagesEndRef,
+  className
 }: MessageContentProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -202,19 +206,23 @@ const MessageContent = ({
   }, []);
 
   if (!selectedConversation || !currentConversation) {
-    return <EmptyMessageState />;
+    return (
+      <div className={cn("w-full md:w-2/3 flex flex-col bg-background", className)}>
+        <EmptyMessageState />
+      </div>
+    );
   }
 
   return (
     <div 
-      className="w-full md:w-2/3 flex flex-col bg-background"
+      className={cn("w-full flex flex-col bg-background relative", className)}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b sticky top-0 bg-background z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button 
@@ -245,8 +253,8 @@ const MessageContent = ({
       </div>
 
       {/* Message List */}
-      <ScrollArea className="flex-1 p-4 relative">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4 min-h-[calc(100vh-20rem)]">
           {messageHistory.map((message) => (
             <MessageItem 
               key={message.id} 
@@ -260,7 +268,7 @@ const MessageContent = ({
         
         {/* File drop overlay */}
         {isDragging && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-md border-2 border-dashed border-primary">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-md border-2 border-dashed border-primary z-50">
             <div className="text-center p-4">
               <File className="h-12 w-12 text-primary mx-auto mb-2" />
               <h3 className="text-lg font-medium">Drop files here</h3>
@@ -294,7 +302,7 @@ const MessageContent = ({
       )}
 
       {/* Message Input */}
-      <div className="p-4 border-t">
+      <div className="p-4 border-t sticky bottom-0 bg-background">
         <div className="flex items-end gap-2">
           <Textarea
             placeholder="Type a message..."
