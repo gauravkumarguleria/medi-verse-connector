@@ -16,6 +16,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Spinner } from '@/components/ui/spinner';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const Auth = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { refreshUserProfile, isAuthenticated } = useUser();
   const [showPassword, setShowPassword] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   // Form state
   const [email, setEmail] = useState('');
@@ -47,11 +49,12 @@ const Auth = () => {
   // Add a debug useEffect to log authentication state changes
   useEffect(() => {
     console.log('Auth component - isAuthenticated:', isAuthenticated);
-    if (isAuthenticated) {
+    if (isAuthenticated && !redirecting) {
       console.log('User is authenticated, navigating to dashboard');
-      navigate('/dashboard');
+      setRedirecting(true);
+      navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, redirecting]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -136,20 +139,21 @@ const Auth = () => {
         if (signInData && signInData.user) {
           console.log("Login successful, user:", signInData.user);
           
-          // Refresh the user profile to get the latest data
-          await refreshUserProfile();
-          
           // Display success toast
           toast({
             title: "Login Successful",
             description: "Welcome back to MediVerse!",
           });
           
-          // Force navigation to dashboard without waiting for isAuthenticated state update
-          console.log("Forcing navigation to /dashboard");
+          // Refresh the user profile to get the latest data
+          await refreshUserProfile();
+          
+          // Set redirecting to true to prevent multiple navigations
+          setRedirecting(true);
+          
+          // Force navigation to dashboard
           navigate('/dashboard', { replace: true });
         }
-        setIsLoading(false);
       }
     } catch (error) {
       console.error("Authentication error:", error);
@@ -248,6 +252,7 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={isLoading || redirecting}
                     />
                   </div>
                   <div className="space-y-2">
@@ -268,11 +273,13 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={isLoading || redirecting}
                       />
                       <button 
                         type="button" 
                         onClick={togglePasswordVisibility}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                        disabled={isLoading || redirecting}
                       >
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -283,9 +290,14 @@ const Auth = () => {
                   <AnimatedButton 
                     className="w-full" 
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || redirecting}
                   >
-                    {isLoading ? "Logging in..." : "Login"}
+                    {isLoading || redirecting ? (
+                      <div className="flex items-center justify-center">
+                        <Spinner size="sm" className="mr-2" />
+                        <span>{redirecting ? "Redirecting..." : "Logging in..."}</span>
+                      </div>
+                    ) : "Login"}
                   </AnimatedButton>
                   <div className="text-center text-sm text-muted-foreground">
                     Don't have an account?{" "}
@@ -294,9 +306,11 @@ const Auth = () => {
                       className="text-primary hover:underline"
                       onClick={(e) => {
                         e.preventDefault();
-                        setAuthType('register');
-                        clearError();
-                        setRegistrationSuccess(false);
+                        if (!isLoading && !redirecting) {
+                          setAuthType('register');
+                          clearError();
+                          setRegistrationSuccess(false);
+                        }
                       }}
                     >
                       Register
@@ -317,6 +331,7 @@ const Auth = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -328,6 +343,7 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -340,11 +356,13 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={isLoading}
                       />
                       <button 
                         type="button" 
                         onClick={togglePasswordVisibility}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                        disabled={isLoading}
                       >
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -354,6 +372,7 @@ const Auth = () => {
                     <Label>Select Your Role</Label>
                     <RoleSelector 
                       onRoleSelect={setSelectedRole} 
+                      disabled={isLoading}
                     />
                   </div>
                 </CardContent>
@@ -363,7 +382,12 @@ const Auth = () => {
                     type="submit"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Spinner size="sm" className="mr-2" />
+                        <span>Creating Account...</span>
+                      </div>
+                    ) : "Create Account"}
                   </AnimatedButton>
                   <div className="text-center text-sm text-muted-foreground">
                     Already have an account?{" "}
@@ -372,8 +396,10 @@ const Auth = () => {
                       className="text-primary hover:underline"
                       onClick={(e) => {
                         e.preventDefault();
-                        setAuthType('login');
-                        clearError();
+                        if (!isLoading) {
+                          setAuthType('login');
+                          clearError();
+                        }
                       }}
                     >
                       Login
