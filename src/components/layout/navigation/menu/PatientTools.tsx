@@ -6,7 +6,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton
 } from '@/components/ui/sidebar';
-import { Heart, Calendar, PillIcon, AlarmClock, WifiIcon, Activity, Database } from 'lucide-react';
+import { Heart, Calendar, PillIcon, AlarmClock, WifiIcon, Database } from 'lucide-react';
 
 interface PatientToolsProps {
   currentPath: string;
@@ -66,19 +66,6 @@ export const PatientTools = ({ currentPath }: PatientToolsProps) => {
             <a href="/dashboard/iot-devices">
               <Database size={18} />
               <span>IoT Devices</span>
-            </a>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        
-        <SidebarMenuItem>
-          <SidebarMenuButton 
-            asChild
-            isActive={currentPath === '/dashboard/iot-reports'}
-            tooltip="Health Reports"
-          >
-            <a href="/dashboard/iot-reports">
-              <Activity size={18} />
-              <span>Health Reports</span>
             </a>
           </SidebarMenuButton>
         </SidebarMenuItem>
