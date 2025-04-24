@@ -85,14 +85,31 @@ export const SensorDataService = {
     // Reverse to get chronological order
     const orderedReadings = [...readings].reverse();
     
-    return orderedReadings.map(reading => ({
-      time: new Date(reading.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      temperature: reading.temperature,
-      humidity: reading.humidity,
-      mq3_1: reading.mq3_1,
-      mq3_2: reading.mq3_2,
-      mq135: reading.mq135
-    }));
+    return orderedReadings.map(reading => {
+      // Calculate glucose (average of mq3_1 and mq3_2)
+      const glucose = (reading.mq3_1 + reading.mq3_2) / 2;
+      
+      return {
+        time: new Date(reading.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        temperature: reading.temperature,
+        humidity: reading.humidity,
+        glucose: Number(glucose.toFixed(2)),
+        airQuality: reading.mq135
+      };
+    });
+  },
+  
+  // Enable realtime for sensor_data table
+  enableRealtimeForTable: async (tableName: string) => {
+    try {
+      const { error } = await supabase.rpc('enable_realtime_for_table', { table_name: tableName });
+      if (error) throw error;
+      console.log(`Realtime enabled for ${tableName}`);
+      return true;
+    } catch (error) {
+      console.error(`Error enabling realtime for ${tableName}:`, error);
+      return false;
+    }
   }
 };
 

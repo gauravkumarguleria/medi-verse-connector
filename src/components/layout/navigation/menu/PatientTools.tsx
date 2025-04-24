@@ -1,60 +1,50 @@
 
-import { CalendarClock, Pill, ClipboardList, CircuitBoard } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton
-} from '@/components/ui/sidebar';
+import { MenuGroup, MenuLink } from '@/components/ui/sidebar';
+import { Heart, Calendar, PillIcon, AlarmClock, WifiIcon, Activity, Database } from 'lucide-react';
 
-export const PatientTools = ({ currentPath }: { currentPath: string }) => {
-  const navigate = useNavigate();
+interface PatientToolsProps {
+  currentPath: string;
+}
 
-  const tools = [
-    {
-      label: 'Appointments',
-      icon: <CalendarClock className="h-5 w-5" />,
-      path: '/dashboard/appointments'
-    },
-    {
-      label: 'Medications',
-      icon: <Pill className="h-5 w-5" />,
-      path: '/dashboard/medications'
-    },
-    {
-      label: 'Health Records',
-      icon: <ClipboardList className="h-5 w-5" />,
-      path: '/dashboard/records'
-    },
-    {
-      label: 'IoT Devices',
-      icon: <CircuitBoard className="h-5 w-5" />,
-      path: '/dashboard/iot-devices'
-    }
-  ];
-
+export const PatientTools = ({ currentPath }: PatientToolsProps) => {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Health Management</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {tools.map((tool) => (
-            <SidebarMenuItem key={tool.label}>
-              <SidebarMenuButton
-                onClick={() => navigate(tool.path)}
-                isActive={currentPath === tool.path}
-                tooltip={tool.label}
-              >
-                {tool.icon}
-                <span>{tool.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <MenuGroup title="Health Tools">
+      <MenuLink 
+        href="/dashboard/medications" 
+        icon={<PillIcon size={18} />}
+        isActive={currentPath === '/dashboard/medications'}
+      >
+        Medications
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/appointments" 
+        icon={<Calendar size={18} />}
+        isActive={currentPath === '/dashboard/appointments'}
+      >
+        Appointments
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/records" 
+        icon={<Heart size={18} />}
+        isActive={currentPath === '/dashboard/records'}
+      >
+        Health Records
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/iot-devices" 
+        icon={<Database size={18} />}
+        isActive={currentPath === '/dashboard/iot-devices'}
+        className="text-primary font-medium"
+      >
+        IoT Devices
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/iot-reports" 
+        icon={<Activity size={18} />}
+        isActive={currentPath === '/dashboard/iot-reports'}
+      >
+        Health Reports
+      </MenuLink>
+    </MenuGroup>
   );
 };

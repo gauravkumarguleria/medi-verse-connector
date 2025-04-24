@@ -1,55 +1,50 @@
 
-import { CalendarClock, ClipboardList, Pill, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton
-} from '@/components/ui/sidebar';
+import { MenuGroup, MenuLink } from '@/components/ui/sidebar';
+import { Users, Calendar, ClipboardList, Heart, Database, Activity } from 'lucide-react';
 
-export const DoctorTools = ({ currentPath }: { currentPath: string }) => {
-  const navigate = useNavigate();
+interface DoctorToolsProps {
+  currentPath: string;
+}
 
-  const tools = [
-    {
-      label: 'Appointments',
-      icon: <CalendarClock className="h-5 w-5" />,
-      path: '/dashboard/appointments'
-    },
-    {
-      label: 'Patient Records',
-      icon: <ClipboardList className="h-5 w-5" />,
-      path: '/dashboard/records'
-    },
-    {
-      label: 'Prescriptions',
-      icon: <Pill className="h-5 w-5" />,
-      path: '/dashboard/medications'
-    }
-  ];
-
+export const DoctorTools = ({ currentPath }: DoctorToolsProps) => {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Doctor Tools</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {tools.map((tool) => (
-            <SidebarMenuItem key={tool.label}>
-              <SidebarMenuButton
-                onClick={() => navigate(tool.path)}
-                isActive={currentPath === tool.path}
-                tooltip={tool.label}
-              >
-                {tool.icon}
-                <span>{tool.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <MenuGroup title="Doctor Tools">
+      <MenuLink 
+        href="/dashboard/appointments" 
+        icon={<Calendar size={18} />}
+        isActive={currentPath === '/dashboard/appointments'}
+      >
+        Appointments
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/medications" 
+        icon={<ClipboardList size={18} />}
+        isActive={currentPath === '/dashboard/medications'}
+      >
+        Prescriptions
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/records" 
+        icon={<Heart size={18} />}
+        isActive={currentPath === '/dashboard/records'}
+      >
+        Patient Records
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/iot-devices" 
+        icon={<Database size={18} />}
+        isActive={currentPath === '/dashboard/iot-devices'}
+        className="text-primary font-medium"
+      >
+        IoT Devices
+      </MenuLink>
+      <MenuLink 
+        href="/dashboard/iot-reports" 
+        icon={<Activity size={18} />}
+        isActive={currentPath === '/dashboard/iot-reports'}
+      >
+        Health Reports
+      </MenuLink>
+    </MenuGroup>
   );
 };

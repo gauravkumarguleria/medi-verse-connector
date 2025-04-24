@@ -1,9 +1,10 @@
+
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardMain from '@/components/dashboard/DashboardMain';
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
 import IoTReportsPage from '@/components/iot/IoTReportsPage';
-import LiveSensorData from '@/components/iot/LiveSensorData';
+import IoTDevicesPage from '@/components/iot/IoTDevicesPage';
 import AppointmentPage from '@/components/appointments/AppointmentPage';
 import DoctorAppointmentView from '@/components/dashboard/DoctorAppointmentView';
 import MedicationPage from '@/components/medications/MedicationPage';
@@ -42,7 +43,7 @@ const Dashboard = () => {
         } />
         <Route path="/records" element={<HealthRecordsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/iot-devices" element={<LiveSensorData />} />
+        <Route path="/iot-devices" element={<IoTDevicesPage hideLayout />} />
         <Route path="/profile" element={<ProfileSection />} />
         <Route path="/settings" element={<SettingsSection />} />
       </Routes>
