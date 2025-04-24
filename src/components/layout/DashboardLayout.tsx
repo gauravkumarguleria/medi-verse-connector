@@ -263,7 +263,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 variant="sidebar" 
                 size="icon" 
                 onClick={toggleSidebar} 
-                className="ml-0"
+                className="ml-2 mr-auto" // Adjusted positioning
                 aria-label={sidebarHidden ? "Show sidebar" : "Hide sidebar"}
               >
                 {sidebarHidden ? (
