@@ -13,11 +13,32 @@ import MessagesPage from '@/components/messages/MessagesPage';
 import ProfileSection from '@/components/profile/ProfileSection';
 import SettingsSection from '@/components/settings/SettingsSection';
 import { useUser } from '@/contexts/UserContext';
+import { useEffect } from 'react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
+  const { user, isAuthenticated, isLoading } = useUser();
+  
+  // Add effect to redirect to login page if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      console.log("Dashboard: User not authenticated, redirecting to auth");
+      navigate('/auth', { replace: true });
+    } else if (!isLoading && isAuthenticated) {
+      console.log("Dashboard: User authenticated:", user);
+    }
+  }, [isAuthenticated, isLoading, navigate, user]);
+
+  // Show nothing while checking authentication
+  if (isLoading) {
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  // Don't render dashboard if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
   
   return (
     <DashboardLayout>
