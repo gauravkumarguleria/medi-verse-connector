@@ -5,9 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CalendarClock, User, ClipboardCheck, MessageSquare, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsDesktop } from '@/hooks/use-mobile';
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
+  const isDesktop = useIsDesktop();
   
   // Mock data for appointments
   const upcomingAppointments = [
@@ -18,16 +21,17 @@ const DoctorDashboard = () => {
   ];
 
   return (
-    <div className="grid gap-6 animate-fade-up">
+    <div className="w-full max-w-7xl mx-auto space-y-6 p-4 sm:p-6 animate-fade-up">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Doctor Dashboard</h1>
         <p className="text-muted-foreground">Manage your appointments and patient care</p>
       </div>
       
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Appointments</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Appointments</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -39,7 +43,7 @@ const DoctorDashboard = () => {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Patients</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Patients</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -51,7 +55,7 @@ const DoctorDashboard = () => {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reports</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Reports</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -63,7 +67,7 @@ const DoctorDashboard = () => {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Unread Messages</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Messages</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -74,46 +78,56 @@ const DoctorDashboard = () => {
         </Card>
       </div>
       
+      {/* Appointments Table */}
       <Card>
         <CardHeader className="px-6 py-4">
           <div className="flex items-center justify-between">
             <CardTitle>Upcoming Appointments</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/appointments')}>View All</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/appointments')}>
+              View All
+            </Button>
           </div>
         </CardHeader>
-        <CardContent className="px-6 py-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Patient</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingAppointments.map((appointment) => (
-                <TableRow key={appointment.id}>
-                  <TableCell className="font-medium">{appointment.patient}</TableCell>
-                  <TableCell>{appointment.time}</TableCell>
-                  <TableCell>{appointment.date}</TableCell>
-                  <TableCell>{appointment.type}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">View</Button>
-                      <Button variant="outline" size="sm">Reschedule</Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <CardContent className="p-0">
+          <ScrollArea className="h-[400px] w-full">
+            <div className="p-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Patient</TableHead>
+                    <TableHead className="hidden sm:table-cell">Time</TableHead>
+                    <TableHead className="hidden sm:table-cell">Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Type</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcomingAppointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell className="font-medium">{appointment.patient}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{appointment.time}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{appointment.date}</TableCell>
+                      <TableCell className="hidden md:table-cell">{appointment.type}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm">View</Button>
+                          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
+                            Reschedule
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
       
+      {/* Charts and Recent Patients */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Patient Activity</CardTitle>
           </CardHeader>
@@ -127,7 +141,7 @@ const DoctorDashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Recent Patients</CardTitle>
           </CardHeader>
@@ -138,11 +152,11 @@ const DoctorDashboard = () => {
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <User className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
-                    <p className="font-medium">{patient}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{patient}</p>
                     <p className="text-sm text-muted-foreground">Last visit: yesterday</p>
                   </div>
-                  <Button variant="outline" size="sm" className="ml-auto">View</Button>
+                  <Button variant="outline" size="sm">View</Button>
                 </div>
               ))}
             </div>
