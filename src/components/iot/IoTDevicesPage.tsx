@@ -48,35 +48,6 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
     }
   };
 
-  useEffect(() => {
-    fetchSensorData();
-    
-    // Enable realtime updates for sensor_data table
-    SensorDataService.enableRealtimeForTable('sensor_data');
-    
-    // Subscribe to realtime updates
-    const channel = supabase
-      .channel('sensor-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'sensor_data',
-        },
-        (payload) => {
-          console.log('New sensor data received:', payload);
-          // Refresh data when a new reading is inserted
-          fetchSensorData();
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   const exportToCSV = () => {
     try {
       // Convert sensor data to CSV format
@@ -117,6 +88,35 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
     }
   };
 
+  useEffect(() => {
+    fetchSensorData();
+    
+    // Enable realtime updates for sensor_data table
+    SensorDataService.enableRealtimeForTable('sensor_data');
+    
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('sensor-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sensor_data',
+        },
+        (payload) => {
+          console.log('New sensor data received:', payload);
+          // Refresh data when a new reading is inserted
+          fetchSensorData();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -126,7 +126,12 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
             {refreshing ? <Spinner size="sm" className="mr-2" /> : <RefreshCcw size={16} className="mr-2" />}
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={exportToCSV}>
+          <Button 
+            variant="primary" 
+            size="sm" 
+            onClick={exportToCSV} 
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             <Download size={16} className="mr-2" />
             Export CSV
           </Button>
@@ -195,7 +200,18 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
             
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle className="flex justify-between">
+                  Recent Activity
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportToCSV}
+                    className="flex items-center"
+                  >
+                    <Download size={16} className="mr-1" />
+                    Download Data
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -222,7 +238,18 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
           <TabsContent value="charts" className="space-y-4 mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Temperature & Humidity</CardTitle>
+                <CardTitle className="flex justify-between">
+                  Temperature & Humidity
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportToCSV}
+                    className="flex items-center"
+                  >
+                    <Download size={16} className="mr-1" />
+                    Export
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -246,7 +273,18 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
             
             <Card>
               <CardHeader>
-                <CardTitle>Glucose Readings</CardTitle>
+                <CardTitle className="flex justify-between">
+                  Glucose Readings
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportToCSV}
+                    className="flex items-center"
+                  >
+                    <Download size={16} className="mr-1" />
+                    Export
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -274,7 +312,18 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
             
             <Card>
               <CardHeader>
-                <CardTitle>Air Quality</CardTitle>
+                <CardTitle className="flex justify-between">
+                  Air Quality
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportToCSV}
+                    className="flex items-center"
+                  >
+                    <Download size={16} className="mr-1" />
+                    Export
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -303,6 +352,17 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
           <TabsContent value="data" className="mt-4">
             <Card>
               <CardContent className="pt-6">
+                <div className="flex justify-end mb-4">
+                  <Button 
+                    variant="primary"
+                    size="sm" 
+                    onClick={exportToCSV}
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
+                  >
+                    <Download size={16} className="mr-2" />
+                    Export Raw Data CSV
+                  </Button>
+                </div>
                 <Table>
                   <TableCaption>Last 20 sensor readings</TableCaption>
                   <TableHeader>
