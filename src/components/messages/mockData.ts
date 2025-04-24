@@ -125,7 +125,8 @@ export const mockChats: Chat[] = [
     lastMessage: {
       text: "Your test results look good. The white blood cell count is now normal.",
       timestamp: new Date(Date.now() - 25 * 60000).toISOString(),
-      senderId: 'dr-smith'
+      senderId: 'dr-smith',
+      status: 'delivered'
     },
     unreadCount: 2,
     isOnline: true,
@@ -139,7 +140,8 @@ export const mockChats: Chat[] = [
     lastMessage: {
       text: "I've sent your prescription to the pharmacy. It should be ready in an hour.",
       timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
-      senderId: 'dr-jones'
+      senderId: 'dr-jones',
+      status: 'delivered'
     },
     unreadCount: 0,
     isOnline: false,
@@ -153,7 +155,8 @@ export const mockChats: Chat[] = [
     lastMessage: {
       text: "When should I schedule my next appointment?",
       timestamp: new Date(Date.now() - 1 * 86400000).toISOString(),
-      senderId: 'user'
+      senderId: 'user',
+      status: 'delivered'
     },
     unreadCount: 0,
     isOnline: true,
@@ -167,7 +170,8 @@ export const mockChats: Chat[] = [
     lastMessage: {
       text: "Your lab results show improvement in your blood sugar levels.",
       timestamp: new Date(Date.now() - 3 * 86400000).toISOString(),
-      senderId: 'dr-patel'
+      senderId: 'dr-patel',
+      status: 'read'
     },
     unreadCount: 0,
     isOnline: false,
