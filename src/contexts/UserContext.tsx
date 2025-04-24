@@ -73,11 +73,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(true);
       } else {
         console.log('No profile data found for user ID:', userId);
-        // Don't set isAuthenticated to false here, as the user might still be authenticated
-        // but just missing a profile
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
@@ -85,49 +85,45 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for authenticated user on component mount
   useEffect(() => {
-    const checkSession = async () => {
+    // First set up the auth state listener to catch any changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
+        
+        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          console.log('User signed in or token refreshed:', session.user.id);
+          await fetchUserProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out, resetting to initial user');
+          setUser(initialUser);
+          setIsAuthenticated(false);
+        }
+      }
+    );
+
+    // Then check for existing session
+    const checkUser = async () => {
       try {
         setIsLoading(true);
         const { data } = await supabase.auth.getSession();
+        console.log('Auth session data:', data);
         
         if (data && data.session) {
-          console.log('Session found, user is authenticated with ID:', data.session.user.id);
-          setIsAuthenticated(true);
+          console.log('User is authenticated with ID:', data.session.user.id);
           await fetchUserProfile(data.session.user.id);
         } else {
-          console.log('No authenticated session found');
+          console.log('No authenticated session found, using initial user data');
           setIsAuthenticated(false);
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Error checking session:', error);
+        console.error('Error checking user:', error);
         setIsAuthenticated(false);
         setIsLoading(false);
       }
     };
 
-    // Call checkSession immediately
-    checkSession();
-
-    // Set up the auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
-        
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          if (session) {
-            console.log('User signed in or token refreshed:', session.user.id);
-            setIsAuthenticated(true);
-            await fetchUserProfile(session.user.id);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out, resetting to initial user');
-          setUser(initialUser);
-          setIsAuthenticated(false);
-          setIsLoading(false);
-        }
-      }
-    );
+    checkUser();
 
     return () => {
       if (authListener && authListener.subscription) {
@@ -141,7 +137,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data } = await supabase.auth.getSession();
       if (data && data.session) {
         console.log('Refreshing user profile for:', data.session.user.id);
-        setIsAuthenticated(true);
         await fetchUserProfile(data.session.user.id);
       } else {
         console.log('Cannot refresh profile: No active session');
