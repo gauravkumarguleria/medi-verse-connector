@@ -127,7 +127,7 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
             Refresh
           </Button>
           <Button 
-            variant="primary" 
+            variant="download" 
             size="sm" 
             onClick={exportToCSV} 
             className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -241,7 +241,7 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
                 <CardTitle className="flex justify-between">
                   Temperature & Humidity
                   <Button 
-                    variant="outline" 
+                    variant="download" 
                     size="sm" 
                     onClick={exportToCSV}
                     className="flex items-center"
@@ -276,7 +276,7 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
                 <CardTitle className="flex justify-between">
                   Glucose Readings
                   <Button 
-                    variant="outline" 
+                    variant="download" 
                     size="sm" 
                     onClick={exportToCSV}
                     className="flex items-center"
@@ -315,7 +315,7 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
                 <CardTitle className="flex justify-between">
                   Air Quality
                   <Button 
-                    variant="outline" 
+                    variant="download" 
                     size="sm" 
                     onClick={exportToCSV}
                     className="flex items-center"
@@ -354,7 +354,7 @@ const IoTDevicesPage: React.FC<IoTDevicesPageProps> = ({ hideLayout }) => {
               <CardContent className="pt-6">
                 <div className="flex justify-end mb-4">
                   <Button 
-                    variant="primary"
+                    variant="download"
                     size="sm" 
                     onClick={exportToCSV}
                     className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
