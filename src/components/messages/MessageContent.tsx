@@ -14,9 +14,11 @@ import { Avatar } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import FileAttachment from './FileAttachment';
 import { CallActions } from './CallActions';
-import { Conversation, Message } from './types';
+import { Conversation, Message, ChatMessage } from './types';
 import MessageItem from './MessageItem';
 import { cn } from '@/lib/utils';
+import FileDropZone from './components/FileDropZone';
+import AttachmentPreview from './components/AttachmentPreview';
 
 interface MessageContentProps {
   selectedConversation: string | null;
@@ -213,6 +215,22 @@ const MessageContent = ({
     );
   }
 
+  // Convert Message objects to ChatMessage objects for MessageItem component
+  const convertedMessages = messageHistory.map(message => ({
+    id: message.id,
+    text: message.text,
+    timestamp: message.time,
+    senderId: message.sender === 'user' ? 'current-user' : 'recipient',
+    status: message.status === 'delivered' || message.status === 'read' || 
+            message.status === 'error' ? message.status : 'sent',
+    attachments: message.attachment ? [{
+      name: message.attachment.name,
+      size: message.attachment.size,
+      type: message.attachment.type,
+      url: message.attachment.url
+    }] : undefined
+  }));
+
   return (
     <div 
       className={cn("w-full flex flex-col bg-background relative", className)}
@@ -255,51 +273,25 @@ const MessageContent = ({
       {/* Message List */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4 min-h-[calc(100vh-20rem)]">
-          {messageHistory.map((message) => (
+          {convertedMessages.map((message) => (
             <MessageItem 
               key={message.id} 
               message={message} 
-              onDownload={handleDownloadFile} 
-              onShare={handleShareFile} 
+              isCurrentUser={message.senderId === 'current-user'}
             />
           ))}
           <div ref={messagesEndRef} />
         </div>
         
         {/* File drop overlay */}
-        {isDragging && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-md border-2 border-dashed border-primary z-50">
-            <div className="text-center p-4">
-              <File className="h-12 w-12 text-primary mx-auto mb-2" />
-              <h3 className="text-lg font-medium">Drop files here</h3>
-              <p className="text-muted-foreground">Upload documents to share with {currentConversation.recipient.name}</p>
-            </div>
-          </div>
-        )}
+        <FileDropZone isDragging={isDragging} />
       </ScrollArea>
 
       {/* Attachments Preview */}
-      {attachments.length > 0 && (
-        <div className="px-4 py-2 border-t">
-          <div className="flex flex-wrap gap-2">
-            {attachments.map((file, index) => (
-              <FileAttachment 
-                key={index}
-                file={{
-                  name: file.name,
-                  size: file.size,
-                  type: file.type,
-                  data: file
-                }}
-                onRemove={() => handleRemoveAttachment(index)}
-                isPending={uploadProgress[file.name] < 100}
-                progress={uploadProgress[file.name]}
-                showActions={false}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      <AttachmentPreview 
+        attachments={attachments}
+        onRemoveAttachment={handleRemoveAttachment}
+      />
 
       {/* Message Input */}
       <div className="p-4 border-t sticky bottom-0 bg-background">
