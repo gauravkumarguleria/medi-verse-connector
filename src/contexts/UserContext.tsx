@@ -1,15 +1,51 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import { User, UserRole } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+
+// Sample user data for local authentication
+const sampleUsers = [
+  {
+    id: "doctor-1",
+    email: "doctor@mediverse.com",
+    password: "password123",
+    name: "Dr. John Smith",
+    role: "doctor" as UserRole,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=doctor",
+    createdAt: new Date().toISOString(),
+    specialty: "Cardiologist",
+    experience: "10 years"
+  },
+  {
+    id: "patient-1",
+    email: "patient@mediverse.com",
+    password: "password123",
+    name: "Sarah Johnson",
+    role: "patient" as UserRole,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
+    createdAt: new Date().toISOString(),
+    dateOfBirth: "1990-05-15",
+    bloodType: "O+",
+    allergies: "Penicillin"
+  },
+  {
+    id: "pharmacist-1",
+    email: "pharmacist@mediverse.com",
+    password: "password123",
+    name: "Mike Chen",
+    role: "pharmacist" as UserRole,
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
+    createdAt: new Date().toISOString()
+  }
+];
 
 // The initial mock user data
 const initialUser: User = {
-  id: "1",
-  name: "John Doe",
-  email: "john.doe@example.com",
+  id: "",
+  name: "",
+  email: "",
   role: "patient",
-  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+  avatar: "",
   createdAt: new Date().toISOString()
 };
 
@@ -20,9 +56,15 @@ interface UserContextType {
   updateUser: (userData: Partial<User>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
   signOut: () => Promise<void>;
+  loginWithEmailAndPassword: (email: string, password: string) => Promise<boolean>;
+  registerUser: (email: string, password: string, name: string, role: UserRole) => Promise<boolean>;
+  getAllUsers: () => User[];
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
+
+// Helper function to simulate API delay
+const simulateDelay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(initialUser);
@@ -30,125 +72,146 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
 
-  // This function fetches the user's profile from Supabase
-  const fetchUserProfile = async (userId: string) => {
+  // Check for any stored user session on component mount
+  useEffect(() => {
+    const checkStoredSession = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Check local storage for saved user session
+        const storedUser = localStorage.getItem('mediverse_user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setIsAuthenticated(true);
+          console.log('User loaded from local storage:', userData.name);
+        }
+      } catch (error) {
+        console.error('Error checking stored session:', error);
+        localStorage.removeItem('mediverse_user');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkStoredSession();
+  }, []);
+
+  const loginWithEmailAndPassword = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      
-      console.log('Fetching user profile for ID:', userId);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      console.log('Attempting login with:', email);
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
+      // Simulate API delay
+      await simulateDelay();
 
-      if (data) {
-        console.log('Profile data retrieved:', data);
-        setUser({
-          id: data.id,
-          name: data.name || '',
-          email: data.email || '',
-          role: data.role as 'patient' | 'doctor' | 'pharmacist' | 'admin',
-          avatar: data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
-          createdAt: data.created_at,
-          phone: data.phone,
-          dateOfBirth: data.date_of_birth,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          zipCode: data.zip_code,
-          bloodType: data.blood_type,
-          height: data.height,
-          weight: data.weight,
-          allergies: data.allergies,
-          conditions: data.conditions
+      // Find user with matching credentials
+      const matchedUser = sampleUsers.find(
+        u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      );
+
+      if (!matchedUser) {
+        console.error('Invalid credentials');
+        toast({
+          title: "Login Failed",
+          description: "Invalid email or password",
+          variant: "destructive",
         });
-        setIsAuthenticated(true);
-      } else {
-        console.log('No profile data found for user ID:', userId);
-        setIsAuthenticated(false);
+        return false;
       }
+
+      // Create a copy of the user without the password
+      const { password: _, ...safeUserData } = matchedUser;
+
+      // Set user data and auth state
+      setUser(safeUserData as User);
+      setIsAuthenticated(true);
+
+      // Save to local storage
+      localStorage.setItem('mediverse_user', JSON.stringify(safeUserData));
+
+      console.log('Login successful for:', safeUserData.name);
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${safeUserData.name}!`,
+      });
+
+      return true;
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-      setIsAuthenticated(false);
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Check for authenticated user on component mount
-  useEffect(() => {
-    // First set up the auth state listener to catch any changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
-        
-        if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          console.log('User signed in or token refreshed:', session.user.id);
-          await fetchUserProfile(session.user.id);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out, resetting to initial user');
-          setUser(initialUser);
-          setIsAuthenticated(false);
-        }
-      }
-    );
+  const registerUser = async (email: string, password: string, name: string, role: UserRole): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      console.log('Attempting registration for:', email);
 
-    // Then check for existing session
-    const checkUser = async () => {
-      try {
-        setIsLoading(true);
-        const { data } = await supabase.auth.getSession();
-        console.log('Auth session data:', data);
-        
-        if (data && data.session) {
-          console.log('User is authenticated with ID:', data.session.user.id);
-          await fetchUserProfile(data.session.user.id);
-        } else {
-          console.log('No authenticated session found, using initial user data');
-          setIsAuthenticated(false);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error checking user:', error);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-      }
-    };
+      // Simulate API delay
+      await simulateDelay();
 
-    checkUser();
-
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
+      // Check if user already exists
+      if (sampleUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        console.error('User already exists');
+        toast({
+          title: "Registration Failed",
+          description: "An account with this email already exists",
+          variant: "destructive",
+        });
+        return false;
       }
-    };
-  }, []);
+
+      // Create new user
+      const newUser = {
+        id: `${role}-${Date.now()}`,
+        email,
+        password,
+        name,
+        role,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        createdAt: new Date().toISOString()
+      };
+
+      // Add to sample users (in a real app, this would persist to a database)
+      sampleUsers.push(newUser);
+
+      toast({
+        title: "Registration Successful",
+        description: "Your account has been created successfully",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const refreshUserProfile = async () => {
     try {
-      const { data } = await supabase.auth.getSession();
-      if (data && data.session) {
-        console.log('Refreshing user profile for:', data.session.user.id);
-        await fetchUserProfile(data.session.user.id);
-      } else {
-        console.log('Cannot refresh profile: No active session');
-        setIsAuthenticated(false);
-        toast({
-          title: "Authentication Error",
-          description: "You must be logged in to view your profile.",
-          variant: "destructive",
-        });
-      }
+      // In a local implementation, this might reload from localStorage
+      // or refresh from an API
+      console.log('Refreshing user profile');
+      
+      // For now, just return the current user data
+      return user;
     } catch (error) {
       console.error('Error refreshing user profile:', error);
-      setIsAuthenticated(false);
       toast({
         title: "Error",
         description: "Failed to refresh your profile.",
@@ -162,19 +225,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Starting signOut process in UserContext');
       setIsLoading(true);
       
-      const { error } = await supabase.auth.signOut();
+      // Simulate API delay
+      await simulateDelay(300);
       
-      if (error) {
-        console.error('Error signing out:', error);
-        toast({
-          title: "Error",
-          description: "Failed to sign out. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      console.log('Supabase signOut successful, resetting user state');
+      // Clear local storage
+      localStorage.removeItem('mediverse_user');
       
       // Reset user state to initial
       setUser(initialUser);
@@ -186,7 +241,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       console.log('Redirecting to home page');
-      // Force a page reload to clear any cached state and navigate to home
+      
+      // Force a page reload to clear any cached state
       window.location.href = '/';
       
     } catch (error) {
@@ -204,105 +260,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUser = async (userData: Partial<User>) => {
     try {
       setIsLoading(true);
-      const { data: authData } = await supabase.auth.getSession();
+      console.log('Updating user data:', userData);
       
-      if (!authData || !authData.session) {
-        toast({
-          title: "Not authenticated",
-          description: "You must be logged in to update your profile.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const userId = authData.session.user.id;
-      console.log('Updating profile for user ID:', userId);
-      
-      // Format the data for Supabase (snake_case)
-      const formattedData = {
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone,
-        date_of_birth: userData.dateOfBirth,
-        address: userData.address,
-        city: userData.city,
-        state: userData.state,
-        zip_code: userData.zipCode,
-        blood_type: userData.bloodType,
-        height: userData.height,
-        weight: userData.weight,
-        allergies: userData.allergies,
-        conditions: userData.conditions,
-        avatar: userData.avatar,
-        role: userData.role
-      };
-
-      console.log('Sending update with data:', formattedData);
-
-      // First, check if the profile exists
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error checking if profile exists:', fetchError);
-        toast({
-          title: "Error updating profile",
-          description: fetchError.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      let error;
-      
-      if (!existingProfile) {
-        console.log('Profile does not exist, creating new one');
-        // Profile doesn't exist, create it
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({ ...formattedData, id: userId });
-          
-        error = insertError;
-      } else {
-        console.log('Profile exists, updating');
-        // Profile exists, update it
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update(formattedData)
-          .eq('id', userId);
-          
-        error = updateError;
-      }
-
-      if (error) {
-        console.error('Error updating profile:', error);
-        toast({
-          title: "Error updating profile",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
+      // Simulate API delay
+      await simulateDelay();
 
       // Update local state
-      setUser(prevUser => ({
-        ...prevUser,
-        ...userData,
-      }));
-
-      console.log('Profile updated successfully');
+      setUser(prevUser => {
+        const updatedUser = { ...prevUser, ...userData };
+        // Update in local storage too
+        localStorage.setItem('mediverse_user', JSON.stringify(updatedUser));
+        return updatedUser;
+      });
 
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
         variant: "default",
       });
-      
-      // Refresh the profile to ensure we have the latest data
-      await fetchUserProfile(userId);
       
     } catch (error) {
       console.error('Error in updateUser:', error);
@@ -316,8 +291,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const getAllUsers = (): User[] => {
+    // Return all sample users without passwords
+    return sampleUsers.map(({ password: _, ...userData }) => userData as User);
+  };
+
   return (
-    <UserContext.Provider value={{ user, isLoading, isAuthenticated, updateUser, refreshUserProfile, signOut }}>
+    <UserContext.Provider value={{ 
+      user, 
+      isLoading, 
+      isAuthenticated, 
+      updateUser, 
+      refreshUserProfile, 
+      signOut,
+      loginWithEmailAndPassword,
+      registerUser,
+      getAllUsers
+    }}>
       {children}
     </UserContext.Provider>
   );

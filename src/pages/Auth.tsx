@@ -15,7 +15,6 @@ import { ChevronLeft } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -29,7 +28,7 @@ const Auth = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(preselectedRole);
   const [isLoading, setIsLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const { refreshUserProfile, isAuthenticated } = useUser();
+  const { loginWithEmailAndPassword, registerUser, isAuthenticated } = useUser();
   const [showPassword, setShowPassword] = useState(false);
 
   // Form state
@@ -39,6 +38,9 @@ const Auth = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   
+  // Sample credentials hint - for easy testing
+  const [showSampleCreds, setShowSampleCreds] = useState(false);
+  
   useEffect(() => {
     // Update auth type if URL parameter changes
     setAuthType(type === 'register' ? 'register' : 'login');
@@ -46,6 +48,10 @@ const Auth = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const toggleSampleCreds = () => {
+    setShowSampleCreds(!showSampleCreds);
   };
 
   const clearError = () => {
@@ -70,26 +76,11 @@ const Auth = () => {
       }
       
       if (authType === 'register' && selectedRole) {
-        // Register the user with Supabase
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name,
-              role: selectedRole,
-              avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-            }
-          }
-        });
+        // Register the user with our local system
+        const success = await registerUser(email, password, name, selectedRole);
         
-        if (signUpError) {
-          setErrorMessage(signUpError.message);
-          toast({
-            title: "Registration Failed",
-            description: signUpError.message,
-            variant: "destructive",
-          });
+        if (!success) {
+          setIsLoading(false);
           return;
         }
         
@@ -104,39 +95,22 @@ const Auth = () => {
         // Switch to login tab
         setAuthType('login');
       } else {
-        // For login, sign in with Supabase
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        // For login, use local authentication
+        const success = await loginWithEmailAndPassword(email, password);
         
-        if (signInError) {
-          console.error("Login error:", signInError);
-          setErrorMessage(signInError.message);
-          toast({
-            title: "Login Failed",
-            description: signInError.message,
-            variant: "destructive",
-          });
+        if (!success) {
           setIsLoading(false);
           return;
         }
         
-        if (signInData && signInData.user) {
-          console.log("Login successful, user:", signInData.user);
-          
-          // Refresh the user profile to get the latest data
-          await refreshUserProfile();
-          
-          // Display success toast
-          toast({
-            title: "Login Successful",
-            description: "Welcome back to MediVerse!",
-          });
-          
-          // Force navigation to dashboard
-          navigate('/dashboard');
-        }
+        // Display success toast
+        toast({
+          title: "Login Successful",
+          description: "Welcome back to MediVerse!",
+        });
+        
+        // Force navigation to dashboard
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error("Authentication error:", error);
@@ -205,6 +179,38 @@ const Auth = () => {
               </Alert>
             </div>
           )}
+          
+          {/* Sample Credentials Panel */}
+          <div className="px-6 pb-2">
+            <Button 
+              variant="outline" 
+              onClick={toggleSampleCreds} 
+              size="sm" 
+              className="w-full"
+            >
+              {showSampleCreds ? "Hide Sample Credentials" : "Show Sample Credentials"}
+            </Button>
+            
+            {showSampleCreds && (
+              <div className="mt-2 p-3 bg-muted/50 rounded-md text-xs">
+                <h4 className="font-semibold mb-1">Sample Users:</h4>
+                <div className="space-y-2">
+                  <div>
+                    <div><span className="font-semibold">Doctor:</span> doctor@mediverse.com</div>
+                    <div><span className="font-semibold">Password:</span> password123</div>
+                  </div>
+                  <div>
+                    <div><span className="font-semibold">Patient:</span> patient@mediverse.com</div>
+                    <div><span className="font-semibold">Password:</span> password123</div>
+                  </div>
+                  <div>
+                    <div><span className="font-semibold">Pharmacist:</span> pharmacist@mediverse.com</div>
+                    <div><span className="font-semibold">Password:</span> password123</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           
           <Tabs 
             value={authType}
