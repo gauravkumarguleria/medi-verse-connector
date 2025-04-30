@@ -5,10 +5,10 @@ const Preloader = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading time and then hide preloader
+    // Reduce loading time significantly
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000); // Reduced from 2000ms to 1000ms for faster loading
+    }, 500); // Reduced from 1000ms to 500ms for faster loading
 
     return () => clearTimeout(timer);
   }, []);

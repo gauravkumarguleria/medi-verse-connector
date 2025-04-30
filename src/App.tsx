@@ -28,11 +28,11 @@ const queryClient = new QueryClient({
 const App = () => {
   const [appReady, setAppReady] = useState(false);
 
-  // Ensure app is ready after preloader
+  // Ensure app is ready after preloader with a shorter delay
   useEffect(() => {
     const timer = setTimeout(() => {
       setAppReady(true);
-    }, 1500);
+    }, 600); // Reduced from 1500ms to 600ms
     
     return () => clearTimeout(timer);
   }, []);

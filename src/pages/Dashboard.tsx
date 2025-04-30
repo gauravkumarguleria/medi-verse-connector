@@ -33,7 +33,7 @@ const Dashboard = () => {
     // Set a timeout to avoid infinite loading states
     const timer = setTimeout(() => {
       setLoadingTimeout(true);
-    }, 5000);
+    }, 3000); // Reduced from 5000ms to 3000ms
 
     return () => clearTimeout(timer);
   }, [isAuthenticated, isLoading, navigate, user]);
@@ -49,11 +49,11 @@ const Dashboard = () => {
         {loadingTimeout && (
           <div className="mt-4 text-center max-w-md">
             <p className="text-sm text-red-500">
-              Loading is taking longer than expected. You might try refreshing the page.
+              Loading is taking longer than expected.
             </p>
             <button 
               onClick={() => window.location.reload()}
-              className="mt-2 text-sm text-primary hover:underline"
+              className="mt-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
             >
               Refresh page
             </button>
@@ -63,9 +63,21 @@ const Dashboard = () => {
     );
   }
 
-  // Don't render dashboard if not authenticated
+  // Don't render dashboard if not authenticated and show a clearer message
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <p className="text-lg text-muted-foreground">
+          You must be logged in to view the dashboard
+        </p>
+        <button 
+          onClick={() => navigate('/auth')}
+          className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+        >
+          Go to login page
+        </button>
+      </div>
+    );
   }
   
   return (
