@@ -24,7 +24,6 @@ import {
   PanelLeftOpen,
   Pill,
   CalendarClock,
-  ClipboardList,
   MessageSquare,
   HeartPulse,
   CircuitBoard,
@@ -107,12 +106,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               icon: <CalendarClock className="h-5 w-5" />,
               onClick: () => navigate('/dashboard/appointments'),
               isActive: isActiveRoute('/dashboard/appointments'),
-            },
-            {
-              label: 'Patient Records',
-              icon: <ClipboardList className="h-5 w-5" />,
-              onClick: () => navigate('/dashboard/records'),
-              isActive: isActiveRoute('/dashboard/records'),
             },
             {
               label: 'Prescriptions',
