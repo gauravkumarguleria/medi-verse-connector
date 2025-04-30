@@ -1,10 +1,12 @@
+
 import React, { useRef, useState, useCallback } from 'react';
 import { 
   Send, 
   MoreVertical, 
   Paperclip, 
   ChevronLeft, 
-  File
+  File,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +40,7 @@ const MessageContent = ({
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSendMessage = () => {
     if (newMessage.trim() || attachments.length > 0) {
@@ -47,6 +50,13 @@ const MessageContent = ({
       // Reset local state
       setNewMessage('');
       setAttachments([]);
+      
+      // Focus the textarea for continuous typing
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -207,54 +217,74 @@ const MessageContent = ({
 
   return (
     <div 
-      className="w-full md:w-2/3 flex flex-col bg-background"
+      className="w-full flex flex-col h-full bg-background"
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden mr-2"
-              onClick={onBack}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Avatar className="h-10 w-10">
-              <img src={currentConversation.recipient.avatar} alt={currentConversation.recipient.name} />
-            </Avatar>
-            <div className="ml-3">
-              <h3 className="font-medium">{currentConversation.recipient.name}</h3>
-              <p className="text-xs text-muted-foreground">{currentConversation.recipient.role}</p>
+      <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden mr-2"
+            onClick={onBack}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Avatar className="h-10 w-10">
+            <img 
+              src={currentConversation.recipient.avatar} 
+              alt={currentConversation.recipient.name} 
+              className="h-full w-full object-cover"
+            />
+          </Avatar>
+          <div className="ml-3">
+            <h3 className="font-medium">{currentConversation.recipient.name}</h3>
+            <div className="flex items-center text-xs text-muted-foreground">
+              <span className={`inline-block h-2 w-2 rounded-full ${
+                currentConversation.recipient.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+              } mr-1`}></span>
+              {currentConversation.recipient.status === 'online' ? 'Online' : 'Offline'}
+              <span className="ml-1">• {currentConversation.recipient.role}</span>
             </div>
           </div>
-          
-          {/* Add Call Actions */}
-          <div className="flex items-center gap-2">
-            <CallActions recipient={currentConversation.recipient} />
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
-          </div>
+        </div>
+        
+        {/* Add Call Actions */}
+        <div className="flex items-center gap-2">
+          <CallActions recipient={currentConversation.recipient} />
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
       {/* Message List */}
       <ScrollArea className="flex-1 p-4 relative">
-        <div className="space-y-4">
-          {messageHistory.map((message) => (
-            <MessageItem 
-              key={message.id} 
-              message={message} 
-              onDownload={handleDownloadFile} 
-              onShare={handleShareFile} 
-            />
-          ))}
+        <div className="space-y-2 pb-2">
+          {messageHistory.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-60 text-center">
+              <div className="bg-primary/10 p-4 rounded-full mb-4">
+                <MessageCircle className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-medium mb-2">Start a conversation</h3>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Send your first message to {currentConversation.recipient.name}
+              </p>
+            </div>
+          ) : (
+            messageHistory.map((message) => (
+              <MessageItem 
+                key={message.id} 
+                message={message} 
+                onDownload={handleDownloadFile} 
+                onShare={handleShareFile} 
+              />
+            ))
+          )}
           <div ref={messagesEndRef} />
         </div>
         
@@ -294,13 +324,14 @@ const MessageContent = ({
       )}
 
       {/* Message Input */}
-      <div className="p-4 border-t">
+      <div className="px-4 py-3 border-t">
         <div className="flex items-end gap-2">
           <Textarea
+            ref={textareaRef}
             placeholder="Type a message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="min-h-[80px] resize-none"
+            className="min-h-[60px] max-h-32 resize-none rounded-2xl"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -330,6 +361,7 @@ const MessageContent = ({
               className="rounded-full" 
               onClick={handleSendMessage}
               title="Send message"
+              disabled={!newMessage.trim() && attachments.length === 0}
             >
               <Send className="h-5 w-5" />
             </Button>
@@ -343,19 +375,14 @@ const MessageContent = ({
 // Empty state component
 const EmptyMessageState = () => (
   <div className="flex flex-col items-center justify-center h-full text-center p-6">
-    <MessageCircle className="h-16 w-16 text-muted-foreground mb-4" />
+    <div className="bg-primary/10 p-6 rounded-full mb-4">
+      <MessageCircle className="h-12 w-12 text-primary" />
+    </div>
     <h3 className="text-xl font-medium mb-2">Your Messages</h3>
     <p className="text-muted-foreground mb-6 max-w-md">
       Select a conversation to view messages or start a new conversation with a healthcare provider.
     </p>
-    <AnimatedButton>
-      <Plus className="h-4 w-4 mr-2" />
-      Start New Conversation
-    </AnimatedButton>
   </div>
 );
-
-import { Plus, MessageCircle } from 'lucide-react';
-import AnimatedButton from '@/components/ui/AnimatedButton';
 
 export default MessageContent;
