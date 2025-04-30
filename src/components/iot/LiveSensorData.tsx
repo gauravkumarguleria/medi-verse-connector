@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -6,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Thermometer, Droplets, Activity, BarChart2, History, FileText } from 'lucide-react';
+import { Thermometer, Droplets, Activity, BarChart2, History, FileText, Wind } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -14,6 +13,15 @@ import SensorDataService, { SensorReading, AverageSensorData } from '@/services/
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { 
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 
 // Configuration for the charts
 const chartConfig = {
@@ -29,8 +37,8 @@ const chartConfig = {
     label: 'Glucose',
     theme: { light: '#8B5CF6', dark: '#A78BFA' }
   },
-  mq135: { 
-    label: 'MQ135',
+  airQualityPercentage: { 
+    label: 'Air Quality',
     theme: { light: '#F59E0B', dark: '#FBBF24' }
   }
 };
@@ -52,29 +60,16 @@ const LiveSensorData: React.FC = () => {
       
       // Calculate average of the readings
       const average = SensorDataService.calculateAverageReadings(data);
-      
-      // Add glucose calculation as average of mq3_1 and mq3_2
-      if (average) {
-        average.glucose = (average.mq3_1 + average.mq3_2) / 2;
-      }
-      
       setAverageData(average);
       
-      // Generate time series data for charts with glucose included
+      // Generate time series data for charts
       const timeSeriesData = SensorDataService.getTimeSeriesData(data);
-      
-      // Add glucose calculation to each data point
-      timeSeriesData.forEach(dataPoint => {
-        dataPoint.glucose = (dataPoint.mq3_1 + dataPoint.mq3_2) / 2;
-      });
-      
       setChartData(timeSeriesData);
     } catch (error) {
       console.error('Error fetching sensor data:', error);
     }
   };
   
-  // Set up real-time subscription
   useEffect(() => {
     fetchData();
     
@@ -111,6 +106,7 @@ const LiveSensorData: React.FC = () => {
     setRefreshInterval(parseInt(value, 10));
   };
   
+  // Get the appropriate icon for each metric
   const getMetricIcon = (metric: string) => {
     switch (metric) {
       case 'temperature':
@@ -119,13 +115,14 @@ const LiveSensorData: React.FC = () => {
         return <Droplets className="h-4 w-4" />;
       case 'glucose':
         return <Activity className="h-4 w-4" />;
-      case 'mq135':
-        return <Activity className="h-4 w-4" />;
+      case 'airQualityPercentage':
+        return <Wind className="h-4 w-4" />;
       default:
         return <BarChart2 className="h-4 w-4" />;
     }
   };
   
+  // Get the appropriate unit for each metric
   const getMetricUnit = (metric: string) => {
     switch (metric) {
       case 'temperature':
@@ -134,16 +131,35 @@ const LiveSensorData: React.FC = () => {
         return '%';
       case 'glucose':
         return 'mg/dL';
+      case 'airQualityPercentage':
+        return '%';
       default:
-        return 'ppm';
+        return '';
     }
   };
   
+  // Format the value of a metric with its unit
   const formatMetricValue = (value: number, metric: string) => {
     if (metric === 'temperature') return `${value.toFixed(1)}°C`;
     if (metric === 'humidity') return `${value.toFixed(1)}%`;
     if (metric === 'glucose') return `${value.toFixed(1)} mg/dL`;
-    return `${value.toFixed(2)} ppm`;
+    if (metric === 'airQualityPercentage') return `${value.toFixed(1)}%`;
+    return `${value.toFixed(2)}`;
+  };
+  
+  // Get air quality status based on percentage
+  const getAirQualityStatus = (percentage: number): { label: string, color: string } => {
+    if (percentage >= 80) {
+      return { label: 'Excellent', color: 'bg-green-500' };
+    } else if (percentage >= 60) {
+      return { label: 'Good', color: 'bg-lime-500' };
+    } else if (percentage >= 40) {
+      return { label: 'Moderate', color: 'bg-yellow-500' };
+    } else if (percentage >= 20) {
+      return { label: 'Poor', color: 'bg-orange-500' };
+    } else {
+      return { label: 'Hazardous', color: 'bg-red-500' };
+    }
   };
   
   const handleDownloadCSV = () => {
@@ -160,17 +176,18 @@ const LiveSensorData: React.FC = () => {
       setIsDownloading(true);
       
       // Create CSV header
-      const csvHeader = "Timestamp,Temperature,Humidity,Glucose,MQ135\n";
+      const csvHeader = "Timestamp,Temperature,Humidity,Glucose,Air Quality (%)\n";
       
       // Create CSV content
       const csvContent = readings.map(reading => {
         const glucose = (reading.mq3_1 + reading.mq3_2) / 2;
+        const airQualityPercentage = SensorDataService.calculateAirQualityPercentage(reading.mq135);
         return [
           new Date(reading.timestamp).toLocaleString(),
           reading.temperature.toFixed(2),
           reading.humidity.toFixed(2),
           glucose.toFixed(2),
-          reading.mq135.toFixed(2)
+          airQualityPercentage.toFixed(1)
         ].join(',');
       }).join('\n');
       
@@ -245,7 +262,7 @@ const LiveSensorData: React.FC = () => {
                 <SelectItem value="temperature">Temperature</SelectItem>
                 <SelectItem value="humidity">Humidity</SelectItem>
                 <SelectItem value="glucose">Glucose</SelectItem>
-                <SelectItem value="mq135">MQ135 (Air Quality)</SelectItem>
+                <SelectItem value="airQualityPercentage">Air Quality</SelectItem>
               </SelectContent>
             </Select>
             
@@ -318,7 +335,7 @@ const LiveSensorData: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {averageData ? `${((averageData.mq3_1 + averageData.mq3_2) / 2).toFixed(1)} mg/dL` : 'N/A'}
+              {averageData ? `${averageData.glucose.toFixed(1)} mg/dL` : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
               Average of last {readings.length} readings
@@ -329,17 +346,35 @@ const LiveSensorData: React.FC = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              MQ135 (Air Quality)
+              <Wind className="h-4 w-4" />
+              Air Quality
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {averageData ? `${averageData.mq135.toFixed(2)}` : 'N/A'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Average of last {readings.length} readings
-            </p>
+            {averageData ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">
+                    {averageData.airQualityPercentage.toFixed(1)}%
+                  </div>
+                  {averageData && (
+                    <Badge className={`${getAirQualityStatus(averageData.airQualityPercentage).color} text-white`}>
+                      {getAirQualityStatus(averageData.airQualityPercentage).label}
+                    </Badge>
+                  )}
+                </div>
+                <Progress 
+                  value={averageData.airQualityPercentage} 
+                  className="mt-2"
+                  indicatorClassName={getAirQualityStatus(averageData.airQualityPercentage).color}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Based on air composition standards
+                </p>
+              </>
+            ) : (
+              <div className="text-2xl font-bold">N/A</div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -397,38 +432,47 @@ const LiveSensorData: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted">
-                  <tr className="text-left">
-                    <th className="p-2 font-medium">Time</th>
-                    <th className="p-2 font-medium">Temperature</th>
-                    <th className="p-2 font-medium">Humidity</th>
-                    <th className="p-2 font-medium">Glucose</th>
-                    <th className="p-2 font-medium">MQ135</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {readings.length > 0 ? (
-                    readings.map((reading) => (
-                      <tr key={reading.id} className="border-t">
-                        <td className="p-2">{new Date(reading.timestamp).toLocaleString()}</td>
-                        <td className="p-2">{reading.temperature.toFixed(1)}°C</td>
-                        <td className="p-2">{reading.humidity.toFixed(1)}%</td>
-                        <td className="p-2">{((reading.mq3_1 + reading.mq3_2) / 2).toFixed(1)} mg/dL</td>
-                        <td className="p-2">{reading.mq135.toFixed(2)}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="p-4 text-center text-muted-foreground">
-                        No readings available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Temperature</TableHead>
+                  <TableHead>Humidity</TableHead>
+                  <TableHead>Glucose</TableHead>
+                  <TableHead>Air Quality</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {readings.length > 0 ? (
+                  readings.map((reading) => {
+                    const airQualityPercentage = SensorDataService.calculateAirQualityPercentage(reading.mq135);
+                    const airQualityStatus = getAirQualityStatus(airQualityPercentage);
+                    return (
+                      <TableRow key={reading.id}>
+                        <TableCell>{new Date(reading.timestamp).toLocaleString()}</TableCell>
+                        <TableCell>{reading.temperature.toFixed(1)}°C</TableCell>
+                        <TableCell>{reading.humidity.toFixed(1)}%</TableCell>
+                        <TableCell>{((reading.mq3_1 + reading.mq3_2) / 2).toFixed(1)} mg/dL</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span>{airQualityPercentage.toFixed(1)}%</span>
+                            <Badge className={`${airQualityStatus.color} text-white`}>
+                              {airQualityStatus.label}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      No readings available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

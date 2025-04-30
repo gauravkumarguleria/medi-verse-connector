@@ -17,7 +17,8 @@ export interface AverageSensorData {
   mq3_1: number;
   mq3_2: number;
   mq135: number;
-  glucose: number; // Added glucose field
+  airQualityPercentage: number; // Added air quality percentage
+  glucose: number;
   timestamp: string;
 }
 
@@ -40,6 +41,24 @@ export const SensorDataService = {
     return data || [];
   },
   
+  // Calculate air quality percentage based on MQ135 reading
+  // MQ135 normally ranges from 0-5000ppm, with lower values indicating better air quality
+  calculateAirQualityPercentage: (mq135Value: number): number => {
+    // Define thresholds based on MQ135 standards
+    // These thresholds can be adjusted based on specific requirements
+    const excellentQuality = 500;   // Excellent air quality threshold (ppm)
+    const poorQuality = 3500;       // Poor air quality threshold (ppm)
+    
+    // Invert the scale since lower MQ135 values mean better air quality
+    // Calculate percentage where 100% = excellent air quality, 0% = poor air quality
+    let percentage = 100 - (((mq135Value - excellentQuality) / (poorQuality - excellentQuality)) * 100);
+    
+    // Clamp the percentage between 0 and 100
+    percentage = Math.max(0, Math.min(100, percentage));
+    
+    return Number(percentage.toFixed(1));
+  },
+  
   // Calculate average of last N readings
   calculateAverageReadings: (readings: SensorReading[]): AverageSensorData => {
     console.log('Calculating average of', readings.length, 'readings');
@@ -51,7 +70,8 @@ export const SensorDataService = {
         mq3_1: 0,
         mq3_2: 0,
         mq135: 0,
-        glucose: 0, // Initialize glucose with 0
+        airQualityPercentage: 0, // Initialize air quality percentage with 0
+        glucose: 0,
         timestamp: new Date().toISOString()
       };
     }
@@ -75,14 +95,19 @@ export const SensorDataService = {
     const avgMq3_1 = Number((sum.mq3_1 / count).toFixed(2));
     const avgMq3_2 = Number((sum.mq3_2 / count).toFixed(2));
     const glucose = Number(((avgMq3_1 + avgMq3_2) / 2).toFixed(2));
+    const avgMq135 = Number((sum.mq135 / count).toFixed(2));
+    
+    // Calculate air quality percentage based on average MQ135 value
+    const airQualityPercentage = SensorDataService.calculateAirQualityPercentage(avgMq135);
     
     return {
       temperature: Number((sum.temperature / count).toFixed(2)),
       humidity: Number((sum.humidity / count).toFixed(2)),
       mq3_1: avgMq3_1,
       mq3_2: avgMq3_2,
-      mq135: Number((sum.mq135 / count).toFixed(2)),
-      glucose: glucose, // Add glucose calculation
+      mq135: avgMq135,
+      airQualityPercentage: airQualityPercentage, // Add air quality percentage
+      glucose: glucose,
       timestamp: new Date().toISOString()
     };
   },
@@ -97,6 +122,8 @@ export const SensorDataService = {
     return orderedReadings.map(reading => {
       // Calculate glucose as average of mq3_1 and mq3_2
       const glucose = (reading.mq3_1 + reading.mq3_2) / 2;
+      // Calculate air quality percentage for this reading
+      const airQualityPercentage = SensorDataService.calculateAirQualityPercentage(reading.mq135);
       
       return {
         time: new Date(reading.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -104,8 +131,9 @@ export const SensorDataService = {
         humidity: reading.humidity,
         mq3_1: reading.mq3_1,
         mq3_2: reading.mq3_2,
-        glucose: glucose, // Add glucose to time series data
-        mq135: reading.mq135
+        glucose: glucose,
+        mq135: reading.mq135,
+        airQualityPercentage: airQualityPercentage // Add air quality percentage to time series data
       };
     });
   }

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Heart, Activity, Thermometer, AreaChart, Battery, Clock, Smartphone, WifiIcon, Download, FileDown } from 'lucide-react';
+import { Heart, Activity, Thermometer, Wind, Battery, Clock, Smartphone, WifiIcon, Download, FileDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
@@ -62,19 +61,35 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
       const readings = await SensorDataService.getLatestReadings(10);
       if (readings.length > 0) {
         const average = SensorDataService.calculateAverageReadings(readings);
-        // Calculate glucose as average of mq3_1 and mq3_2
-        const glucoseLevel = (average.mq3_1 + average.mq3_2) / 2;
+        // Get the air quality percentage based on MQ135
+        const airQualityPercentage = average.airQualityPercentage;
         
         setLatestData({
           heartRate: Math.round(average.temperature * 1.2), // Simulating heart rate based on temperature
           temperature: average.temperature,
           activityLevel: Math.round(average.humidity), // Using humidity as proxy for activity
           batteryLevel: 80, // Fixed value for battery
-          glucoseLevel: Math.round(glucoseLevel * 10) // Scaling for display
+          glucoseLevel: Math.round(average.glucose * 10), // Scaling for display
+          airQualityPercentage: airQualityPercentage // Add air quality percentage
         });
       }
     } catch (error) {
       console.error('Error fetching sensor data:', error);
+    }
+  };
+
+  // Get air quality status based on percentage
+  const getAirQualityStatus = (percentage: number): { label: string, color: string } => {
+    if (percentage >= 80) {
+      return { label: 'Excellent', color: 'bg-green-500' };
+    } else if (percentage >= 60) {
+      return { label: 'Good', color: 'bg-lime-500' };
+    } else if (percentage >= 40) {
+      return { label: 'Moderate', color: 'bg-yellow-500' };
+    } else if (percentage >= 20) {
+      return { label: 'Poor', color: 'bg-orange-500' };
+    } else {
+      return { label: 'Hazardous', color: 'bg-red-500' };
     }
   };
 
@@ -234,17 +249,31 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Battery className="h-4 w-4" />
-              Battery Level
+              <Wind className="h-4 w-4" />
+              Air Quality
             </CardTitle>
-            <CardDescription>Connected device battery status</CardDescription>
+            <CardDescription>Environmental air quality</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">
-              {latestData ? `${latestData.batteryLevel}%` : 'Loading...'}
-            </div>
+            {latestData ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-semibold">
+                    {latestData.airQualityPercentage.toFixed(1)}%
+                  </div>
+                  <Badge className={`${getAirQualityStatus(latestData.airQualityPercentage).color} text-white`}>
+                    {getAirQualityStatus(latestData.airQualityPercentage).label}
+                  </Badge>
+                </div>
+                <Progress 
+                  value={latestData.airQualityPercentage} 
+                  className="mt-2"
+                />
+              </>
+            ) : (
+              <div className="text-2xl font-semibold">Loading...</div>
+            )}
             <Separator className="my-2" />
-            <Progress value={latestData ? latestData.batteryLevel : 0} />
             <div className="flex items-center text-sm text-muted-foreground">
               <Clock className="h-4 w-4 mr-2" />
               Updated just now
@@ -285,7 +314,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
                 <SelectItem value="heartRate">Heart Rate</SelectItem>
                 <SelectItem value="temperature">Temperature</SelectItem>
                 <SelectItem value="glucose">Glucose</SelectItem>
-                <SelectItem value="batteryLevel">Battery Level</SelectItem>
+                <SelectItem value="airQuality">Air Quality</SelectItem>
               </SelectContent>
             </Select>
             <ToggleGroup defaultValue={timeRange} onValueChange={handleTimeRangeChange} type="single">
