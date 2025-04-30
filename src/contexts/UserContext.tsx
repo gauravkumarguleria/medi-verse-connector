@@ -207,8 +207,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // or refresh from an API
       console.log('Refreshing user profile');
       
-      // For now, just return the current user data
-      return user;
+      // Instead of returning user data, we don't return anything (void)
+      return;
     } catch (error) {
       console.error('Error refreshing user profile:', error);
       toast({
