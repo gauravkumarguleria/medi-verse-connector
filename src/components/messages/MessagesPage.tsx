@@ -1,10 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ConversationList from './ConversationList';
 import MessageContent from './MessageContent';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
-import { Message, Conversation, Attachment } from './types';
+import { Message, Conversation } from './types';
 import { toast } from '@/hooks/use-toast';
 
 const MessagesPage = () => {
@@ -46,19 +45,12 @@ const MessagesPage = () => {
           const newMessage: Message = {
             id: `${Date.now()}`,
             sender: 'recipient',
-            text: payload.payload.content || '',
+            text: payload.payload.content,
             time: new Date().toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
             }),
-            status: 'delivered',
-            // Include attachment if it exists in the payload
-            attachment: payload.payload.attachment ? {
-              name: payload.payload.attachment.name,
-              size: payload.payload.attachment.size,
-              type: payload.payload.attachment.type,
-              url: payload.payload.attachment.url
-            } : undefined
+            status: 'delivered'
           };
           
           setMessageHistory(prev => [...prev, newMessage]);
@@ -73,7 +65,7 @@ const MessagesPage = () => {
           if (conversation) {
             toast({
               title: "New message",
-              description: `${conversation.recipient.name}: ${newMessage.text ? newMessage.text.substring(0, 30) + (newMessage.text.length > 30 ? '...' : '') : 'Sent an attachment'}`
+              description: `${conversation.recipient.name}: ${newMessage.text.substring(0, 30)}${newMessage.text.length > 30 ? '...' : ''}`
             });
           }
         }
@@ -155,26 +147,16 @@ const MessagesPage = () => {
     if (!selectedConversation || (!text.trim() && attachments.length === 0)) return;
 
     try {
-      // Process attachments if any
-      const attachmentData: Attachment | undefined = attachments.length > 0 ? {
-        name: attachments[0].name,
-        size: attachments[0].size,
-        type: attachments[0].type,
-        data: attachments[0],
-        url: URL.createObjectURL(attachments[0])
-      } : undefined;
-
       // Add the message to our local state immediately for fast UI feedback
       const tempMessage: Message = {
         id: `${Date.now()}`,
         sender: 'user',
-        text: text.trim(),
+        text,
         time: new Date().toLocaleTimeString([], {
           hour: '2-digit',
           minute: '2-digit',
         }),
-        status: 'sending',
-        attachment: attachmentData
+        status: 'sending'
       };
 
       setMessageHistory(prev => [...prev, tempMessage]);
@@ -203,15 +185,9 @@ const MessagesPage = () => {
         payload: {
           sender_id: user.id,
           receiver_id: selectedConversation,
-          content: text.trim(),
+          content: text,
           sender_name: user.name,
           timestamp: new Date().toISOString(),
-          attachment: attachmentData ? {
-            name: attachmentData.name,
-            size: attachmentData.size,
-            type: attachmentData.type,
-            url: attachmentData.url
-          } : null
         }
       });
 
@@ -221,13 +197,13 @@ const MessagesPage = () => {
           return {
             ...conv,
             lastMessage: {
-              text: text.trim() || (attachmentData ? `Sent an attachment: ${attachmentData.name}` : ''),
+              text,
               time: new Date().toLocaleTimeString([], {
                 hour: '2-digit', 
                 minute: '2-digit'
               }),
               isRead: false,
-              sender: "user" as const
+              sender: "user" as const // Fixed: Explicitly set as literal type "user"
             }
           };
         }
