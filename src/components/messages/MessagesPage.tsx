@@ -98,21 +98,23 @@ const MessagesPage = () => {
       if (error) throw error;
 
       // Create conversation objects from profiles
-      const mappedConversations = profiles.map(profile => {
+      const mappedConversations: Conversation[] = profiles.map(profile => {
         return {
           id: profile.id, // Use the profile ID as the conversation ID
           recipient: {
             id: profile.id,
             name: profile.name || 'Unknown User',
             avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
-            status: 'online', // Default to online for now
+            // Fix: Cast status to "online" | "offline" instead of using a string
+            status: "online", // Default to online for now
             role: profile.role || 'user'
           },
           lastMessage: {
             text: 'Click to start a conversation',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             isRead: true,
-            sender: 'user'
+            // Fix: Cast sender to "user" | "recipient" instead of using a string
+            sender: "user"
           },
           unread: 0
         };
@@ -234,7 +236,8 @@ const MessagesPage = () => {
                 minute: '2-digit'
               }),
               isRead: false,
-              sender: 'user'
+              // Fix: Use "user" as a literal type instead of a string
+              sender: "user" as "user" | "recipient"
             }
           };
         }
