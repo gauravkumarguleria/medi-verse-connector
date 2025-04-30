@@ -42,16 +42,21 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarHidden, setSidebarHidden] = useState(false); // Changed default to false to show sidebar
-  const { user } = useUser();
+  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const { user, signOut } = useUser();
 
   const isActiveRoute = (route: string) => {
     return location.pathname === route || (route !== '/dashboard' && location.pathname.startsWith(route));
   };
 
-  const handleLogout = () => {
-    // For demo purposes, just navigate to home
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      console.log("Logout initiated from sidebar");
+      await signOut();
+      // Navigation is now handled in the signOut function in UserContext
+    } catch (error) {
+      console.error('Error during logout in sidebar:', error);
+    }
   };
 
   const toggleSidebar = () => {

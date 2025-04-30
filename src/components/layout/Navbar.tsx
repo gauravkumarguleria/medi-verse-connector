@@ -28,7 +28,7 @@ const Navbar: React.FC = () => {
   
   // Use the user context instead of mock data
   const { user, signOut, isAuthenticated } = useUser();
-  const userInitials = user.name.split(' ').map(n => n[0]).join('');
+  const userInitials = user.name ? user.name.split(' ').map(n => n[0]).join('') : '';
 
   // Check if user is on the dashboard to show different navigation
   const isOnDashboard = location.pathname.includes('/dashboard');
@@ -59,8 +59,10 @@ const Navbar: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      console.log("Logout initiated");
       await signOut();
-      // Navigation is handled in signOut function
+      // Navigation is now handled in the signOut function in UserContext
+      console.log("Logout completed in Navbar");
     } catch (error) {
       console.error('Error during logout:', error);
       toast({

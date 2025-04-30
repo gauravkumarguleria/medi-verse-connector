@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,7 @@ const initialUser: User = {
 interface UserContextType {
   user: User;
   isLoading: boolean;
-  isAuthenticated: boolean; // Add isAuthenticated flag
+  isAuthenticated: boolean;
   updateUser: (userData: Partial<User>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -28,7 +27,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(initialUser);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Add authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
 
   // This function fetches the user's profile from Supabase
@@ -160,7 +159,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      console.log('Starting signOut process in UserContext');
       setIsLoading(true);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -173,19 +174,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
+      console.log('Supabase signOut successful, resetting user state');
+      
       // Reset user state to initial
       setUser(initialUser);
       setIsAuthenticated(false);
-      
-      // Clear any local storage items related to auth if needed
-      localStorage.removeItem('supabase.auth.token');
       
       toast({
         title: "Signed Out",
         description: "You have been successfully signed out.",
       });
       
-      // Force window reload to clear any cached state
+      console.log('Redirecting to home page');
+      // Force a page reload to clear any cached state and navigate to home
       window.location.href = '/';
       
     } catch (error) {
