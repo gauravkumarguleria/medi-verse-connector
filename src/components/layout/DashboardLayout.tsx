@@ -5,35 +5,13 @@ import {
   Sidebar, 
   SidebarContent, 
   SidebarFooter, 
-  SidebarGroup, 
-  SidebarGroupContent, 
-  SidebarGroupLabel, 
   SidebarHeader, 
-  SidebarMenu, 
-  SidebarMenuButton, 
-  SidebarMenuItem, 
   SidebarProvider, 
   SidebarTrigger 
 } from '@/components/ui/sidebar';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Settings, 
-  LogOut,
-  User,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Pill,
-  CalendarClock,
-  MessageSquare,
-  HeartPulse,
-  CircuitBoard,
-  ClipboardList
-} from 'lucide-react';
 import SidebarMenuGroups from './SidebarMenuGroups';
 import SidebarToggleButton from './SidebarToggleButton';
 import SidebarUserFooter from './SidebarUserFooter';
-import { useUser } from '@/contexts/UserContext';
 
 interface DashboardLayoutProps {
   children: ReactNode;
