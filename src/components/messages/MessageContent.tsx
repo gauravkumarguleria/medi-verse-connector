@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback } from 'react';
 import { 
   Send, 
@@ -14,11 +13,8 @@ import { Avatar } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import FileAttachment from './FileAttachment';
 import { CallActions } from './CallActions';
-import { Conversation, Message, ChatMessage } from './types';
+import { Conversation, Message } from './types';
 import MessageItem from './MessageItem';
-import { cn } from '@/lib/utils';
-import FileDropZone from './components/FileDropZone';
-import AttachmentPreview from './components/AttachmentPreview';
 
 interface MessageContentProps {
   selectedConversation: string | null;
@@ -27,7 +23,6 @@ interface MessageContentProps {
   onBack: () => void;
   onSendMessage: (text: string, attachments: File[]) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  className?: string;
 }
 
 const MessageContent = ({
@@ -36,8 +31,7 @@ const MessageContent = ({
   messageHistory,
   onBack,
   onSendMessage,
-  messagesEndRef,
-  className
+  messagesEndRef
 }: MessageContentProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -208,46 +202,19 @@ const MessageContent = ({
   }, []);
 
   if (!selectedConversation || !currentConversation) {
-    return (
-      <div className={cn("w-full md:w-2/3 flex flex-col bg-background", className)}>
-        <EmptyMessageState />
-      </div>
-    );
+    return <EmptyMessageState />;
   }
-
-  // Convert Message objects to ChatMessage objects for MessageItem component
-  const convertedMessages = messageHistory.map(message => {
-    // Ensure status is one of the valid values for ChatMessage
-    let status: 'sent' | 'delivered' | 'read' | 'error' = 'sent';
-    if (message.status === 'delivered' || message.status === 'read' || message.status === 'error') {
-      status = message.status;
-    }
-    
-    return {
-      id: message.id,
-      text: message.text,
-      timestamp: message.time,
-      senderId: message.sender === 'user' ? 'current-user' : 'recipient',
-      status: status,
-      attachments: message.attachment ? [{
-        name: message.attachment.name,
-        size: message.attachment.size,
-        type: message.attachment.type,
-        url: message.attachment.url
-      }] : undefined
-    };
-  });
 
   return (
     <div 
-      className={cn("w-full flex flex-col bg-background relative", className)}
+      className="w-full md:w-2/3 flex flex-col bg-background"
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="p-4 border-b sticky top-0 bg-background z-10">
+      <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button 
@@ -278,30 +245,56 @@ const MessageContent = ({
       </div>
 
       {/* Message List */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4 min-h-[calc(100vh-20rem)]">
-          {convertedMessages.map((message) => (
+      <ScrollArea className="flex-1 p-4 relative">
+        <div className="space-y-4">
+          {messageHistory.map((message) => (
             <MessageItem 
               key={message.id} 
               message={message} 
-              isCurrentUser={message.senderId === 'current-user'}
+              onDownload={handleDownloadFile} 
+              onShare={handleShareFile} 
             />
           ))}
           <div ref={messagesEndRef} />
         </div>
         
         {/* File drop overlay */}
-        <FileDropZone isDragging={isDragging} />
+        {isDragging && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-md border-2 border-dashed border-primary">
+            <div className="text-center p-4">
+              <File className="h-12 w-12 text-primary mx-auto mb-2" />
+              <h3 className="text-lg font-medium">Drop files here</h3>
+              <p className="text-muted-foreground">Upload documents to share with {currentConversation.recipient.name}</p>
+            </div>
+          </div>
+        )}
       </ScrollArea>
 
       {/* Attachments Preview */}
-      <AttachmentPreview 
-        attachments={attachments}
-        onRemoveAttachment={handleRemoveAttachment}
-      />
+      {attachments.length > 0 && (
+        <div className="px-4 py-2 border-t">
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((file, index) => (
+              <FileAttachment 
+                key={index}
+                file={{
+                  name: file.name,
+                  size: file.size,
+                  type: file.type,
+                  data: file
+                }}
+                onRemove={() => handleRemoveAttachment(index)}
+                isPending={uploadProgress[file.name] < 100}
+                progress={uploadProgress[file.name]}
+                showActions={false}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Message Input */}
-      <div className="p-4 border-t sticky bottom-0 bg-background">
+      <div className="p-4 border-t">
         <div className="flex items-end gap-2">
           <Textarea
             placeholder="Type a message..."

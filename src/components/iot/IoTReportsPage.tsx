@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +18,6 @@ import SensorDataService from '@/services/SensorDataService';
 import { Button } from '@/components/ui/button';
 import { generateIoTReport } from '@/services/PDFService';
 import { toast } from '@/hooks/use-toast';
-import AnimatedButton from '@/components/ui/AnimatedButton';
 
 interface IoTReportsPageProps {
   hideLayout?: boolean;
@@ -156,19 +156,16 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
           <h1 className="text-2xl md:text-3xl font-bold">IoT Health Monitoring</h1>
           <p className="text-muted-foreground">Monitor your health metrics from connected devices</p>
         </div>
-        <div className="flex gap-2">
-          <AnimatedButton 
-            variant="outline"
-            onClick={handleDownloadReport}
-            className="flex items-center gap-2"
-            shine
-          >
-            <FileDown className="h-4 w-4" />
-            Download Report
-          </AnimatedButton>
-        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleDownloadReport}
+          className="flex items-center gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Download Report
+        </Button>
       </div>
-
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>

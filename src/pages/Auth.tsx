@@ -44,15 +44,6 @@ const Auth = () => {
     setAuthType(type === 'register' ? 'register' : 'login');
   }, [type]);
 
-  // Add a debug useEffect to log authentication state changes
-  useEffect(() => {
-    console.log('Auth component - isAuthenticated:', isAuthenticated);
-    if (isAuthenticated) {
-      console.log('User is authenticated, navigating to dashboard');
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
-
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -99,7 +90,6 @@ const Auth = () => {
             description: signUpError.message,
             variant: "destructive",
           });
-          setIsLoading(false);
           return;
         }
         
@@ -113,7 +103,6 @@ const Auth = () => {
         setRegistrationSuccess(true);
         // Switch to login tab
         setAuthType('login');
-        setIsLoading(false);
       } else {
         // For login, sign in with Supabase
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -145,11 +134,9 @@ const Auth = () => {
             description: "Welcome back to MediVerse!",
           });
           
-          // Force navigation to dashboard without waiting for isAuthenticated state update
-          console.log("Forcing navigation to /dashboard");
-          navigate('/dashboard', { replace: true });
+          // Force navigation to dashboard
+          navigate('/dashboard');
         }
-        setIsLoading(false);
       }
     } catch (error) {
       console.error("Authentication error:", error);
@@ -163,13 +150,13 @@ const Auth = () => {
         description: message,
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // This will redirect if the user is already authenticated
+  // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
-    console.log("User already authenticated, redirecting to dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 

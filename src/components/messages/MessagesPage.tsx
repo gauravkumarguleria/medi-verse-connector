@@ -1,301 +1,189 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { useUser } from '@/contexts/UserContext';
+import React, { useState, useRef, useEffect } from 'react';
+import ConversationList from './ConversationList';
+import MessageContent from './MessageContent';
+import { conversations, messageHistory as initialMessageHistory } from './mockData';
 import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/contexts/UserContext';
+import { Message } from './types';
 import { toast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
-import ChatList from './ChatList';
-import ChatWindow from './ChatWindow';
-import { Chat, ChatMessage } from './types';
 
 const MessagesPage = () => {
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [activeTab, setActiveTab] = useState('all');
+  const [messageHistory, setMessageHistory] = useState<Message[]>(initialMessageHistory);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
-  const isMobile = useIsMobile();
-  const [contacts, setContacts] = useState<any[]>([]);
-  
-  // Fetch chats and contacts on component mount
+
+  const handleSelectConversation = (id: string) => {
+    setSelectedConversation(id);
+    // In a real app, mark messages as read here
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  };
+
+  // Set up realtime messaging
   useEffect(() => {
-    fetchChats();
-    fetchContacts();
-    
-    // Subscribe to new messages
-    const channel = supabase.channel('chat-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'chat_messages'
-        },
+    if (!selectedConversation) return;
+
+    // Enable realtime for messages table
+    const enableRealtime = async () => {
+      try {
+        await supabase.rpc('enable_realtime_for_table', { table_name: 'messages' });
+        console.log('Realtime enabled for messages table');
+      } catch (error) {
+        console.error('Error enabling realtime:', error);
+      }
+    };
+
+    enableRealtime();
+
+    // Subscribe to real-time updates for messages
+    const channel = supabase
+      .channel('messages_updates')
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation}` 
+        }, 
         (payload) => {
-          console.log('Real-time message update:', payload);
-          handleRealTimeUpdate(payload);
+          console.log('New message received:', payload);
+          // Add the new message to our state
+          const newMessage = payload.new as any;
+          
+          // Convert the message to our Message type
+          const message: Message = {
+            id: newMessage.id,
+            sender: newMessage.sender_id === user.id ? 'user' : 'recipient',
+            text: newMessage.content,
+            time: new Date(newMessage.created_at).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            status: 'delivered',
+            attachment: newMessage.attachment_url ? {
+              name: newMessage.attachment_name || 'file',
+              size: 0, // We don't have this info from the database
+              type: newMessage.attachment_type || 'application/octet-stream',
+              url: newMessage.attachment_url
+            } : undefined
+          };
+          
+          setMessageHistory(prev => [...prev, message]);
+          
+          // Scroll to bottom on new message
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+          
+          // Show notification if the message is from the other person
+          if (message.sender !== 'user') {
+            toast({
+              title: "New message",
+              description: `${currentConversation?.recipient.name}: ${message.text.substring(0, 30)}${message.text.length > 30 ? '...' : ''}`
+            });
+          }
         }
       )
       .subscribe();
-
+    
+    // Cleanup subscription on unmount or when conversation changes
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user.id]);
+  }, [selectedConversation, user.id]);
 
-  const handleRealTimeUpdate = (payload: any) => {
-    if (payload.eventType === 'INSERT') {
-      const newMessage = payload.new;
-      // Only update if the message is relevant to the current user
-      if (newMessage.sender_id === user.id || newMessage.receiver_id === user.id) {
-        updateChatsWithNewMessage(newMessage);
-      }
-    }
-  };
+  const currentConversation = conversations.find(conv => conv.id === selectedConversation);
 
-  const updateChatsWithNewMessage = (newMessage: any) => {
-    const otherUserId = newMessage.sender_id === user.id ? newMessage.receiver_id : newMessage.sender_id;
-    
-    setChats(prevChats => {
-      const chatIndex = prevChats.findIndex(chat => chat.contactId === otherUserId);
-      
-      if (chatIndex >= 0) {
-        // Update existing chat
-        const updatedChats = [...prevChats];
-        const chat = { ...updatedChats[chatIndex] };
-        
-        // Add message to chat
-        chat.messages = [...(chat.messages || []), {
-          id: newMessage.id,
-          text: newMessage.content,
-          senderId: newMessage.sender_id,
-          timestamp: newMessage.created_at,
-          status: 'delivered'
-        }];
-        
-        // Update last message
-        chat.lastMessage = {
-          text: newMessage.content,
-          timestamp: newMessage.created_at,
-          senderId: newMessage.sender_id,
-          status: 'delivered'
-        };
-        
-        // Update unread count if message is received
-        if (newMessage.sender_id !== user.id) {
-          chat.unreadCount = (chat.unreadCount || 0) + 1;
-        }
-        
-        updatedChats[chatIndex] = chat;
-        return updatedChats;
-      }
-      
-      // If chat doesn't exist, create new chat (this should be rare)
-      return prevChats;
-    });
-  };
+  // Function to handle sending a new message
+  const handleSendMessage = async (text: string, attachments: File[]) => {
+    if (!selectedConversation || (!text.trim() && attachments.length === 0)) return;
 
-  const fetchChats = async () => {
     try {
-      const { data: messages, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+      // In a real app, save message to the database
+      // For now, we'll just update our local state
+      const newMessage: Message = {
+        id: `temp-${Date.now()}`,
+        sender: 'user',
+        text,
+        time: new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        status: 'sending'
+      };
 
-      if (error) throw error;
+      setMessageHistory(prev => [...prev, newMessage]);
 
-      // Transform messages into chat objects
-      const chatMap = new Map<string, Chat>();
-      
-      for (const message of messages) {
-        const otherUserId = message.sender_id === user.id ? message.receiver_id : message.sender_id;
-        
-        if (!chatMap.has(otherUserId)) {
-          // Fetch user details for the other participant
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', otherUserId)
-            .single();
+      // Simulate the recipient typing and responding after a delay
+      if (Math.random() > 0.3) { // 70% chance of getting a response
+        setTimeout(() => {
+          const responseMessage: Message = {
+            id: `temp-${Date.now() + 1}`,
+            sender: 'recipient',
+            text: `This is an automated response to: "${text}"`,
+            time: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            status: 'delivered'
+          };
           
-          chatMap.set(otherUserId, {
-            id: otherUserId,
-            contactId: otherUserId,
-            contactName: userData?.name || 'Unknown User',
-            contactAvatar: userData?.avatar,
-            messages: [],
-            unreadCount: 0,
-            isOnline: false // You could implement presence here
-          });
-        }
-        
-        const chat = chatMap.get(otherUserId)!;
-        chat.messages = [...(chat.messages || []), {
-          id: message.id,
-          text: message.content,
-          senderId: message.sender_id,
-          timestamp: message.created_at,
-          status: message.read_at ? 'read' : 'delivered'
-        }];
-        
-        // Set last message
-        chat.lastMessage = {
-          text: message.content,
-          timestamp: message.created_at,
-          senderId: message.sender_id,
-          status: message.read_at ? 'read' : 'delivered'
-        };
-        
-        // Update unread count
-        if (message.sender_id !== user.id && !message.read_at) {
-          chat.unreadCount++;
-        }
+          setMessageHistory(prev => [...prev, responseMessage]);
+          
+          // Scroll to bottom on new message
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }, 1500 + Math.random() * 2000); // Random delay between 1.5-3.5 seconds
       }
-      
-      setChats(Array.from(chatMap.values()));
-      
-    } catch (error) {
-      console.error('Error fetching chats:', error);
-      toast({
-        title: "Error loading chats",
-        description: "Please try again later",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const fetchContacts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .neq('id', user.id);
-
-      if (error) throw error;
-      
-      setContacts(data.map(profile => ({
-        id: profile.id,
-        name: profile.name || 'Unknown User',
-        avatar: profile.avatar,
-        role: profile.role
-      })));
-      
-    } catch (error) {
-      console.error('Error fetching contacts:', error);
-      toast({
-        title: "Error loading contacts",
-        description: "Please try again later",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const handleSelectChat = async (chatId: string) => {
-    setSelectedChat(chatId);
-    
-    // Mark messages as read
-    const chat = chats.find(c => c.id === chatId);
-    if (chat && chat.unreadCount > 0) {
-      try {
-        const { error } = await supabase
-          .from('chat_messages')
-          .update({ read_at: new Date().toISOString() })
-          .eq('receiver_id', user.id)
-          .eq('sender_id', chatId)
-          .is('read_at', null);
-
-        if (error) throw error;
-        
-        // Update local state
-        setChats(prev => 
-          prev.map(chat => 
-            chat.id === chatId 
-              ? { ...chat, unreadCount: 0 } 
-              : chat
-          )
-        );
-      } catch (error) {
-        console.error('Error marking messages as read:', error);
-      }
-    }
-  };
-
-  const handleSendMessage = async (text: string, attachments: File[] = []) => {
-    if (!selectedChat || (!text.trim() && attachments.length === 0)) return;
-    
-    try {
-      // Insert message into database
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .insert({
-          content: text,
-          sender_id: user.id,
-          receiver_id: selectedChat
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      // Message will be added to UI through real-time subscription
-      
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
-        title: "Error sending message",
-        description: "Please try again",
+        title: "Error",
+        description: "Failed to send message",
         variant: "destructive"
       });
     }
-  };
-
-  const createNewChat = async (contactId: string, contactName: string) => {
-    const existingChat = chats.find(chat => chat.contactId === contactId);
-    if (existingChat) {
-      setSelectedChat(existingChat.id);
-      return;
-    }
-    
-    const newChat: Chat = {
-      id: contactId,
-      contactId,
-      contactName,
-      messages: [],
-      unreadCount: 0,
-      isOnline: false
-    };
-    
-    setChats(prev => [newChat, ...prev]);
-    setSelectedChat(contactId);
   };
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col">
-      <div className="mb-4">
-        <h1 className="text-2xl md:text-3xl font-bold">Messages</h1>
-        <p className="text-muted-foreground">Connect with your healthcare team</p>
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Messages</h1>
+        <p className="text-muted-foreground">Communicate with your healthcare providers</p>
       </div>
 
-      <div className="flex-1 flex rounded-lg overflow-hidden border bg-background shadow">
-        <ChatList
-          chats={chats}
-          contacts={contacts}
-          selectedChatId={selectedChat}
-          onSelectChat={handleSelectChat}
-          onNewChat={createNewChat}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          className={selectedChat && isMobile ? 'hidden' : 'w-full md:w-1/3'}
-        />
-        
-        <ChatWindow
-          selectedChatId={selectedChat}
-          chats={chats}
-          onBack={() => setSelectedChat(null)}
-          onSendMessage={handleSendMessage}
-          className={!selectedChat && isMobile ? 'hidden' : 'w-full md:w-2/3'}
-          currentUserId={user.id}
-        />
+      <div className="flex h-full rounded-lg border overflow-hidden">
+        {/* Conversation List */}
+        <div className={`${selectedConversation ? 'hidden md:block' : 'block'} w-full md:w-1/3`}>
+          <ConversationList 
+            conversations={conversations}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            selectedConversation={selectedConversation}
+            onSelectConversation={handleSelectConversation}
+          />
+        </div>
+
+        {/* Message Content */}
+        <div className={`${selectedConversation ? 'block' : 'hidden md:block'} w-full md:w-2/3`}>
+          <MessageContent 
+            selectedConversation={selectedConversation}
+            currentConversation={currentConversation}
+            messageHistory={messageHistory}
+            onBack={() => setSelectedConversation(null)}
+            onSendMessage={handleSendMessage}
+            messagesEndRef={messagesEndRef}
+          />
+        </div>
       </div>
     </div>
   );
