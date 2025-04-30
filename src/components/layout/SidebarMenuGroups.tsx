@@ -16,7 +16,6 @@ import {
   Pill, 
   CalendarClock, 
   MessageSquare, 
-  HeartPulse, 
   CircuitBoard,
   ClipboardList
 } from 'lucide-react';
@@ -124,7 +123,6 @@ const SidebarMenuGroups = () => {
             onClick: () => navigate('/dashboard/records'),
             isActive: isActiveRoute('/dashboard/records'),
           },
-          // Pharmacy Store link has been removed
         ],
       },
       {
@@ -141,12 +139,6 @@ const SidebarMenuGroups = () => {
       {
         group: 'Monitoring',
         items: [
-          {
-            label: 'Vital Signs',
-            icon: <HeartPulse className="h-5 w-5" />,
-            onClick: () => navigate('/dashboard/vitals'),
-            isActive: isActiveRoute('/dashboard/vitals'),
-          },
           {
             label: 'IoT Devices',
             icon: <CircuitBoard className="h-5 w-5" />,
