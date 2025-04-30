@@ -8,7 +8,7 @@ const Preloader = () => {
     // Simulate loading time and then hide preloader
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 1000); // Reduced from 2000ms to 1000ms for faster loading
 
     return () => clearTimeout(timer);
   }, []);
