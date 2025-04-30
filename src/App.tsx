@@ -14,55 +14,32 @@ import NotFound from "./pages/NotFound";
 import Preloader from "./components/ui/Preloader";
 import { ThemeProvider } from "./components/ui/ThemeProvider";
 import { UserProvider } from "./contexts/UserContext";
-import { useState, useEffect } from "react";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-const App = () => {
-  const [appReady, setAppReady] = useState(false);
-
-  // Ensure app is ready after preloader with a shorter delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAppReady(true);
-    }, 600); // Reduced from 1500ms to 600ms
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <ThemeProvider defaultTheme="system" storageKey="mediverse-theme">
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <UserProvider>
-            <Preloader />
-            <Toaster />
-            <Sonner />
-            <div style={{ opacity: appReady ? 1 : 0, transition: 'opacity 0.3s ease' }}>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/features" element={<Features />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/dashboard/*" element={<Dashboard />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </div>
-          </UserProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  );
-};
+const App = () => (
+  <ThemeProvider defaultTheme="system" storageKey="mediverse-theme">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <UserProvider>
+          <Preloader />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard/*" element={<Dashboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </UserProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
+);
 
 export default App;

@@ -14,7 +14,6 @@ import {
 interface RoleSelectorProps {
   onRoleSelect: (role: UserRole) => void;
   className?: string;
-  disabled?: boolean;
 }
 
 interface RoleOption {
@@ -24,7 +23,7 @@ interface RoleOption {
   icon: React.ReactNode;
 }
 
-const RoleSelector: React.FC<RoleSelectorProps> = ({ onRoleSelect, className, disabled = false }) => {
+const RoleSelector: React.FC<RoleSelectorProps> = ({ onRoleSelect, className }) => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
   const roles: RoleOption[] = [
@@ -55,7 +54,6 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ onRoleSelect, className, di
   ];
 
   const handleSelect = (role: UserRole) => {
-    if (disabled) return;
     setSelectedRole(role);
     onRoleSelect(role);
   };
@@ -70,8 +68,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ onRoleSelect, className, di
             'border border-border hover:border-primary/50 hover:shadow-sm',
             selectedRole === role.id 
               ? 'border-primary bg-primary/5 shadow-sm' 
-              : 'bg-white',
-            disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+              : 'bg-white'
           )}
           onClick={() => handleSelect(role.id)}
         >

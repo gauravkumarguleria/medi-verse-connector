@@ -1,4 +1,3 @@
-
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardMain from '@/components/dashboard/DashboardMain';
@@ -12,14 +11,12 @@ import MessagesPage from '@/components/messages/MessagesPage';
 import ProfileSection from '@/components/profile/ProfileSection';
 import SettingsSection from '@/components/settings/SettingsSection';
 import { useUser } from '@/contexts/UserContext';
-import { useEffect, useState } from 'react';
-import { Spinner } from '@/components/ui/spinner';
+import { useEffect } from 'react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, isLoading } = useUser();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
   
   // Add effect to redirect to login page if not authenticated
   useEffect(() => {
@@ -29,55 +26,16 @@ const Dashboard = () => {
     } else if (!isLoading && isAuthenticated) {
       console.log("Dashboard: User authenticated:", user);
     }
-
-    // Set a timeout to avoid infinite loading states
-    const timer = setTimeout(() => {
-      setLoadingTimeout(true);
-    }, 3000); // Reduced from 5000ms to 3000ms
-
-    return () => clearTimeout(timer);
   }, [isAuthenticated, isLoading, navigate, user]);
 
-  // Show a better loading state with a timeout fallback
+  // Show nothing while checking authentication
   if (isLoading) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center">
-        <Spinner size="lg" />
-        <p className="mt-4 text-muted-foreground">
-          Loading your dashboard...
-        </p>
-        {loadingTimeout && (
-          <div className="mt-4 text-center max-w-md">
-            <p className="text-sm text-red-500">
-              Loading is taking longer than expected.
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="mt-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-            >
-              Refresh page
-            </button>
-          </div>
-        )}
-      </div>
-    );
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  // Don't render dashboard if not authenticated and show a clearer message
+  // Don't render dashboard if not authenticated
   if (!isAuthenticated) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center">
-        <p className="text-lg text-muted-foreground">
-          You must be logged in to view the dashboard
-        </p>
-        <button 
-          onClick={() => navigate('/auth')}
-          className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-        >
-          Go to login page
-        </button>
-      </div>
-    );
+    return null;
   }
   
   return (
