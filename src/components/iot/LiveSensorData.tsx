@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Thermometer, Droplets, Wind, Activity, BarChart2, History, FileText } from 'lucide-react';
+import { Thermometer, Droplets, Activity, BarChart2, History, FileText } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -25,13 +25,9 @@ const chartConfig = {
     label: 'Humidity',
     theme: { light: '#0EA5E9', dark: '#38BDF8' }
   },
-  mq3_1: { 
-    label: 'MQ3-1',
+  glucose: { 
+    label: 'Glucose',
     theme: { light: '#8B5CF6', dark: '#A78BFA' }
-  },
-  mq3_2: { 
-    label: 'MQ3-2',
-    theme: { light: '#10B981', dark: '#34D399' }
   },
   mq135: { 
     label: 'MQ135',
@@ -56,10 +52,22 @@ const LiveSensorData: React.FC = () => {
       
       // Calculate average of the readings
       const average = SensorDataService.calculateAverageReadings(data);
+      
+      // Add glucose calculation as average of mq3_1 and mq3_2
+      if (average) {
+        average.glucose = (average.mq3_1 + average.mq3_2) / 2;
+      }
+      
       setAverageData(average);
       
-      // Generate time series data for charts
+      // Generate time series data for charts with glucose included
       const timeSeriesData = SensorDataService.getTimeSeriesData(data);
+      
+      // Add glucose calculation to each data point
+      timeSeriesData.forEach(dataPoint => {
+        dataPoint.glucose = (dataPoint.mq3_1 + dataPoint.mq3_2) / 2;
+      });
+      
       setChartData(timeSeriesData);
     } catch (error) {
       console.error('Error fetching sensor data:', error);
@@ -109,9 +117,8 @@ const LiveSensorData: React.FC = () => {
         return <Thermometer className="h-4 w-4" />;
       case 'humidity':
         return <Droplets className="h-4 w-4" />;
-      case 'mq3_1':
-      case 'mq3_2':
-        return <Wind className="h-4 w-4" />;
+      case 'glucose':
+        return <Activity className="h-4 w-4" />;
       case 'mq135':
         return <Activity className="h-4 w-4" />;
       default:
@@ -125,6 +132,8 @@ const LiveSensorData: React.FC = () => {
         return '°C';
       case 'humidity':
         return '%';
+      case 'glucose':
+        return 'mg/dL';
       default:
         return 'ppm';
     }
@@ -133,6 +142,7 @@ const LiveSensorData: React.FC = () => {
   const formatMetricValue = (value: number, metric: string) => {
     if (metric === 'temperature') return `${value.toFixed(1)}°C`;
     if (metric === 'humidity') return `${value.toFixed(1)}%`;
+    if (metric === 'glucose') return `${value.toFixed(1)} mg/dL`;
     return `${value.toFixed(2)} ppm`;
   };
   
@@ -150,16 +160,16 @@ const LiveSensorData: React.FC = () => {
       setIsDownloading(true);
       
       // Create CSV header
-      const csvHeader = "Timestamp,Temperature,Humidity,MQ3_1,MQ3_2,MQ135\n";
+      const csvHeader = "Timestamp,Temperature,Humidity,Glucose,MQ135\n";
       
       // Create CSV content
       const csvContent = readings.map(reading => {
+        const glucose = (reading.mq3_1 + reading.mq3_2) / 2;
         return [
           new Date(reading.timestamp).toLocaleString(),
           reading.temperature.toFixed(2),
           reading.humidity.toFixed(2),
-          reading.mq3_1.toFixed(2),
-          reading.mq3_2.toFixed(2),
+          glucose.toFixed(2),
           reading.mq135.toFixed(2)
         ].join(',');
       }).join('\n');
@@ -234,8 +244,7 @@ const LiveSensorData: React.FC = () => {
               <SelectContent>
                 <SelectItem value="temperature">Temperature</SelectItem>
                 <SelectItem value="humidity">Humidity</SelectItem>
-                <SelectItem value="mq3_1">MQ3-1 (Alcohol)</SelectItem>
-                <SelectItem value="mq3_2">MQ3-2 (Alcohol)</SelectItem>
+                <SelectItem value="glucose">Glucose</SelectItem>
                 <SelectItem value="mq135">MQ135 (Air Quality)</SelectItem>
               </SelectContent>
             </Select>
@@ -265,7 +274,7 @@ const LiveSensorData: React.FC = () => {
       </Card>
       
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -303,30 +312,13 @@ const LiveSensorData: React.FC = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Wind className="h-4 w-4" />
-              MQ3-1 (Alcohol)
+              <Activity className="h-4 w-4" />
+              Glucose
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {averageData ? `${averageData.mq3_1.toFixed(2)}` : 'N/A'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Average of last {readings.length} readings
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Wind className="h-4 w-4" />
-              MQ3-2 (Alcohol)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {averageData ? `${averageData.mq3_2.toFixed(2)}` : 'N/A'}
+              {averageData ? `${((averageData.mq3_1 + averageData.mq3_2) / 2).toFixed(1)} mg/dL` : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
               Average of last {readings.length} readings
@@ -412,8 +404,7 @@ const LiveSensorData: React.FC = () => {
                     <th className="p-2 font-medium">Time</th>
                     <th className="p-2 font-medium">Temperature</th>
                     <th className="p-2 font-medium">Humidity</th>
-                    <th className="p-2 font-medium">MQ3-1</th>
-                    <th className="p-2 font-medium">MQ3-2</th>
+                    <th className="p-2 font-medium">Glucose</th>
                     <th className="p-2 font-medium">MQ135</th>
                   </tr>
                 </thead>
@@ -424,14 +415,13 @@ const LiveSensorData: React.FC = () => {
                         <td className="p-2">{new Date(reading.timestamp).toLocaleString()}</td>
                         <td className="p-2">{reading.temperature.toFixed(1)}°C</td>
                         <td className="p-2">{reading.humidity.toFixed(1)}%</td>
-                        <td className="p-2">{reading.mq3_1.toFixed(2)}</td>
-                        <td className="p-2">{reading.mq3_2.toFixed(2)}</td>
+                        <td className="p-2">{((reading.mq3_1 + reading.mq3_2) / 2).toFixed(1)} mg/dL</td>
                         <td className="p-2">{reading.mq135.toFixed(2)}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                      <td colSpan={5} className="p-4 text-center text-muted-foreground">
                         No readings available
                       </td>
                     </tr>

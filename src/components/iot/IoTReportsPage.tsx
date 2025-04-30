@@ -62,11 +62,15 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
       const readings = await SensorDataService.getLatestReadings(10);
       if (readings.length > 0) {
         const average = SensorDataService.calculateAverageReadings(readings);
+        // Calculate glucose as average of mq3_1 and mq3_2
+        const glucoseLevel = (average.mq3_1 + average.mq3_2) / 2;
+        
         setLatestData({
           heartRate: Math.round(average.temperature * 1.2), // Simulating heart rate based on temperature
           temperature: average.temperature,
           activityLevel: Math.round(average.humidity), // Using humidity as proxy for activity
-          batteryLevel: 80 // Fixed value for battery
+          batteryLevel: 80, // Fixed value for battery
+          glucoseLevel: Math.round(glucoseLevel * 10) // Scaling for display
         });
       }
     } catch (error) {
@@ -211,13 +215,13 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
-              Activity Level
+              Glucose Level
             </CardTitle>
-            <CardDescription>Daily activity summary</CardDescription>
+            <CardDescription>Blood glucose monitoring</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold">
-              {latestData ? `${latestData.activityLevel}` : 'Loading...'}
+              {latestData ? `${latestData.glucoseLevel} mg/dL` : 'Loading...'}
             </div>
             <Separator className="my-2" />
             <div className="flex items-center text-sm text-muted-foreground">
@@ -280,7 +284,7 @@ const IoTReportsPage: React.FC<IoTReportsPageProps> = ({ hideLayout = false }) =
               <SelectContent>
                 <SelectItem value="heartRate">Heart Rate</SelectItem>
                 <SelectItem value="temperature">Temperature</SelectItem>
-                <SelectItem value="activityLevel">Activity Level</SelectItem>
+                <SelectItem value="glucose">Glucose</SelectItem>
                 <SelectItem value="batteryLevel">Battery Level</SelectItem>
               </SelectContent>
             </Select>

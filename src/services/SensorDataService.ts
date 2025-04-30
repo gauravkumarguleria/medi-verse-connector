@@ -17,6 +17,7 @@ export interface AverageSensorData {
   mq3_1: number;
   mq3_2: number;
   mq135: number;
+  glucose: number; // Added glucose field
   timestamp: string;
 }
 
@@ -50,6 +51,7 @@ export const SensorDataService = {
         mq3_1: 0,
         mq3_2: 0,
         mq135: 0,
+        glucose: 0, // Initialize glucose with 0
         timestamp: new Date().toISOString()
       };
     }
@@ -68,12 +70,19 @@ export const SensorDataService = {
     );
     
     const count = readings.length;
+    
+    // Calculate average glucose as the average of mq3_1 and mq3_2
+    const avgMq3_1 = Number((sum.mq3_1 / count).toFixed(2));
+    const avgMq3_2 = Number((sum.mq3_2 / count).toFixed(2));
+    const glucose = Number(((avgMq3_1 + avgMq3_2) / 2).toFixed(2));
+    
     return {
       temperature: Number((sum.temperature / count).toFixed(2)),
       humidity: Number((sum.humidity / count).toFixed(2)),
-      mq3_1: Number((sum.mq3_1 / count).toFixed(2)),
-      mq3_2: Number((sum.mq3_2 / count).toFixed(2)),
+      mq3_1: avgMq3_1,
+      mq3_2: avgMq3_2,
       mq135: Number((sum.mq135 / count).toFixed(2)),
+      glucose: glucose, // Add glucose calculation
       timestamp: new Date().toISOString()
     };
   },
@@ -85,14 +94,20 @@ export const SensorDataService = {
     // Reverse to get chronological order
     const orderedReadings = [...readings].reverse();
     
-    return orderedReadings.map(reading => ({
-      time: new Date(reading.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      temperature: reading.temperature,
-      humidity: reading.humidity,
-      mq3_1: reading.mq3_1,
-      mq3_2: reading.mq3_2,
-      mq135: reading.mq135
-    }));
+    return orderedReadings.map(reading => {
+      // Calculate glucose as average of mq3_1 and mq3_2
+      const glucose = (reading.mq3_1 + reading.mq3_2) / 2;
+      
+      return {
+        time: new Date(reading.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        temperature: reading.temperature,
+        humidity: reading.humidity,
+        mq3_1: reading.mq3_1,
+        mq3_2: reading.mq3_2,
+        glucose: glucose, // Add glucose to time series data
+        mq135: reading.mq135
+      };
+    });
   }
 };
 
