@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -202,7 +201,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const refreshUserProfile = async () => {
+  const refreshUserProfile = async (): Promise<void> => {
     try {
       // In a local implementation, this might reload from localStorage
       // or refresh from an API
