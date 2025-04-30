@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ConversationList from './ConversationList';
 import MessageContent from './MessageContent';
@@ -100,7 +99,7 @@ const MessagesPage = () => {
             text: 'Click to start a conversation',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             isRead: true,
-            sender: "user" // Fixed: Using the correct literal type instead of string
+            sender: "user" // Fixed: Now using the correct literal type instead of a string
           },
           unread: 0
         };
@@ -204,7 +203,7 @@ const MessagesPage = () => {
                 minute: '2-digit'
               }),
               isRead: false,
-              sender: "user"
+              sender: "user" as const // Fixed: Explicitly set as literal type "user"
             }
           };
         }
