@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CalendarClock, User, ClipboardCheck, MessageSquare, Activity } from 'lucide-react';
+import { CalendarClock, User, ClipboardCheck, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -111,44 +111,6 @@ const DoctorDashboard = () => {
           </Table>
         </CardContent>
       </Card>
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Patient Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px] flex items-center justify-center">
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Activity className="h-10 w-10" />
-                <p>Activity chart will be displayed here</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Patients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {['Sarah Johnson', 'Michael Chen', 'Emily Rodriguez'].map((patient, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{patient}</p>
-                    <p className="text-sm text-muted-foreground">Last visit: yesterday</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="ml-auto">View</Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
