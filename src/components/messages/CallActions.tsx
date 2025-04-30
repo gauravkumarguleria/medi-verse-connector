@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Phone, Video, PhoneOff, VideoOff, Mic, MicOff, User } from 'lucide-react';
+import { Phone, Video, PhoneOff, VideoOff, Mic, MicOff, Volume, VolumeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -10,6 +10,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/contexts/UserContext';
 
 interface CallActionsProps {
   recipient: {
@@ -25,13 +27,16 @@ export function CallActions({ recipient }: CallActionsProps) {
   const [isVoiceCallActive, setIsVoiceCallActive] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isVolumeMuted, setIsVolumeMuted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [networkQuality, setNetworkQuality] = useState(100);
   
+  const { user } = useUser();
   const isMobile = useIsMobile();
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
   const networkIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const callChannelRef = React.useRef<any>(null);
   
   // Simulate network quality fluctuations
   useEffect(() => {
@@ -82,14 +87,11 @@ export function CallActions({ recipient }: CallActionsProps) {
       description: `Connecting to ${recipient.name}...`
     });
     
-    // Simulate connection delay
-    setTimeout(() => {
-      setConnectionStatus('connected');
-      toast({
-        title: "Video call connected",
-        description: `You are now on a call with ${recipient.name}`
-      });
-    }, 2000);
+    // Set up the real-time call channel
+    setupCallChannel('video');
+    
+    // Broadcast call request to recipient
+    broadcastCallRequest('video');
   };
   
   const handleStartVoiceCall = () => {
@@ -102,18 +104,113 @@ export function CallActions({ recipient }: CallActionsProps) {
       description: `Calling ${recipient.name}...`
     });
     
-    // Simulate connection delay
+    // Set up the real-time call channel
+    setupCallChannel('voice');
+    
+    // Broadcast call request to recipient
+    broadcastCallRequest('voice');
+  };
+  
+  const setupCallChannel = (callType: 'voice' | 'video') => {
+    const channelId = `call_${user.id}_${recipient.id}`;
+    
+    callChannelRef.current = supabase
+      .channel(channelId)
+      .on('broadcast', { event: 'call-accepted' }, (payload) => {
+        console.log('Call accepted:', payload);
+        
+        // Simulate connection delay
+        setTimeout(() => {
+          setConnectionStatus('connected');
+          toast({
+            title: `${callType === 'video' ? 'Video' : 'Voice'} call connected`,
+            description: `You are now on a call with ${recipient.name}`
+          });
+        }, 1000);
+      })
+      .on('broadcast', { event: 'call-rejected' }, (payload) => {
+        console.log('Call rejected:', payload);
+        
+        toast({
+          title: "Call declined",
+          description: `${recipient.name} declined the call`
+        });
+        
+        handleEndCall();
+      })
+      .on('broadcast', { event: 'call-ended' }, (payload) => {
+        console.log('Call ended by recipient:', payload);
+        
+        toast({
+          title: "Call ended",
+          description: `${recipient.name} ended the call`
+        });
+        
+        handleEndCall();
+      })
+      .subscribe();
+      
+    // Auto accept call for demo purposes after a short delay
+    // In a real app, recipient would receive call notification
     setTimeout(() => {
-      setConnectionStatus('connected');
-      toast({
-        title: "Voice call connected",
-        description: `You are now on a call with ${recipient.name}`
-      });
+      acceptIncomingCall();
     }, 2000);
   };
   
+  const broadcastCallRequest = (callType: 'voice' | 'video') => {
+    const recipientChannelId = `call_${recipient.id}_${user.id}`;
+    
+    supabase.channel(recipientChannelId).send({
+      type: 'broadcast',
+      event: 'call-request',
+      payload: {
+        caller_id: user.id,
+        caller_name: user.name,
+        call_type: callType,
+        timestamp: new Date().toISOString(),
+      }
+    });
+  };
+  
+  const acceptIncomingCall = () => {
+    // In a real app, this would be triggered by the recipient
+    // when they accept the call
+    if (callChannelRef.current) {
+      callChannelRef.current.send({
+        type: 'broadcast',
+        event: 'call-accepted',
+        payload: {
+          recipient_id: recipient.id,
+          recipient_name: recipient.name,
+          timestamp: new Date().toISOString(),
+        }
+      });
+    }
+  };
+  
   const handleEndCall = () => {
+    // Broadcast end call event to recipient
+    if (callChannelRef.current && connectionStatus === 'connected') {
+      const recipientChannelId = `call_${recipient.id}_${user.id}`;
+      
+      supabase.channel(recipientChannelId).send({
+        type: 'broadcast',
+        event: 'call-ended',
+        payload: {
+          user_id: user.id,
+          user_name: user.name,
+          timestamp: new Date().toISOString(),
+        }
+      });
+    }
+    
     setConnectionStatus('disconnected');
+    
+    // Clean up channel
+    if (callChannelRef.current) {
+      supabase.removeChannel(callChannelRef.current);
+      callChannelRef.current = null;
+    }
     
     // Simulate disconnection delay
     setTimeout(() => {
@@ -153,6 +250,13 @@ export function CallActions({ recipient }: CallActionsProps) {
     setIsVideoOff(!isVideoOff);
     toast({
       description: isVideoOff ? "Camera turned on" : "Camera turned off"
+    });
+  };
+  
+  const toggleVolume = () => {
+    setIsVolumeMuted(!isVolumeMuted);
+    toast({
+      description: isVolumeMuted ? "Speaker unmuted" : "Speaker muted"
     });
   };
   
@@ -265,8 +369,8 @@ export function CallActions({ recipient }: CallActionsProps) {
             
             <div className="absolute bottom-4 right-4 bg-gray-800 rounded-lg p-2">
               <Avatar className="h-16 w-16">
-                <AvatarImage src="https://i.pravatar.cc/150?img=12" alt="You" />
-                <AvatarFallback>You</AvatarFallback>
+                <AvatarImage src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="You" />
+                <AvatarFallback>{user.name?.charAt(0) || "U"}</AvatarFallback>
               </Avatar>
             </div>
           </div>
@@ -295,6 +399,19 @@ export function CallActions({ recipient }: CallActionsProps) {
                 <VideoOff className="h-4 w-4" />
               ) : (
                 <Video className="h-4 w-4" />
+              )}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className={isVolumeMuted ? "bg-red-100 text-red-500" : ""}
+              onClick={toggleVolume}
+              disabled={connectionStatus === 'connecting'}
+            >
+              {isVolumeMuted ? (
+                <VolumeOff className="h-4 w-4" />
+              ) : (
+                <Volume className="h-4 w-4" />
               )}
             </Button>
             
@@ -356,7 +473,7 @@ export function CallActions({ recipient }: CallActionsProps) {
                     <AvatarFallback>{recipient.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 flex items-center justify-center ring-2 ring-background">
-                    <User className="h-3 w-3 text-white" />
+                    <Phone className="h-3 w-3 text-white" />
                   </div>
                 </div>
                 <p className="text-lg font-medium">{recipient.name}</p>
@@ -393,6 +510,19 @@ export function CallActions({ recipient }: CallActionsProps) {
                 <MicOff className="h-4 w-4" />
               ) : (
                 <Mic className="h-4 w-4" />
+              )}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className={isVolumeMuted ? "bg-red-100 text-red-500" : ""}
+              onClick={toggleVolume}
+              disabled={connectionStatus === 'connecting'}
+            >
+              {isVolumeMuted ? (
+                <VolumeOff className="h-4 w-4" />
+              ) : (
+                <Volume className="h-4 w-4" />
               )}
             </Button>
             

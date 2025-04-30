@@ -100,7 +100,7 @@ const MessagesPage = () => {
             text: 'Click to start a conversation',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             isRead: true,
-            sender: "user"
+            sender: "user" // Fixed: Using the correct literal type instead of string
           },
           unread: 0
         };
