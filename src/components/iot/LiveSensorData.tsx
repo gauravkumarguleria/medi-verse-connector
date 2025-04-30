@@ -6,12 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Thermometer, Droplets, Wind, Activity, BarChart2, History } from 'lucide-react';
+import { Thermometer, Droplets, Wind, Activity, BarChart2, History, FileText } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import SensorDataService, { SensorReading, AverageSensorData } from '@/services/SensorDataService';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 // Configuration for the charts
 const chartConfig = {
@@ -44,6 +46,7 @@ const LiveSensorData: React.FC = () => {
   const [averageData, setAverageData] = useState<AverageSensorData | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
   
   const fetchData = async () => {
     try {
@@ -133,11 +136,87 @@ const LiveSensorData: React.FC = () => {
     return `${value.toFixed(2)} ppm`;
   };
   
+  const handleDownloadCSV = () => {
+    if (readings.length === 0) {
+      toast({
+        title: "No data available",
+        description: "There is no sensor data to download",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsDownloading(true);
+      
+      // Create CSV header
+      const csvHeader = "Timestamp,Temperature,Humidity,MQ3_1,MQ3_2,MQ135\n";
+      
+      // Create CSV content
+      const csvContent = readings.map(reading => {
+        return [
+          new Date(reading.timestamp).toLocaleString(),
+          reading.temperature.toFixed(2),
+          reading.humidity.toFixed(2),
+          reading.mq3_1.toFixed(2),
+          reading.mq3_2.toFixed(2),
+          reading.mq135.toFixed(2)
+        ].join(',');
+      }).join('\n');
+      
+      // Combine header and content
+      const csvData = csvHeader + csvContent;
+      
+      // Create Blob with CSV data
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      // Set link attributes
+      link.setAttribute('href', url);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      link.setAttribute('download', `sensor-data-${timestamp}.csv`);
+      
+      // Append to body, trigger click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download complete",
+        description: "Sensor data has been downloaded as CSV",
+      });
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+      toast({
+        title: "Download failed",
+        description: "Failed to download sensor data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+  
   return (
     <div className="space-y-6 animate-fade-up">
-      <div>
-        <h2 className="text-2xl font-bold">Live Sensor Monitoring</h2>
-        <p className="text-muted-foreground">Real-time environmental health monitoring</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Live Sensor Monitoring</h2>
+          <p className="text-muted-foreground">Real-time environmental health monitoring</p>
+        </div>
+        
+        <Button 
+          variant="outline"
+          onClick={handleDownloadCSV}
+          disabled={isDownloading || readings.length === 0}
+          className="flex items-center gap-2"
+        >
+          <FileText className="h-4 w-4" />
+          {isDownloading ? "Downloading..." : "Download CSV"}
+        </Button>
       </div>
       
       {/* Controls for data view */}
