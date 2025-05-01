@@ -5,7 +5,7 @@ import { Doctor, Appointment } from '@/types';
 export const mockDoctors: Doctor[] = [
   {
     id: '1',
-    name: 'Dr. Arjun Sharma',
+    name: 'Dr. Geeta Sharma',
     specialty: 'Cardiologist',
     experience: 10,
     rating: 4.8,
@@ -14,7 +14,7 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '2',
-    name: 'Dr. Priya Patel',
+    name: 'Dr. Partik Patel',
     specialty: 'Dermatologist',
     experience: 8,
     rating: 4.7,
@@ -23,7 +23,7 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '3',
-    name: 'Dr. Rajesh Gupta',
+    name: 'Dr. Riya Gupta',
     specialty: 'Neurologist',
     experience: 12,
     rating: 4.9,
@@ -32,7 +32,7 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '4',
-    name: 'Dr. Kavita Reddy',
+    name: 'Dr.  R. Reddy',
     specialty: 'Pediatrician',
     experience: 15,
     rating: 4.9,
@@ -41,7 +41,7 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '5',
-    name: 'Dr. Vikram Singh',
+    name: 'Dr. Sonia Singh',
     specialty: 'Psychiatrist',
     experience: 9,
     rating: 4.6,
